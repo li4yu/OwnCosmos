@@ -5,6 +5,7 @@ import {
   archiveTypeLabel,
   formatDwell,
   getArchiveItem,
+  sourceModuleLabel,
 } from "@/services/archive";
 import { ARCHIVE_TYPE_ESSAY_SEDIMENT } from "@/db/schema";
 
@@ -42,42 +43,62 @@ export async function ArchiveDetailView({
 
       <article className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
         <p className="font-mono text-[10px] tracking-[0.18em] text-[var(--teal)]">
-          {archiveTypeLabel(item.type)} · 只读
+          {archiveTypeLabel(item.type)} · 只读 · 不可编辑
         </p>
         <h1 className="mt-2 text-2xl tracking-[0.08em] text-[var(--paper)]">
           {item.title}
         </h1>
-        <dl className="mt-4 grid gap-2 text-sm text-[var(--mist)] sm:grid-cols-2">
+        <dl className="mt-4 grid gap-3 text-sm text-[var(--mist)] sm:grid-cols-2">
           <div>
             <dt className="font-mono text-[10px] tracking-wide opacity-70">
               归档时间
             </dt>
-            <dd>{formatWhen(item.archivedAt)}</dd>
+            <dd className="mt-0.5">{formatWhen(item.archivedAt)}</dd>
           </div>
           <div>
             <dt className="font-mono text-[10px] tracking-wide opacity-70">
               归档方式
             </dt>
-            <dd>{archiveReasonLabel(item.archiveReason)}</dd>
+            <dd className="mt-0.5">{archiveReasonLabel(item.archiveReason)}</dd>
           </div>
           <div>
             <dt className="font-mono text-[10px] tracking-wide opacity-70">
-              来源模块
+              来源
             </dt>
-            <dd>
-              {item.sourceModule === "present" ? "今时际" : item.sourceModule}
+            <dd className="mt-0.5">{sourceModuleLabel(item.sourceModule)}</dd>
+          </div>
+          <div>
+            <dt className="font-mono text-[10px] tracking-wide opacity-70">
+              停留时长
+            </dt>
+            <dd className="mt-0.5">
+              {formatDwell(item.sourceCreatedAt, item.archivedAt)}
+              <span className="ml-2 font-mono text-[10px] opacity-60">
+                （创建 → 归档）
+              </span>
             </dd>
           </div>
           {item.type === ARCHIVE_TYPE_ESSAY_SEDIMENT ? (
-            <div>
-              <dt className="font-mono text-[10px] tracking-wide opacity-70">
-                停留时长
-              </dt>
-              <dd>{formatDwell(item.sourceCreatedAt, item.archivedAt)}</dd>
-            </div>
+            <>
+              <div>
+                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                  原创建时间
+                </dt>
+                <dd className="mt-0.5">{formatWhen(item.sourceCreatedAt)}</dd>
+              </div>
+              <div>
+                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                  原最后编辑
+                </dt>
+                <dd className="mt-0.5">{formatWhen(item.sourceUpdatedAt)}</dd>
+              </div>
+            </>
           ) : null}
         </dl>
-        <div className="mt-6 whitespace-pre-wrap text-base leading-8 text-[var(--paper)]">
+        <div
+          className="mt-6 whitespace-pre-wrap text-base leading-8 text-[var(--paper)] select-text"
+          aria-readonly="true"
+        >
           {item.body.trim() || "（无正文）"}
         </div>
       </article>

@@ -6,10 +6,12 @@ import { getActiveEssay } from "@/services/essays";
 
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string }>;
 };
 
-export default async function EditEssayPage({ params }: Props) {
+export default async function EditEssayPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const { saved } = await searchParams;
   const session = await requireSession();
   const item = await getActiveEssay(session.user.id, id);
   if (!item) notFound();
@@ -29,6 +31,7 @@ export default async function EditEssayPage({ params }: Props) {
           essayId={item.id}
           initialTitle={item.title}
           initialBody={item.body}
+          justCreated={saved === "1"}
         />
       </div>
     </main>

@@ -1,14 +1,15 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { GALLERY_SECTIONS, matchGallerySection } from "@/lib/gallery-sections";
 
-/** 拾忆馆藏内三级分区：全部 / 随笔沉淀 … */
+/** 拾忆馆藏内三级分区 */
 export function GallerySectionNav() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const active = matchGallerySection(pathname);
+  const active = matchGallerySection(pathname, searchParams.get("section"));
 
   return (
     <nav
@@ -29,10 +30,10 @@ export function GallerySectionNav() {
             }`}
             aria-current={isActive ? "page" : undefined}
           >
-            {sec.id === "essay-sediment" ? (
-              <PoeticName name={sec.name} tip={sec.tip} />
-            ) : (
+            {sec.id === "all" ? (
               sec.name
+            ) : (
+              <PoeticName name={sec.name} tip={sec.tip} />
             )}
             {!sec.ready ? (
               <span className="ml-1.5 font-mono text-[9px] tracking-wide opacity-60">

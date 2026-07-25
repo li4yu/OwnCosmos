@@ -6,6 +6,10 @@ import {
   listArchiveItems,
 } from "@/services/archive";
 import { ARCHIVE_TYPE_ESSAY_SEDIMENT } from "@/db/schema";
+import {
+  galleryDetailHref,
+  type GallerySectionId,
+} from "@/lib/gallery-sections";
 import { PoeticName } from "@/components/ui/poetic-name";
 
 function formatWhen(d: Date) {
@@ -21,15 +25,14 @@ function formatWhen(d: Date) {
 type ArchiveListProps = {
   items: Awaited<ReturnType<typeof listArchiveItems>>;
   emptyHint: string;
-  /** 详情链接前缀，默认馆藏 */
-  detailBase?: string;
+  sectionId?: GallerySectionId;
   showTypeChip?: boolean;
 };
 
 export function ArchiveItemList({
   items,
   emptyHint,
-  detailBase = "/app/past/gallery",
+  sectionId = "all",
   showTypeChip = true,
 }: ArchiveListProps) {
   if (items.length === 0) {
@@ -45,7 +48,7 @@ export function ArchiveItemList({
       {items.map((item) => (
         <li key={item.id}>
           <Link
-            href={`${detailBase}/${item.id}`}
+            href={galleryDetailHref(item.id, sectionId)}
             className="block rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4 transition hover:border-[var(--amber)]"
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -83,7 +86,7 @@ export function GalleryIntro() {
         />
       </h2>
       <p className="mt-2 text-sm text-[var(--mist)]">
-        总库按归档时间倒序；馆内可用「随笔沉淀」等分区筛选。
+        总库按归档时间倒序；馆内可用分区筛选。详情只读，不可改回流。
       </p>
     </div>
   );

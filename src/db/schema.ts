@@ -95,8 +95,12 @@ export const essay = pgTable(
   ],
 );
 
-/** Phase 4: 拾忆馆藏条目（快照；类型可扩展） */
+/** Phase 4+: 拾忆馆藏条目（快照；类型可扩展） */
 export const ARCHIVE_TYPE_ESSAY_SEDIMENT = "essay_sediment" as const;
+/** Phase 7 写入；P5 仅分区空态预留 */
+export const ARCHIVE_TYPE_PLAN_ARCHIVE = "plan_archive" as const;
+/** Phase 8 写入；P5 仅分区空态预留 */
+export const ARCHIVE_TYPE_FOCUS_RECORD = "focus_record" as const;
 export const ARCHIVE_REASON_MANUAL = "manual" as const;
 export const ARCHIVE_REASON_AUTO_48H = "auto_48h" as const;
 

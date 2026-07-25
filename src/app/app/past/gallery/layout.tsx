@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { GallerySectionNav } from "@/components/archive/gallery-section-nav";
 import { PoeticName } from "@/components/ui/poetic-name";
 
@@ -16,10 +17,12 @@ export default function GalleryLayout({
           />
         </h2>
         <p className="mt-2 text-sm text-[var(--mist)]">
-          馆藏总库；「随笔沉淀」等为馆内分区。
+          馆藏总库，详情只读；「随笔沉淀」等为馆内分区（规划归档 / 凝录稍后写入）。
         </p>
       </div>
-      <GallerySectionNav />
+      <Suspense fallback={<div className="h-10 rounded-lg border border-[var(--line)]" />}>
+        <GallerySectionNav />
+      </Suspense>
       {children}
     </div>
   );

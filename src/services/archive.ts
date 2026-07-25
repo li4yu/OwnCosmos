@@ -5,6 +5,8 @@ import {
   ARCHIVE_REASON_AUTO_48H,
   ARCHIVE_REASON_MANUAL,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_FOCUS_RECORD,
+  ARCHIVE_TYPE_PLAN_ARCHIVE,
   archiveItem,
   essay,
 } from "@/db/schema";
@@ -134,14 +136,29 @@ export function archiveTypeLabel(type: string) {
   switch (type) {
     case ARCHIVE_TYPE_ESSAY_SEDIMENT:
       return "随笔沉淀";
-    case "plan_archive":
+    case ARCHIVE_TYPE_PLAN_ARCHIVE:
       return "规划归档";
-    case "focus_record":
+    case ARCHIVE_TYPE_FOCUS_RECORD:
       return "凝录";
     case "memory_fragment":
       return "记忆碎片";
     default:
       return type;
+  }
+}
+
+export function sourceModuleLabel(module: string) {
+  switch (module) {
+    case "present":
+      return "今时际";
+    case "future":
+      return "来日途";
+    case "focus":
+      return "凝时";
+    case "past":
+      return "昔时往";
+    default:
+      return module;
   }
 }
 

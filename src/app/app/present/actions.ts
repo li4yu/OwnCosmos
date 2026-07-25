@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/session";
 import { createEssay, deleteActiveEssay, updateEssay } from "@/services/essays";
 import { archiveActiveEssay } from "@/services/archive";
@@ -9,6 +8,8 @@ import { ARCHIVE_REASON_MANUAL } from "@/db/schema";
 
 export type EssayActionState = {
   error?: string;
+  /** 新建成功后由客户端跳转编辑页（避免 server redirect 时壳层 dirty 未清） */
+  createdId?: string;
 };
 
 export async function createEssayAction(
@@ -24,7 +25,7 @@ export async function createEssayAction(
   const id = await createEssay(session.user.id, { title, body });
   revalidatePath("/app/present");
   revalidatePath("/app/present/essays");
-  redirect(`/app/present/essays/${id}`);
+  return { createdId: id };
 }
 
 export async function updateEssayAction(

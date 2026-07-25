@@ -1,6 +1,6 @@
 import { ArchiveItemList } from "@/components/archive/archive-item-list";
-import { ARCHIVE_TYPE_ESSAY_SEDIMENT } from "@/db/schema";
 import { runEssayArchiveCatchUp } from "@/lib/archive-catchup";
+import { getGallerySection } from "@/lib/gallery-sections";
 import { requireSession } from "@/lib/session";
 import { listArchiveItems } from "@/services/archive";
 
@@ -8,15 +8,16 @@ import { listArchiveItems } from "@/services/archive";
 export default async function GalleryEssaySedimentPage() {
   const session = await requireSession();
   await runEssayArchiveCatchUp(session.user.id);
+  const section = getGallerySection("essay-sediment")!;
   const items = await listArchiveItems(session.user.id, {
-    type: ARCHIVE_TYPE_ESSAY_SEDIMENT,
+    type: section.filterType!,
   });
 
   return (
     <ArchiveItemList
       items={items}
-      emptyHint="还没有随笔沉淀。去流思笺写一条并归档，或等待自动沉淀。"
-      detailBase="/app/past/gallery"
+      emptyHint={section.emptyHint}
+      sectionId="essay-sediment"
       showTypeChip={false}
     />
   );

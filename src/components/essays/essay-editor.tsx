@@ -20,6 +20,8 @@ type EssayEditorProps =
       essayId: string;
       initialTitle: string;
       initialBody: string;
+      /** 刚从「创建并保存」跳转过来 */
+      justCreated?: boolean;
     };
 
 const initialState: EssayActionState = {};
@@ -41,7 +43,9 @@ export function EssayEditor(props: EssayEditorProps) {
   const [title, setTitle] = useState(isEdit ? props.initialTitle : "");
   const [body, setBody] = useState(isEdit ? props.initialBody : "");
   const [dirty, setDirty] = useState(false);
-  const [savedFlash, setSavedFlash] = useState(false);
+  const [savedFlash, setSavedFlash] = useState(
+    () => isEdit && Boolean(props.justCreated),
+  );
   const [wasPending, setWasPending] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -50,19 +54,32 @@ export function EssayEditor(props: EssayEditorProps) {
   const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (props.mode !== "edit") return;
+    emitEssayDirty(false);
+    if (props.justCreated) {
+      router.replace(`/app/present/essays/${props.essayId}`, { scroll: false });
+    }
+  }, [props, router]);
+
+  useEffect(() => {
     if (pending) {
       setWasPending(true);
       return;
     }
-    if (wasPending) {
-      if (!state.error) {
-        setDirty(false);
-        emitEssayDirty(false);
-        if (isEdit) setSavedFlash(true);
-      }
-      setWasPending(false);
+    if (!wasPending) return;
+    setWasPending(false);
+    if (state.error) return;
+
+    setDirty(false);
+    emitEssayDirty(false);
+
+    if (!isEdit && state.createdId) {
+      router.push(`/app/present/essays/${state.createdId}?saved=1`);
+      router.refresh();
+      return;
     }
-  }, [pending, wasPending, state.error, isEdit]);
+    if (isEdit) setSavedFlash(true);
+  }, [pending, wasPending, state.error, state.createdId, isEdit, router]);
 
   useEffect(() => {
     if (!dirty) return;
