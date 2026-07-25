@@ -1,10 +1,16 @@
 import { relations } from "drizzle-orm";
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 /**
- * Better Auth core tables (Phase 1).
- * Password hash lives on `account.password` (scrypt via Better Auth).
- * Theme / profile extensions land in Phase 2.
+ * Better Auth + domain schema.
+ * Phase 1–2: user/session/account/verification (+ theme/bio).
+ * Phase 3: essay (流思笺); archived_at reserved for Phase 4.
  */
 
 export const user = pgTable("user", {
@@ -61,9 +67,31 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/** Phase 3: 流思笺（流动中随笔） */
+export const essay = pgTable(
+  "essay",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    body: text("body").notNull().default(""),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    /** NULL = 流动中；Phase 4 归档时写入 */
+    archivedAt: timestamp("archived_at"),
+  },
+  (t) => [
+    index("essay_user_archived_idx").on(t.userId, t.archivedAt),
+    index("essay_user_updated_idx").on(t.userId, t.updatedAt),
+  ],
+);
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  essays: many(essay),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -76,6 +104,13 @@ export const sessionRelations = relations(session, ({ one }) => ({
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
+    references: [user.id],
+  }),
+}));
+
+export const essayRelations = relations(essay, ({ one }) => ({
+  user: one(user, {
+    fields: [essay.userId],
     references: [user.id],
   }),
 }));

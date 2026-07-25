@@ -1,0 +1,64 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+type GuardedBackProps = {
+  href: string;
+  label?: string;
+};
+
+/**
+ * 顶栏返回：有未保存更改时用主题小窗确认。
+ * 与 EssayEditor 的 dirty 同步靠 window 自定义事件。
+ */
+export function GuardedBackLink({ href, label = "返回" }: GuardedBackProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    const onDirty = (e: Event) => {
+      const detail = (e as CustomEvent<{ dirty: boolean }>).detail;
+      if (typeof detail?.dirty === "boolean") setDirty(detail.dirty);
+    };
+    window.addEventListener("owncosmos:essay-dirty", onDirty);
+    return () => window.removeEventListener("owncosmos:essay-dirty", onDirty);
+  }, []);
+
+  function attempt() {
+    if (dirty) {
+      setOpen(true);
+      return;
+    }
+    router.push(href);
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={attempt}
+        className="mb-3 inline-flex items-center gap-1 rounded border border-[var(--line)] px-2.5 py-1 text-xs tracking-[0.06em] text-[var(--mist)] transition hover:border-[var(--amber)] hover:text-[var(--amber)]"
+      >
+        ← {label}
+      </button>
+      <ConfirmDialog
+        open={open}
+        title="离开编辑？"
+        message="有未保存的更改，离开后将丢失。确定返回吗？"
+        confirmLabel="离开"
+        cancelLabel="继续编辑"
+        onCancel={() => setOpen(false)}
+        onConfirm={() => {
+          setOpen(false);
+          window.dispatchEvent(
+            new CustomEvent("owncosmos:essay-dirty", { detail: { dirty: false } }),
+          );
+          router.push(href);
+        }}
+      />
+    </>
+  );
+}

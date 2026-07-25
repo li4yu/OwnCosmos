@@ -64,7 +64,7 @@ export function AuthModal({ open, mode, onModeChange, onClose }: AuthModalProps)
             <button
               type="button"
               onClick={onClose}
-              className="rounded border border-[var(--line)] px-2 py-1 font-mono text-xs text-[var(--mist)] hover:border-[var(--amber)] hover:text-[var(--amber)]"
+              className="ui-btn-ghost ui-btn-sm"
               aria-label="关闭窗口"
             >
               关闭
@@ -76,7 +76,7 @@ export function AuthModal({ open, mode, onModeChange, onClose }: AuthModalProps)
           <button
             type="button"
             onClick={() => onModeChange("login")}
-            className={`rounded-md py-1.5 font-mono text-xs tracking-widest transition ${
+            className={`rounded-md py-1.5 text-sm tracking-[0.08em] transition ${
               mode === "login"
                 ? "bg-[var(--amber)] text-[var(--on-amber)]"
                 : "text-[var(--mist)] hover:text-[var(--paper)]"
@@ -87,7 +87,7 @@ export function AuthModal({ open, mode, onModeChange, onClose }: AuthModalProps)
           <button
             type="button"
             onClick={() => onModeChange("register")}
-            className={`rounded-md py-1.5 font-mono text-xs tracking-widest transition ${
+            className={`rounded-md py-1.5 text-sm tracking-[0.08em] transition ${
               mode === "register"
                 ? "bg-[var(--amber)] text-[var(--on-amber)]"
                 : "text-[var(--mist)] hover:text-[var(--paper)]"
@@ -163,14 +163,14 @@ export function AuthEntry({ initialMode = null }: AuthEntryProps) {
       <button
         type="button"
         onClick={() => openMode("login")}
-        className="rounded border border-[var(--line)] px-3 py-1.5 font-mono text-xs tracking-widest text-[var(--paper)] hover:border-[var(--amber)] hover:text-[var(--amber)]"
+        className="ui-btn-ghost"
       >
         登录
       </button>
       <button
         type="button"
         onClick={() => openMode("register")}
-        className="auth-submit !w-auto px-3 py-1.5 text-xs"
+        className="ui-btn-primary !w-auto px-3 py-1.5 text-xs"
       >
         注册
       </button>

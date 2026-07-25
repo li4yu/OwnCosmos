@@ -56,7 +56,7 @@ export function AppearanceForm({ initialTheme }: AppearanceFormProps) {
             type="button"
             disabled={pending}
             onClick={() => selectTheme(opt.id)}
-            className={`rounded-md border px-3 py-3 font-mono text-xs tracking-widest transition disabled:opacity-50 ${
+            className={`rounded-md border px-3 py-3 text-sm tracking-[0.08em] transition disabled:opacity-50 ${
               theme === opt.id
                 ? "border-[var(--amber)] bg-[var(--amber)] text-[var(--on-amber)]"
                 : "border-[var(--line)] text-[var(--mist)] hover:border-[var(--amber)]"

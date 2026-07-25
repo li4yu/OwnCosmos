@@ -25,6 +25,8 @@
   --on-amber: #070b14;
   --overlay: rgba(4, 8, 16, 0.62);
   --dialog-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  --danger: #b54a4a;
+  --on-danger: #f5e8e6;
 }
 
 /* 时光卡其 */
@@ -49,6 +51,8 @@
   --on-amber: #f4ecdc;
   --overlay: rgba(62, 52, 36, 0.4);
   --dialog-shadow: 0 24px 56px rgba(62, 52, 36, 0.28);
+  --danger: #8f3d3d;
+  --on-danger: #f4ecdc;
 }
 
 body {
@@ -58,12 +62,24 @@ body {
   transition: background 0.45s ease, color 0.35s ease;
 }
 
+/* 按钮继承正文衬线，避免浏览器默认无衬线 */
+button,
+.ui-btn,
+.ui-tooltip {
+  font-family: inherit;
+}
+
+.ui-tooltip {
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+}
+
 @layer components {
   .auth-field {
     @apply w-full rounded-md px-3 py-2.5 text-sm outline-none transition;
     color: var(--field-fg);
     background: var(--field-bg);
     border: 1px solid var(--field-border);
+    font-family: inherit;
   }
 
   .auth-field::placeholder {
@@ -75,10 +91,51 @@ body {
     box-shadow: 0 0 0 3px var(--amber-soft);
   }
 
-  .auth-submit {
-    @apply w-full rounded-md px-4 py-2.5 font-mono text-sm tracking-widest transition hover:opacity-90 disabled:opacity-50;
+  .auth-submit,
+  .ui-btn-primary {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm tracking-[0.12em] transition hover:opacity-90 disabled:opacity-50;
+    font-family: inherit;
     background: var(--amber);
     color: var(--on-amber);
+  }
+
+  .auth-submit {
+    @apply w-full;
+  }
+
+  .ui-btn-ghost {
+    @apply inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm tracking-[0.08em] transition disabled:opacity-50;
+    font-family: inherit;
+    border-color: var(--line);
+    color: var(--mist);
+  }
+
+  .ui-btn-ghost:hover {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .ui-btn-danger {
+    @apply inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm tracking-[0.08em] transition disabled:opacity-50;
+    font-family: inherit;
+    border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+    color: var(--danger);
+  }
+
+  .ui-btn-danger:hover {
+    border-color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 10%, transparent);
+  }
+
+  .ui-btn-danger-solid {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm tracking-[0.08em] transition disabled:opacity-50 hover:opacity-90;
+    font-family: inherit;
+    background: var(--danger);
+    color: var(--on-danger);
+  }
+
+  .ui-btn-sm {
+    @apply px-2.5 py-1 text-xs tracking-[0.06em];
   }
 }
 

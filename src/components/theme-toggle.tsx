@@ -41,7 +41,7 @@ export function ThemeToggle({ persistToUser = false }: ThemeToggleProps) {
     return (
       <button
         type="button"
-        className="rounded border border-[var(--line)] px-3 py-1.5 font-mono text-xs tracking-widest text-[var(--mist)]"
+        className="ui-btn-ghost ui-btn-sm opacity-60"
         disabled
       >
         …
@@ -54,7 +54,7 @@ export function ThemeToggle({ persistToUser = false }: ThemeToggleProps) {
       type="button"
       onClick={toggle}
       disabled={saving}
-      className="rounded border border-[var(--line)] bg-[var(--field-bg)] px-3 py-1.5 font-mono text-xs tracking-widest text-[var(--paper)] transition hover:border-[var(--amber)] hover:text-[var(--amber)] disabled:opacity-50"
+      className="ui-btn-ghost bg-[var(--field-bg)] text-[var(--paper)]"
       aria-label={theme === "khaki" ? "切换到深空夜色" : "切换到时光卡其"}
     >
       {saving ? "同步中…" : theme === "khaki" ? "深空夜色" : "时光卡其"}

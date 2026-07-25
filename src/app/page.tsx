@@ -24,7 +24,7 @@ export default async function Home() {
             {session ? (
               <Link
                 href="/app"
-                className="rounded border border-[var(--line)] px-3 py-1.5 font-mono text-xs tracking-widest text-[var(--paper)] hover:border-[var(--amber)] hover:text-[var(--amber)]"
+                className="ui-btn-ghost"
               >
                 进入
               </Link>

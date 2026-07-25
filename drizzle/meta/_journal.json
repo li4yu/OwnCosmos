@@ -15,6 +15,13 @@
       "when": 1784978344590,
       "tag": "0001_user_profile_theme",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784979694685,
+      "tag": "0002_essay_flow",
+      "breakpoints": true
     }
   ]
 }

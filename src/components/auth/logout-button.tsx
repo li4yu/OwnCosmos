@@ -24,7 +24,7 @@ export function LogoutButton() {
       type="button"
       onClick={onLogout}
       disabled={pending}
-      className="rounded border border-[var(--line)] px-3 py-1.5 font-mono text-xs tracking-widest text-[var(--paper)] transition hover:border-[var(--amber)] hover:text-[var(--amber)] disabled:opacity-50"
+      className="ui-btn-ghost disabled:opacity-50"
     >
       {pending ? "退出中…" : "退出登录"}
     </button>

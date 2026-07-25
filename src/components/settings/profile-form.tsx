@@ -147,7 +147,7 @@ export function ProfileForm({
             </div>
           )}
           <div className="flex flex-col gap-2">
-            <label className="cursor-pointer rounded border border-[var(--line)] px-3 py-1.5 font-mono text-xs tracking-widest text-[var(--paper)] hover:border-[var(--amber)] hover:text-[var(--amber)]">
+            <label className="ui-btn-ghost ui-btn-sm cursor-pointer">
               选择图片
               <input
                 ref={fileRef}
@@ -160,7 +160,7 @@ export function ProfileForm({
             {(shown || pendingFile) && (
               <button
                 type="button"
-                className="text-left font-mono text-xs text-[var(--mist)] hover:text-[var(--amber)]"
+                className="text-left text-sm text-[var(--mist)] hover:text-[var(--amber)]"
                 onClick={() => {
                   if (preview) URL.revokeObjectURL(preview);
                   setPreview(null);
@@ -206,14 +206,14 @@ export function ProfileForm({
             <button
               type="button"
               onClick={() => router.push("/app")}
-              className="auth-submit !w-auto px-4 py-2 text-xs"
+              className="ui-btn-primary !w-auto px-4 py-2 text-xs"
             >
               返回首页
             </button>
             <button
               type="button"
               onClick={() => setMessage(null)}
-              className="rounded border border-[var(--line)] px-4 py-2 font-mono text-xs tracking-widest text-[var(--paper)] hover:border-[var(--amber)]"
+              className="ui-btn-ghost"
             >
               继续编辑
             </button>
