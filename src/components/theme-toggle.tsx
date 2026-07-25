@@ -41,7 +41,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="rounded border border-[var(--line)] bg-[var(--ink)]/40 px-3 py-1.5 font-mono text-xs tracking-widest text-[var(--paper)] transition hover:border-[var(--amber)] hover:text-[var(--amber)]"
+      className="rounded border border-[var(--line)] bg-[var(--field-bg)] px-3 py-1.5 font-mono text-xs tracking-widest text-[var(--paper)] transition hover:border-[var(--amber)] hover:text-[var(--amber)]"
       aria-label={theme === "khaki" ? "切换到深空夜色" : "切换到时光卡其"}
     >
       {theme === "khaki" ? "深空夜色" : "时光卡其"}

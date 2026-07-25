@@ -17,6 +17,14 @@
   --panel: rgba(16, 24, 42, 0.92);
   --background: var(--void);
   --foreground: var(--paper);
+  --field-bg: rgba(7, 11, 20, 0.72);
+  --field-fg: #e6e0d4;
+  --field-placeholder: rgba(154, 168, 192, 0.75);
+  --field-border: rgba(230, 224, 212, 0.16);
+  --field-focus: #d4b072;
+  --on-amber: #070b14;
+  --overlay: rgba(4, 8, 16, 0.62);
+  --dialog-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
 /* 时光卡其 */
@@ -30,9 +38,17 @@
   --teal: #5c6a52;
   --line: rgba(42, 35, 24, 0.16);
   --glow: rgba(110, 78, 40, 0.22);
-  --panel: rgba(232, 220, 190, 0.94);
+  --panel: rgba(236, 226, 200, 0.96);
   --background: var(--void);
   --foreground: var(--paper);
+  --field-bg: #efe6d2;
+  --field-fg: #2a2318;
+  --field-placeholder: rgba(90, 80, 64, 0.72);
+  --field-border: rgba(42, 35, 24, 0.22);
+  --field-focus: #6e4e28;
+  --on-amber: #f4ecdc;
+  --overlay: rgba(62, 52, 36, 0.4);
+  --dialog-shadow: 0 24px 56px rgba(62, 52, 36, 0.28);
 }
 
 body {
@@ -42,8 +58,39 @@ body {
   transition: background 0.45s ease, color 0.35s ease;
 }
 
+@layer components {
+  .auth-field {
+    @apply w-full rounded-md px-3 py-2.5 text-sm outline-none transition;
+    color: var(--field-fg);
+    background: var(--field-bg);
+    border: 1px solid var(--field-border);
+  }
+
+  .auth-field::placeholder {
+    color: var(--field-placeholder);
+  }
+
+  .auth-field:focus {
+    border-color: var(--field-focus);
+    box-shadow: 0 0 0 3px var(--amber-soft);
+  }
+
+  .auth-submit {
+    @apply w-full rounded-md px-4 py-2.5 font-mono text-sm tracking-widest transition hover:opacity-90 disabled:opacity-50;
+    background: var(--amber);
+    color: var(--on-amber);
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .atmosphere-wash {
+    background:
+      radial-gradient(ellipse 80% 55% at 50% -10%, var(--glow), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, var(--amber-soft), transparent 50%),
+      var(--background);
   }
 }

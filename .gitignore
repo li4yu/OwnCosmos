@@ -63,3 +63,6 @@ test-results/
 
 # Cursor local plans (skills are tracked)
 .cursor/plans/
+
+# Local tooling downloads (e.g. Postgres installer)
+.tools/
