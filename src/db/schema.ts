@@ -13,6 +13,7 @@ import {
  * Phase 1–2: user/session/account/verification (+ theme/bio).
  * Phase 3: essay (流思笺).
  * Phase 4: archive_item (拾忆馆藏); essay.archived_at 写入。
+ * Phase 6: plan (来日途·规划，V1 仅单次事件).
  */
 
 export const user = pgTable("user", {
@@ -132,11 +133,44 @@ export const archiveItem = pgTable(
   ],
 );
 
+/** Phase 6: 来日途 · 规划（V1 仅 kind=once） */
+export const PLAN_KIND_ONCE = "once" as const;
+export const PLAN_STATUS_OPEN = "open" as const;
+export const PLAN_STATUS_DONE = "done" as const;
+
+export const plan = pgTable(
+  "plan",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    /** once | vision | stage | cycle | capsule — 本阶段仅 once */
+    kind: text("kind").notNull().default(PLAN_KIND_ONCE),
+    title: text("title").notNull(),
+    body: text("body").notNull().default(""),
+    /** 截止日期 */
+    dueAt: timestamp("due_at").notNull(),
+    /** open | done */
+    status: text("status").notNull().default(PLAN_STATUS_OPEN),
+    /** NULL = 仍在来日途；P7 归档馆藏时写入 */
+    archivedAt: timestamp("archived_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("plan_user_archived_idx").on(t.userId, t.archivedAt),
+    index("plan_user_due_idx").on(t.userId, t.dueAt),
+    index("plan_user_status_idx").on(t.userId, t.status),
+  ],
+);
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   essays: many(essay),
   archiveItems: many(archiveItem),
+  plans: many(plan),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -169,5 +203,12 @@ export const archiveItemRelations = relations(archiveItem, ({ one }) => ({
   sourceEssay: one(essay, {
     fields: [archiveItem.sourceEssayId],
     references: [essay.id],
+  }),
+}));
+
+export const planRelations = relations(plan, ({ one }) => ({
+  user: one(user, {
+    fields: [plan.userId],
+    references: [user.id],
   }),
 }));

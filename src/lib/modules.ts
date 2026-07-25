@@ -100,8 +100,8 @@ export const APP_MODULES: readonly AppModuleDef[] = [
         id: "plans",
         href: "/app/future/plans",
         name: "规划",
-        tip: "长期愿景、阶段任务与单次事件等规划条目",
-        ready: false,
+        tip: "单次事件：标题、描述与截止日期；可标记完成",
+        ready: true,
       },
       {
         id: "cycles",

@@ -36,6 +36,13 @@
       "when": 1784983109632,
       "tag": "0004_user_essay_idle_hours",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784986514436,
+      "tag": "0005_hesitant_inertia",
+      "breakpoints": true
     }
   ]
 }
