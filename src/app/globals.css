@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 深空夜色 */
+:root,
+[data-theme="night"] {
+  --void: #070b14;
+  --ink: #10182a;
+  --mist: #9aa8c0;
+  --paper: #e6e0d4;
+  --amber: #d4b072;
+  --amber-soft: rgba(212, 176, 114, 0.35);
+  --teal: #6a9ea3;
+  --line: rgba(230, 224, 212, 0.12);
+  --glow: rgba(212, 176, 114, 0.18);
+  --panel: rgba(16, 24, 42, 0.92);
+  --background: var(--void);
+  --foreground: var(--paper);
+}
+
+/* 时光卡其 */
+[data-theme="khaki"] {
+  --void: #c4b28a;
+  --ink: #b39d72;
+  --mist: #5a5040;
+  --paper: #2a2318;
+  --amber: #6e4e28;
+  --amber-soft: rgba(110, 78, 40, 0.35);
+  --teal: #5c6a52;
+  --line: rgba(42, 35, 24, 0.16);
+  --glow: rgba(110, 78, 40, 0.22);
+  --panel: rgba(232, 220, 190, 0.94);
+  --background: var(--void);
+  --foreground: var(--paper);
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  transition: background 0.45s ease, color 0.35s ease;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
