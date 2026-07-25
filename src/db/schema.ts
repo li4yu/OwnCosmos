@@ -13,6 +13,10 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  /** Phase 2: 深空夜色 night / 时光卡其 khaki */
+  theme: text("theme").notNull().default("night"),
+  /** Phase 2: 简介 / 签名 */
+  bio: text("bio"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

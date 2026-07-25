@@ -32,6 +32,7 @@ export function RegisterForm({ nextPath = "/app", onSwitchLogin }: RegisterFormP
         email: email.trim(),
         password,
         name: displayName,
+        theme: "night",
       });
       if (signUpError) {
         setError(signUpError.message || "注册失败，请稍后重试");

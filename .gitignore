@@ -66,3 +66,7 @@ test-results/
 
 # Local tooling downloads (e.g. Postgres installer)
 .tools/
+
+# User uploads (avatars etc.; keep folder via .gitkeep)
+/public/uploads/**
+!/public/uploads/**/.gitkeep

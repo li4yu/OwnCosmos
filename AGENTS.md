@@ -31,6 +31,12 @@
 
 确认话术区分：**本阶段新建** / **改动旧表** / **跨阶段关联与预留**。
 
+## 壳层约定（登录后）
+
+- **主题切换只放在「设置 → 外观」**，不在各业务小模块顶栏重复放置。
+- 未登录访客页（首页 / 登录小窗）可保留临时主题切换（仅 localStorage）。
+- 右上角用户头像菜单：编辑资料、设置、其他功能（后续）、退出登录。
+
 ## Git
 
 When finishing a Phase/feature, starting the next feature branch, or committing/merging: follow project skill [.cursor/skills/owncosmos-git-workflow/SKILL.md](.cursor/skills/owncosmos-git-workflow/SKILL.md).

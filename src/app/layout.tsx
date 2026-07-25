@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, JetBrains_Mono, Noto_Serif_SC } from "next/font/google";
+import { ThemeSyncFromSession } from "@/components/theme-toggle";
 import "./globals.css";
 
 const notoSerif = Noto_Serif_SC({
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body
         className={`${notoSerif.variable} ${cormorant.variable} ${jetbrains.variable} min-h-screen antialiased`}
       >
+        <ThemeSyncFromSession />
         {children}
       </body>
     </html>

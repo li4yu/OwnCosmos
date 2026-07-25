@@ -1,28 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { authClient } from "@/lib/auth-client";
+import { applyTheme, isThemeId, readStoredTheme, type ThemeId } from "@/lib/theme";
 
-export type ThemeId = "night" | "khaki";
+type ThemeToggleProps = {
+  /** When set, toggle also persists to the user record. */
+  persistToUser?: boolean;
+};
 
-const STORAGE_KEY = "owncosmos-theme";
-
-export function ThemeToggle() {
+export function ThemeToggle({ persistToUser = false }: ThemeToggleProps) {
   const [theme, setTheme] = useState<ThemeId>("night");
   const [ready, setReady] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeId | null;
-    const next = stored === "khaki" ? "khaki" : "night";
-    document.documentElement.setAttribute("data-theme", next);
+    const next = readStoredTheme();
+    applyTheme(next);
     setTheme(next);
     setReady(true);
   }, []);
 
-  function toggle() {
+  async function toggle() {
     const next: ThemeId = theme === "night" ? "khaki" : "night";
-    document.documentElement.setAttribute("data-theme", next);
-    window.localStorage.setItem(STORAGE_KEY, next);
+    applyTheme(next);
     setTheme(next);
+
+    if (!persistToUser) return;
+    setSaving(true);
+    try {
+      await authClient.updateUser({ theme: next });
+    } catch {
+      // Keep local theme; user can retry from settings.
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!ready) {
@@ -41,10 +53,26 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="rounded border border-[var(--line)] bg-[var(--field-bg)] px-3 py-1.5 font-mono text-xs tracking-widest text-[var(--paper)] transition hover:border-[var(--amber)] hover:text-[var(--amber)]"
+      disabled={saving}
+      className="rounded border border-[var(--line)] bg-[var(--field-bg)] px-3 py-1.5 font-mono text-xs tracking-widest text-[var(--paper)] transition hover:border-[var(--amber)] hover:text-[var(--amber)] disabled:opacity-50"
       aria-label={theme === "khaki" ? "切换到深空夜色" : "切换到时光卡其"}
     >
-      {theme === "khaki" ? "深空夜色" : "时光卡其"}
+      {saving ? "同步中…" : theme === "khaki" ? "深空夜色" : "时光卡其"}
     </button>
   );
+}
+
+/** Apply DB theme for logged-in users (overrides localStorage once). */
+export function ThemeSyncFromSession() {
+  const { data: session, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    if (isPending || !session?.user) return;
+    const raw = (session.user as { theme?: string }).theme;
+    if (isThemeId(raw)) {
+      applyTheme(raw);
+    }
+  }, [isPending, session]);
+
+  return null;
 }

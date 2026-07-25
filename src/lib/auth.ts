@@ -21,7 +21,31 @@ export const auth = betterAuth({
     minPasswordLength: 8,
     autoSignIn: true,
   },
+  user: {
+    additionalFields: {
+      theme: {
+        type: "string",
+        required: true,
+        defaultValue: "night",
+        input: true,
+      },
+      bio: {
+        type: "string",
+        required: false,
+        defaultValue: "",
+        input: true,
+      },
+    },
+    changeEmail: {
+      enabled: false,
+    },
+  },
   plugins: [nextCookies()],
 });
 
 export type Session = typeof auth.$Infer.Session;
+export type ThemeId = "night" | "khaki";
+
+export function isThemeId(value: unknown): value is ThemeId {
+  return value === "night" || value === "khaki";
+}
