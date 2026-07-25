@@ -7,7 +7,12 @@ import {
   getArchiveItem,
   sourceModuleLabel,
 } from "@/services/archive";
-import { ARCHIVE_TYPE_ESSAY_SEDIMENT } from "@/db/schema";
+import {
+  ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_FOCUS_RECORD,
+} from "@/db/schema";
+import { formatFocusDurationMs } from "@/lib/focus-duration";
+import { getFocusSession } from "@/services/focus";
 
 function formatWhen(d: Date) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -34,6 +39,11 @@ export async function ArchiveDetailView({
 }: ArchiveDetailProps) {
   const item = await getArchiveItem(userId, itemId);
   if (!item) notFound();
+
+  const focusSession =
+    item.type === ARCHIVE_TYPE_FOCUS_RECORD && item.sourceFocusSessionId
+      ? await getFocusSession(userId, item.sourceFocusSessionId)
+      : null;
 
   return (
     <main className="flex flex-col gap-6">
@@ -67,17 +77,42 @@ export async function ArchiveDetailView({
             </dt>
             <dd className="mt-0.5">{sourceModuleLabel(item.sourceModule)}</dd>
           </div>
-          <div>
-            <dt className="font-mono text-[10px] tracking-wide opacity-70">
-              停留时长
-            </dt>
-            <dd className="mt-0.5">
-              {formatDwell(item.sourceCreatedAt, item.archivedAt)}
-              <span className="ml-2 font-mono text-[10px] opacity-60">
-                （创建 → 归档）
-              </span>
-            </dd>
-          </div>
+          {item.type === ARCHIVE_TYPE_FOCUS_RECORD ? (
+            <>
+              <div>
+                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                  专注时长
+                </dt>
+                <dd className="mt-0.5">
+                  {formatFocusDurationMs(focusSession?.accumulatedMs ?? 0)}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                  开始时间
+                </dt>
+                <dd className="mt-0.5">{formatWhen(item.sourceCreatedAt)}</dd>
+              </div>
+              <div>
+                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                  结束时间
+                </dt>
+                <dd className="mt-0.5">{formatWhen(item.sourceUpdatedAt)}</dd>
+              </div>
+            </>
+          ) : (
+            <div>
+              <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                停留时长
+              </dt>
+              <dd className="mt-0.5">
+                {formatDwell(item.sourceCreatedAt, item.archivedAt)}
+                <span className="ml-2 font-mono text-[10px] opacity-60">
+                  （创建 → 归档）
+                </span>
+              </dd>
+            </div>
+          )}
           {item.type === ARCHIVE_TYPE_ESSAY_SEDIMENT ? (
             <>
               <div>

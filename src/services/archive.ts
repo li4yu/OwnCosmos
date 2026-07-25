@@ -3,6 +3,7 @@ import { and, desc, eq, isNull, lt } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   ARCHIVE_REASON_AUTO_48H,
+  ARCHIVE_REASON_FOCUS_COMPLETE,
   ARCHIVE_REASON_MANUAL,
   ARCHIVE_REASON_PLAN_COMPLETE,
   ARCHIVE_REASON_PLAN_OVERDUE,
@@ -174,6 +175,8 @@ export function archiveReasonLabel(reason: string) {
       return "临期完成归档";
     case ARCHIVE_REASON_PLAN_OVERDUE:
       return "逾期自动归档";
+    case ARCHIVE_REASON_FOCUS_COMPLETE:
+      return "专注结束凝录";
     default:
       return reason;
   }

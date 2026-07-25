@@ -27,6 +27,9 @@
   --dialog-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
   --danger: #b54a4a;
   --on-danger: #f5e8e6;
+  --font-noto-serif: "Noto Serif SC";
+  --font-cormorant: "Cormorant Garamond";
+  --font-mono: "JetBrains Mono";
 }
 
 /* 时光卡其 */
@@ -53,6 +56,9 @@
   --dialog-shadow: 0 24px 56px rgba(62, 52, 36, 0.28);
   --danger: #8f3d3d;
   --on-danger: #f4ecdc;
+  --font-noto-serif: "Noto Serif SC";
+  --font-cormorant: "Cormorant Garamond";
+  --font-mono: "JetBrains Mono";
 }
 
 body {
@@ -149,5 +155,797 @@ button,
       radial-gradient(ellipse 80% 55% at 50% -10%, var(--glow), transparent 55%),
       radial-gradient(ellipse 50% 40% at 100% 100%, var(--amber-soft), transparent 50%),
       var(--background);
+  }
+}
+
+/* —— 凝时 · 顺钟全屏 · 星宿 —— */
+.focus-chamber {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100dvh;
+  width: 100vw;
+  border: none;
+  border-radius: 0;
+  padding: max(1rem, env(safe-area-inset-top)) 1.1rem
+    max(1.25rem, env(safe-area-inset-bottom));
+  background: var(--void);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  --mx: 0;
+  --my: 0;
+  --gx: 50%;
+  --gy: 50%;
+  --tx: 50%;
+  --ty: 50%;
+  cursor: crosshair;
+}
+.focus-chamber a,
+.focus-chamber button,
+.focus-chamber textarea,
+.focus-chamber label {
+  cursor: pointer;
+}
+.focus-chamber.is-entered {
+  opacity: 1;
+}
+
+.focus-chamber__nebula {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 38%, var(--glow), transparent 68%),
+    radial-gradient(ellipse 40% 35% at 12% 70%, var(--amber-soft), transparent 60%),
+    radial-gradient(
+      ellipse 45% 40% at 90% 20%,
+      color-mix(in srgb, var(--teal) 32%, transparent),
+      transparent 65%
+    ),
+    var(--ink);
+  animation: focus-nebula-drift 36s ease-in-out infinite alternate;
+}
+.focus-chamber__parallax {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.focus-chamber__parallax--far {
+  transform: translate3d(
+    calc(var(--mx) * 22px),
+    calc(var(--my) * 14px),
+    0
+  );
+}
+.focus-chamber__parallax--mid {
+  transform: translate3d(
+    calc(var(--mx) * 12px),
+    calc(var(--my) * 8px),
+    0
+  );
+}
+.focus-chamber__gaze {
+  position: absolute;
+  z-index: 1;
+  width: min(42vw, 280px);
+  aspect-ratio: 1;
+  left: var(--gx);
+  top: var(--gy);
+  translate: -50% -50%;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--amber) 22%, transparent),
+    transparent 68%
+  );
+  opacity: 0.55;
+  transition: opacity 0.35s ease;
+}
+.focus-chamber.is-idle .focus-chamber__gaze {
+  opacity: 0.35;
+}
+.focus-chamber__tap {
+  position: absolute;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  left: var(--tx);
+  top: var(--ty);
+  translate: -50% -50%;
+  pointer-events: none;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, transparent);
+  opacity: 0;
+  transform: scale(0.4);
+}
+.focus-chamber.is-tap .focus-chamber__tap {
+  animation: focus-tap-ring 0.52s ease-out forwards;
+}
+.focus-chamber--running .focus-chamber__nebula {
+  animation-duration: 20s;
+}
+.focus-chamber--paused .focus-chamber__nebula {
+  filter: saturate(0.7) brightness(0.9);
+  animation-play-state: paused;
+}
+
+.focus-chamber__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 48%, transparent 30%, var(--void) 92%);
+  opacity: 0.55;
+}
+
+.focus-chamber__stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.focus-chamber__star {
+  position: absolute;
+  border-radius: 9999px;
+  background: var(--paper);
+  opacity: 0.2;
+  animation: focus-star-twinkle ease-in-out infinite;
+}
+.focus-chamber--paused .focus-chamber__star {
+  animation-play-state: paused;
+  opacity: 0.1;
+}
+
+.focus-chamber__chrome,
+.focus-sky,
+.focus-dock,
+.focus-chamber__controls,
+.focus-chamber__msg {
+  position: relative;
+  z-index: 2;
+}
+
+.focus-chamber__chrome {
+  width: 100%;
+  max-width: 52rem;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 0.5rem;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.focus-chamber.is-engaged .focus-chamber__chrome {
+  opacity: 0.72;
+}
+.focus-chamber__brand {
+  text-align: center;
+}
+.focus-chamber__eyebrow {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-style: italic;
+  font-size: clamp(0.8rem, 2vw, 0.98rem);
+  letter-spacing: 0.32em;
+  color: var(--teal);
+}
+.focus-chamber__title {
+  margin-top: 0.2rem;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-weight: 600;
+  font-size: clamp(1.65rem, 5.5vw, 2.6rem);
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+  line-height: 1.05;
+  color: var(--paper);
+  transition: font-size 0.7s ease, letter-spacing 0.7s ease;
+}
+.focus-chamber.is-engaged .focus-chamber__title {
+  font-size: clamp(1.2rem, 3.5vw, 1.65rem);
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+}
+.focus-chamber__nav-link {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 0.92rem;
+  letter-spacing: 0.14em;
+  color: var(--mist);
+  padding-top: 0.4rem;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+.focus-chamber__nav-link:first-child {
+  justify-self: start;
+}
+.focus-chamber__nav-link:last-child {
+  justify-self: end;
+}
+.focus-chamber__nav-link:hover {
+  color: var(--amber);
+}
+
+/* 中央星野 */
+.focus-sky {
+  position: absolute;
+  inset: 12% 4% 18%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.focus-sky__parallax {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(
+    calc(var(--mx) * -14px),
+    calc(var(--my) * -10px),
+    0
+  );
+  will-change: transform;
+}
+.focus-sky__map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.16;
+  transform: scale(0.96);
+  transition: opacity 0.7s ease, transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.focus-sky__map.is-active {
+  opacity: 0.9;
+  transform: scale(1);
+}
+.focus-sky__map.is-active.is-living {
+  animation: focus-sky-float 14s ease-in-out infinite;
+}
+.focus-sky__map.is-shifting {
+  animation: focus-sky-shift 0.78s ease;
+}
+.focus-chamber--paused .focus-sky__map.is-active {
+  opacity: 0.48;
+  animation: none;
+}
+.focus-sky__line {
+  stroke: color-mix(in srgb, var(--amber) 55%, var(--teal));
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 3 8;
+  opacity: 0.8;
+  transition: stroke 0.6s ease;
+}
+.focus-sky__map.is-living .focus-sky__line {
+  animation: focus-line-flow 7s linear infinite;
+}
+.focus-sky__map--wing-0 .focus-sky__line {
+  stroke: color-mix(in srgb, var(--teal) 65%, var(--amber));
+}
+.focus-sky__map--wing-1 .focus-sky__line {
+  stroke: color-mix(in srgb, var(--paper) 35%, var(--teal));
+}
+.focus-sky__map--wing-2 .focus-sky__line {
+  stroke: color-mix(in srgb, var(--amber) 75%, var(--paper));
+}
+.focus-sky__map--wing-3 .focus-sky__line {
+  stroke: color-mix(in srgb, var(--amber) 40%, var(--teal));
+}
+.focus-sky__aura {
+  stroke: var(--amber);
+  stroke-width: 0.8;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.focus-sky__map.is-living .focus-sky__aura {
+  animation: focus-aura-pulse 3.6s ease-in-out infinite;
+}
+.focus-sky__node {
+  fill: var(--paper);
+  opacity: 0.75;
+}
+.focus-sky__map.is-living .focus-sky__node:not(.is-bright) {
+  animation: focus-node-twinkle 3.8s ease-in-out infinite;
+}
+.focus-sky__node.is-bright {
+  fill: var(--amber);
+  opacity: 1;
+  filter: drop-shadow(0 0 6px var(--amber-soft));
+}
+.focus-sky__map.is-living .focus-sky__node.is-bright {
+  animation: focus-bright-pulse 2.8s ease-in-out infinite;
+}
+.focus-sky__copy {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.9s ease 0.15s, transform 0.9s ease 0.15s;
+  max-width: 22rem;
+  padding-inline: 1rem;
+}
+.focus-sky__copy.is-shifting {
+  animation: focus-copy-in 0.75s ease;
+}
+.focus-chamber.is-engaged .focus-sky__copy {
+  opacity: 1;
+  transform: none;
+}
+.focus-chamber.is-idle .focus-sky__idle-hint {
+  opacity: 0.35;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  color: var(--mist);
+}
+.focus-chamber.is-idle .focus-sky__copy {
+  opacity: 1;
+  transform: none;
+}
+.focus-sky__palace {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-style: italic;
+  font-size: clamp(0.9rem, 2.2vw, 1.1rem);
+  letter-spacing: 0.28em;
+  color: var(--teal);
+}
+.focus-sky__xiu {
+  margin-top: 0.55rem;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-weight: 600;
+  font-size: clamp(3.2rem, 14vw, 6.5rem);
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  line-height: 1;
+  color: var(--paper);
+  text-shadow: 0 0 40px var(--glow);
+}
+.focus-sky__copy.is-living .focus-sky__xiu {
+  animation: focus-xiu-breathe 5s ease-in-out infinite;
+}
+.focus-sky__xiu span {
+  color: var(--amber);
+}
+.focus-sky__motto {
+  margin-top: 1.1rem;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: clamp(0.95rem, 2.4vw, 1.15rem);
+  line-height: 1.75;
+  letter-spacing: 0.12em;
+  color: var(--paper);
+}
+.focus-sky__copy.is-living .focus-sky__motto {
+  animation: focus-motto-glow 6s ease-in-out infinite;
+}
+.focus-sky__hint {
+  margin-top: 0.65rem;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-style: italic;
+  font-size: clamp(0.78rem, 1.8vw, 0.9rem);
+  letter-spacing: 0.14em;
+  color: var(--mist);
+}
+
+.focus-chamber__flare {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 45% 35% at 50% 45%,
+    var(--amber-soft),
+    transparent 70%
+  );
+  animation: focus-flare 0.78s ease forwards;
+}
+
+.focus-chamber--running .focus-chamber__stars {
+  animation: focus-stars-drift 48s linear infinite;
+}
+
+/* 时钟坞：居中 ↔ 左下 */
+.focus-dock {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  left: 50%;
+  top: 52%;
+  transform: translate(-50%, -50%);
+  width: min(86vw, 360px);
+  transition:
+    left 1s cubic-bezier(0.22, 1, 0.36, 1),
+    top 1s cubic-bezier(0.22, 1, 0.36, 1),
+    bottom 1s cubic-bezier(0.22, 1, 0.36, 1),
+    width 1s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.focus-chamber.is-engaged .focus-dock {
+  left: max(1rem, env(safe-area-inset-left));
+  top: auto;
+  bottom: max(1.35rem, env(safe-area-inset-bottom));
+  transform: none;
+  width: min(42vw, 158px);
+  gap: 0;
+  align-items: flex-start;
+}
+.focus-dock__start {
+  margin-top: 0.15rem;
+}
+
+.focus-dial {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+.focus-dial__halo {
+  position: absolute;
+  inset: 5%;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 50% 50%, var(--glow), transparent 68%);
+  opacity: 0.5;
+}
+.focus-dial__halo.is-breathe {
+  animation: focus-halo-breathe 5.5s ease-in-out infinite;
+}
+.focus-dial__halo.is-spin {
+  animation: focus-halo-spin 48s linear infinite;
+  opacity: 0.7;
+}
+.focus-chamber--paused .focus-dial__halo {
+  animation: none;
+  opacity: 0.28;
+}
+
+.focus-dial__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.focus-dial__track {
+  stroke: var(--line);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 7;
+}
+.focus-dial__track--inner {
+  stroke: color-mix(in srgb, var(--amber) 35%, transparent);
+  stroke-dasharray: 1 10;
+  stroke-width: 0.85;
+}
+.focus-dial__bead--amber {
+  fill: var(--amber);
+}
+.focus-dial__bead--teal {
+  fill: var(--teal);
+}
+.focus-dial__orbit-min {
+  transform-origin: 160px 160px;
+  animation: focus-orbit-min 60s linear infinite;
+}
+
+.focus-dial__core {
+  position: absolute;
+  inset: 20%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 48px var(--glow);
+  padding: 0.65rem;
+  transition: inset 0.8s ease, box-shadow 0.8s ease;
+}
+.focus-chamber.is-engaged .focus-dial__core {
+  inset: 16%;
+  box-shadow: 0 0 28px var(--glow);
+}
+.focus-dial__clock {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(2.4rem, 10vw, 3.8rem);
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+  color: var(--paper);
+  line-height: 1;
+  transition: font-size 0.9s ease;
+}
+.focus-chamber.is-engaged .focus-dial__clock {
+  font-size: clamp(1.05rem, 4.2vw, 1.45rem);
+  letter-spacing: 0.08em;
+}
+.focus-dial__phrase {
+  margin-top: 0.85rem;
+  max-width: 12rem;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  letter-spacing: 0.14em;
+  color: var(--mist);
+}
+
+.focus-chamber__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+.focus-chamber__controls--docked {
+  position: absolute;
+  z-index: 3;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
+  justify-content: flex-end;
+}
+
+.focus-btn {
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 0.92rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  color: var(--paper);
+  background: color-mix(in srgb, var(--panel) 65%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  padding: 0.72rem 1.5rem;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.focus-btn:hover:not(:disabled) {
+  border-color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+}
+.focus-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.focus-btn--primary {
+  color: var(--on-amber);
+  background: var(--amber);
+  border-color: transparent;
+  font-weight: 600;
+}
+.focus-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+  background: var(--amber);
+}
+.focus-btn--teal {
+  color: var(--teal);
+  border-color: color-mix(in srgb, var(--teal) 45%, transparent);
+}
+
+.focus-chamber__msg {
+  position: absolute;
+  left: 50%;
+  bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem));
+  transform: translateX(-50%);
+  z-index: 4;
+  width: min(90vw, 28rem);
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+  color: var(--mist);
+  text-align: center;
+}
+
+@keyframes focus-nebula-drift {
+  from {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(1.5%, 1%, 0) scale(1.05);
+  }
+}
+@keyframes focus-star-twinkle {
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+@keyframes focus-halo-breathe {
+  0%,
+  100% {
+    transform: scale(0.96);
+    opacity: 0.38;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.68;
+  }
+}
+@keyframes focus-halo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes focus-orbit-min {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes focus-sky-shift {
+  0% {
+    opacity: 0.25;
+    transform: scale(0.94);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+@keyframes focus-copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes focus-flare {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes focus-sky-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0.6%, -0.8%, 0) scale(1.015);
+  }
+}
+@keyframes focus-line-flow {
+  to {
+    stroke-dashoffset: -44;
+  }
+}
+@keyframes focus-aura-pulse {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: scale(0.88);
+  }
+  50% {
+    opacity: 0.48;
+    transform: scale(1.28);
+  }
+}
+@keyframes focus-node-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+@keyframes focus-bright-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 4px var(--amber-soft));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px var(--amber));
+  }
+}
+@keyframes focus-xiu-breathe {
+  0%,
+  100% {
+    text-shadow: 0 0 28px var(--glow);
+    letter-spacing: 0.2em;
+  }
+  50% {
+    text-shadow: 0 0 52px var(--amber-soft);
+    letter-spacing: 0.22em;
+  }
+}
+@keyframes focus-motto-glow {
+  0%,
+  100% {
+    opacity: 0.82;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes focus-stars-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-1.5%, 1%, 0);
+  }
+}
+@keyframes focus-tap-ring {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.35);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(6.5);
+  }
+}
+
+@media (max-width: 640px) {
+  .focus-chamber.is-engaged .focus-dock {
+    width: min(36vw, 132px);
+  }
+  .focus-sky__xiu {
+    font-size: clamp(2.6rem, 18vw, 4.2rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus-chamber,
+  .focus-chamber.is-entered {
+    opacity: 1;
+  }
+  .focus-dock,
+  .focus-sky__map,
+  .focus-sky__copy,
+  .focus-dial__clock,
+  .focus-chamber__title,
+  .focus-chamber__parallax,
+  .focus-sky__parallax {
+    transition: none !important;
+    transform: none !important;
+  }
+  .focus-chamber__gaze,
+  .focus-chamber__tap {
+    display: none;
+  }
+  .focus-chamber__nebula,
+  .focus-chamber__star,
+  .focus-dial__halo,
+  .focus-dial__orbit-min,
+  .focus-sky__map.is-shifting,
+  .focus-sky__map.is-living,
+  .focus-sky__copy.is-shifting,
+  .focus-sky__copy.is-living .focus-sky__xiu,
+  .focus-sky__copy.is-living .focus-sky__motto,
+  .focus-sky__map.is-living .focus-sky__line,
+  .focus-sky__map.is-living .focus-sky__aura,
+  .focus-sky__map.is-living .focus-sky__node,
+  .focus-chamber__flare,
+  .focus-chamber--running .focus-chamber__stars {
+    animation: none !important;
   }
 }

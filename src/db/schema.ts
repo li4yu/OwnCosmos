@@ -15,6 +15,7 @@ import {
  * Phase 3: essay (流思笺).
  * Phase 4: archive_item (拾忆馆藏); essay.archived_at 写入。
  * Phase 6: plan (来日途·规划，V1 仅单次事件).
+ * Phase 8: focus_session (凝时·顺钟) → archive focus_record.
  */
 
 export const user = pgTable("user", {
@@ -109,6 +110,8 @@ export const ARCHIVE_REASON_AUTO_48H = "auto_48h" as const;
 export const ARCHIVE_REASON_PLAN_COMPLETE = "plan_complete" as const;
 /** Phase 7: 逾期进站补算归档 */
 export const ARCHIVE_REASON_PLAN_OVERDUE = "plan_overdue" as const;
+/** Phase 8: 顺钟完整结束 → 凝录 */
+export const ARCHIVE_REASON_FOCUS_COMPLETE = "focus_complete" as const;
 
 export const archiveItem = pgTable(
   "archive_item",
@@ -128,6 +131,11 @@ export const archiveItem = pgTable(
     /** Phase 7: 规划归档溯源 */
     sourcePlanId: text("source_plan_id").references(
       (): AnyPgColumn => plan.id,
+      { onDelete: "set null" },
+    ),
+    /** Phase 8: 凝录溯源 */
+    sourceFocusSessionId: text("source_focus_session_id").references(
+      (): AnyPgColumn => focusSession.id,
       { onDelete: "set null" },
     ),
     archiveReason: text("archive_reason").notNull(),
@@ -177,12 +185,49 @@ export const plan = pgTable(
   ],
 );
 
+/** Phase 8: 凝时会话（V1 仅顺钟 mode=forward） */
+export const FOCUS_MODE_FORWARD = "forward" as const;
+/** 跨阶段预留字面量；本阶段不写入 */
+export const FOCUS_MODE_COUNTDOWN = "countdown" as const;
+export const FOCUS_STATUS_RUNNING = "running" as const;
+export const FOCUS_STATUS_PAUSED = "paused" as const;
+export const FOCUS_STATUS_COMPLETED = "completed" as const;
+
+export const focusSession = pgTable(
+  "focus_session",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    /** forward | countdown — V1 仅 forward */
+    mode: text("mode").notNull().default(FOCUS_MODE_FORWARD),
+    /** running | paused | completed */
+    status: text("status").notNull(),
+    /** 已计入的专注毫秒（不含当前 running 段） */
+    accumulatedMs: integer("accumulated_ms").notNull().default(0),
+    /** 当前 running 段起点；暂停 / 结束时清空 */
+    runningSince: timestamp("running_since"),
+    startedAt: timestamp("started_at").notNull(),
+    endedAt: timestamp("ended_at"),
+    title: text("title").notNull().default(""),
+    reflection: text("reflection").notNull().default(""),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("focus_session_user_status_idx").on(t.userId, t.status),
+    index("focus_session_user_ended_idx").on(t.userId, t.endedAt),
+  ],
+);
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   essays: many(essay),
   archiveItems: many(archiveItem),
   plans: many(plan),
+  focusSessions: many(focusSession),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -220,11 +265,23 @@ export const archiveItemRelations = relations(archiveItem, ({ one }) => ({
     fields: [archiveItem.sourcePlanId],
     references: [plan.id],
   }),
+  sourceFocusSession: one(focusSession, {
+    fields: [archiveItem.sourceFocusSessionId],
+    references: [focusSession.id],
+  }),
 }));
 
 export const planRelations = relations(plan, ({ one, many }) => ({
   user: one(user, {
     fields: [plan.userId],
+    references: [user.id],
+  }),
+  archiveItems: many(archiveItem),
+}));
+
+export const focusSessionRelations = relations(focusSession, ({ one, many }) => ({
+  user: one(user, {
+    fields: [focusSession.userId],
     references: [user.id],
   }),
   archiveItems: many(archiveItem),

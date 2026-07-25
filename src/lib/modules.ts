@@ -139,7 +139,7 @@ export const APP_MODULES: readonly AppModuleDef[] = [
         href: "/app/focus/forward",
         name: "顺钟",
         tip: "正向累计专注时长，可暂停、继续、结束",
-        ready: false,
+        ready: true,
       },
       {
         id: "countdown",
@@ -153,7 +153,7 @@ export const APP_MODULES: readonly AppModuleDef[] = [
         href: "/app/focus/records",
         name: "凝录",
         tip: "记下这段专注的收获与心情；结束后会沉淀进昔时往",
-        ready: false,
+        ready: true,
       },
     ],
   },

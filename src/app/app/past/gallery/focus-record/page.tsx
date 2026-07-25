@@ -3,7 +3,7 @@ import { getGallerySection } from "@/lib/gallery-sections";
 import { requireSession } from "@/lib/session";
 import { listArchiveItems } from "@/services/archive";
 
-/** 拾忆馆藏 · 凝录分区（P8 写入；本阶段空态预留） */
+/** 拾忆馆藏 · 凝录分区 */
 export default async function GalleryFocusRecordPage() {
   const session = await requireSession();
   const section = getGallerySection("focus-record")!;

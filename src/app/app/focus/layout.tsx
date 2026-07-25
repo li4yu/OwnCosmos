@@ -1,9 +1,8 @@
-import { ModuleShell } from "@/components/shell/module-shell";
-
-export default function FocusLayout({
+/** 顺钟等沉浸页：不套模块栏 */
+export default function FocusRootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <ModuleShell moduleId="focus">{children}</ModuleShell>;
+  return children;
 }

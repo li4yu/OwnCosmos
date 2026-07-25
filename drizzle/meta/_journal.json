@@ -57,6 +57,13 @@
       "when": 1784987975843,
       "tag": "0007_loving_the_fury",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784990004316,
+      "tag": "0008_military_mandarin",
+      "breakpoints": true
     }
   ]
 }
