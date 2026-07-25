@@ -23,7 +23,7 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
         backHref="/app/future/plans"
         backLabel="返回规划"
         guardLeave
-        description="可改标题、描述、截止日期与完成状态"
+        description="可改标题、截止日期、临期配、描述与完成状态"
       />
       <div className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
         <PlanEditor
@@ -32,6 +32,7 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
           initialTitle={item.title}
           initialBody={item.body}
           initialDueAt={item.dueAt}
+          initialRemindDays={item.remindDays}
           initialStatus={item.status}
           justCreated={saved === "1"}
         />

@@ -1,17 +1,23 @@
 import Link from "next/link";
-import { PlanListItem } from "@/components/plans/plan-list-item";
+import {
+  PlanCompletedListItem,
+  PlanListItem,
+} from "@/components/plans/plan-list-item";
 import { PageHeader } from "@/components/shell/page-header";
 import { PoeticName } from "@/components/ui/poetic-name";
+import { runPlanOverdueCatchUp } from "@/lib/plan-catchup";
 import { requireSession } from "@/lib/session";
 import { formatDueDateInput } from "@/lib/plan-dates";
-import { listActivePlans } from "@/services/plans";
+import { listCompletedPlans, listOpenPlans } from "@/services/plans";
 
 export default async function FuturePlansPage() {
   const session = await requireSession();
-  const plans = await listActivePlans(session.user.id);
+  await runPlanOverdueCatchUp(session.user.id);
+  const openPlans = await listOpenPlans(session.user.id);
+  const completedPlans = await listCompletedPlans(session.user.id);
 
   return (
-    <main className="flex flex-col gap-6">
+    <main className="flex flex-col gap-8">
       <PageHeader
         title="规划"
         description={
@@ -20,7 +26,7 @@ export default async function FuturePlansPage() {
               name="规划"
               tip="来日途中的目标与日子；V1 先做单次事件"
             />
-            · 单次事件；临期提醒与归档将在后续阶段接入
+            · 未完成可编辑；「完成及归档」后仍在下方已完成中可查
           </>
         }
         actions={
@@ -33,24 +39,63 @@ export default async function FuturePlansPage() {
         }
       />
 
-      {plans.length === 0 ? (
-        <section className="rounded-xl border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--mist)]">
-          还没有计划。点「新建」记下第一件要奔赴的事。
-        </section>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {plans.map((item) => (
-            <PlanListItem
-              key={item.id}
-              id={item.id}
-              title={item.title}
-              body={item.body}
-              dueLabel={formatDueDateInput(item.dueAt)}
-              status={item.status}
-            />
-          ))}
-        </ul>
-      )}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
+          未完成
+          <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
+            {openPlans.length}
+          </span>
+        </h2>
+        {openPlans.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-[var(--line)] p-6 text-center text-sm text-[var(--mist)]">
+            暂无进行中的计划。点「新建」或把已完成项留在下方回顾。
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {openPlans.map((item) => (
+              <PlanListItem
+                key={item.id}
+                id={item.id}
+                title={item.title}
+                body={item.body}
+                dueLabel={formatDueDateInput(item.dueAt)}
+              />
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
+          已完成
+          <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
+            {completedPlans.length}
+          </span>
+        </h2>
+        {completedPlans.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-[var(--line)] p-6 text-center text-sm text-[var(--mist)]">
+            还没有已完成的计划。「完成及归档」后会出现在这里，并可跳转馆藏。
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {completedPlans.map((item) => (
+              <PlanCompletedListItem
+                key={item.id}
+                id={item.id}
+                title={item.title}
+                body={item.body}
+                dueLabel={formatDueDateInput(item.dueAt)}
+                archivedLabel={
+                  item.archivedAt
+                    ? formatDueDateInput(item.archivedAt)
+                    : null
+                }
+                archiveId={item.archiveId}
+              />
+            ))}
+          </ul>
+        )}
+      </section>
     </main>
   );
 }

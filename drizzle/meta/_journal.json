@@ -43,6 +43,20 @@
       "when": 1784986514436,
       "tag": "0005_hesitant_inertia",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784987450154,
+      "tag": "0006_clumsy_hannibal_king",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784987975843,
+      "tag": "0007_loving_the_fury",
+      "breakpoints": true
     }
   ]
 }

@@ -4,6 +4,8 @@ import { getDb } from "@/db";
 import {
   ARCHIVE_REASON_AUTO_48H,
   ARCHIVE_REASON_MANUAL,
+  ARCHIVE_REASON_PLAN_COMPLETE,
+  ARCHIVE_REASON_PLAN_OVERDUE,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
   ARCHIVE_TYPE_FOCUS_RECORD,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
@@ -168,6 +170,10 @@ export function archiveReasonLabel(reason: string) {
       return "手动归档";
     case ARCHIVE_REASON_AUTO_48H:
       return "逾时自动归档";
+    case ARCHIVE_REASON_PLAN_COMPLETE:
+      return "临期完成归档";
+    case ARCHIVE_REASON_PLAN_OVERDUE:
+      return "逾期自动归档";
     default:
       return reason;
   }

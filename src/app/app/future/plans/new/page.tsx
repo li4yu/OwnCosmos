@@ -12,7 +12,7 @@ export default async function NewPlanPage() {
         backHref="/app/future/plans"
         backLabel="返回规划"
         guardLeave
-        description="单次事件：标题、描述与截止日期；手动保存"
+        description="单次事件：标题、截止日期、临期配与描述"
       />
       <div className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
         <PlanEditor mode="create" />

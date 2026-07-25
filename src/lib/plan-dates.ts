@@ -41,3 +41,10 @@ export function localTodayNoon(now = new Date()): Date {
 export function isDueDateBeforeToday(dueAt: Date, now = new Date()): boolean {
   return dueAt.getTime() < localTodayNoon(now).getTime();
 }
+
+/** 日历日差：due − today（本地日）；负数为已逾期 */
+export function calendarDaysUntilDue(dueAt: Date, now = new Date()) {
+  const today = localTodayNoon(now);
+  const due = localTodayNoon(dueAt);
+  return Math.round((due.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+}

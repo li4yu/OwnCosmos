@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  type AnyPgColumn,
   pgTable,
   text,
   timestamp,
@@ -104,6 +105,10 @@ export const ARCHIVE_TYPE_PLAN_ARCHIVE = "plan_archive" as const;
 export const ARCHIVE_TYPE_FOCUS_RECORD = "focus_record" as const;
 export const ARCHIVE_REASON_MANUAL = "manual" as const;
 export const ARCHIVE_REASON_AUTO_48H = "auto_48h" as const;
+/** Phase 7: 临期帖完成归档 */
+export const ARCHIVE_REASON_PLAN_COMPLETE = "plan_complete" as const;
+/** Phase 7: 逾期进站补算归档 */
+export const ARCHIVE_REASON_PLAN_OVERDUE = "plan_overdue" as const;
 
 export const archiveItem = pgTable(
   "archive_item",
@@ -120,6 +125,11 @@ export const archiveItem = pgTable(
     sourceEssayId: text("source_essay_id").references(() => essay.id, {
       onDelete: "set null",
     }),
+    /** Phase 7: 规划归档溯源 */
+    sourcePlanId: text("source_plan_id").references(
+      (): AnyPgColumn => plan.id,
+      { onDelete: "set null" },
+    ),
     archiveReason: text("archive_reason").notNull(),
     archivedAt: timestamp("archived_at").notNull(),
     /** 原随笔创建时间快照 */
@@ -151,6 +161,8 @@ export const plan = pgTable(
     body: text("body").notNull().default(""),
     /** 截止日期 */
     dueAt: timestamp("due_at").notNull(),
+    /** Phase 7: 临期配，提前几天进入提醒窗（默认 1） */
+    remindDays: integer("remind_days").notNull().default(1),
     /** open | done */
     status: text("status").notNull().default(PLAN_STATUS_OPEN),
     /** NULL = 仍在来日途；P7 归档馆藏时写入 */
@@ -204,11 +216,16 @@ export const archiveItemRelations = relations(archiveItem, ({ one }) => ({
     fields: [archiveItem.sourceEssayId],
     references: [essay.id],
   }),
+  sourcePlan: one(plan, {
+    fields: [archiveItem.sourcePlanId],
+    references: [plan.id],
+  }),
 }));
 
-export const planRelations = relations(plan, ({ one }) => ({
+export const planRelations = relations(plan, ({ one, many }) => ({
   user: one(user, {
     fields: [plan.userId],
     references: [user.id],
   }),
+  archiveItems: many(archiveItem),
 }));

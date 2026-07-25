@@ -3,33 +3,29 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  deletePlanAction,
-  setPlanStatusAction,
-} from "@/app/app/future/actions";
+import { completePlanAction, deletePlanAction } from "@/app/app/future/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { PLAN_STATUS_DONE, PLAN_STATUS_OPEN } from "@/db/schema";
+import { galleryDetailHref } from "@/lib/gallery-sections";
 
 type PlanListItemProps = {
   id: string;
   title: string;
   body: string;
   dueLabel: string;
-  status: string;
 };
 
+/** 未完成计划行：可编辑 / 完成及归档 / 删除 */
 export function PlanListItem({
   id,
   title,
   body,
   dueLabel,
-  status,
 }: PlanListItemProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [completeOpen, setCompleteOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const done = status === PLAN_STATUS_DONE;
 
   async function confirmDelete() {
     setPending(true);
@@ -44,17 +40,16 @@ export function PlanListItem({
     router.refresh();
   }
 
-  async function toggleStatus() {
+  async function confirmComplete() {
     setPending(true);
     setError(null);
-    const next = done ? PLAN_STATUS_OPEN : PLAN_STATUS_DONE;
-    const result = await setPlanStatusAction(id, next);
+    const result = await completePlanAction(id);
     if (result?.error) {
       setError(result.error);
       setPending(false);
       return;
     }
-    setPending(false);
+    setCompleteOpen(false);
     router.refresh();
   }
 
@@ -63,16 +58,10 @@ export function PlanListItem({
       <div className="flex items-start gap-3">
         <Link href={`/app/future/plans/${id}`} className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <h3
-              className={`text-base text-[var(--paper)] ${done ? "opacity-70 line-through" : ""}`}
-            >
-              {title}
-            </h3>
+            <h3 className="text-base text-[var(--paper)]">{title}</h3>
             <div className="flex shrink-0 flex-col items-end gap-1 font-mono text-[10px] tracking-wide text-[var(--mist)]">
               <time>截止 {dueLabel}</time>
-              <span className={done ? "text-[var(--teal)]" : "text-[var(--amber)]"}>
-                {done ? "已完成" : "未完成"}
-              </span>
+              <span className="text-[var(--amber)]">未完成</span>
             </div>
           </div>
           <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--mist)]">
@@ -88,10 +77,11 @@ export function PlanListItem({
             disabled={pending}
             className="ui-btn-ghost ui-btn-sm text-[var(--teal)]"
             onClick={() => {
-              void toggleStatus();
+              setError(null);
+              setCompleteOpen(true);
             }}
           >
-            {done ? "标未完成" : "标完成"}
+            完成及归档
           </button>
           <button
             type="button"
@@ -112,6 +102,21 @@ export function PlanListItem({
       ) : null}
 
       <ConfirmDialog
+        open={completeOpen}
+        title="完成及归档？"
+        message="将标记完成并沉淀入昔时往拾忆馆藏（规划归档）；来日途「已完成」仍可查看，今时际临期帖不再显示。确定吗？"
+        confirmLabel="完成及归档"
+        cancelLabel="取消"
+        pending={pending}
+        onCancel={() => {
+          if (!pending) setCompleteOpen(false);
+        }}
+        onConfirm={() => {
+          void confirmComplete();
+        }}
+      />
+
+      <ConfirmDialog
         open={deleteOpen}
         title="删除这条计划？"
         message="未归档的计划将永久删除，无法恢复。确定删除吗？"
@@ -126,6 +131,55 @@ export function PlanListItem({
           void confirmDelete();
         }}
       />
+    </li>
+  );
+}
+
+type PlanCompletedItemProps = {
+  id: string;
+  title: string;
+  body: string;
+  dueLabel: string;
+  archivedLabel: string | null;
+  archiveId: string | null;
+};
+
+/** 已完成计划行：只读回顾，可跳转馆藏 */
+export function PlanCompletedListItem({
+  title,
+  body,
+  dueLabel,
+  archivedLabel,
+  archiveId,
+}: PlanCompletedItemProps) {
+  const href = archiveId
+    ? galleryDetailHref(archiveId, "plan-archive")
+    : "/app/past/gallery/plan-archive";
+
+  return (
+    <li className="rounded-xl border border-[var(--line)] bg-[var(--panel)]/70 p-4">
+      <div className="flex items-start gap-3">
+        <Link href={href} className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <h3 className="text-base text-[var(--paper)] opacity-80 line-through decoration-[var(--mist)]">
+              {title}
+            </h3>
+            <div className="flex shrink-0 flex-col items-end gap-1 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+              <time>截止 {dueLabel}</time>
+              {archivedLabel ? <time>归档 {archivedLabel}</time> : null}
+              <span className="text-[var(--teal)]">已完成</span>
+            </div>
+          </div>
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--mist)]">
+            {body.trim() || "（无描述）"}
+          </p>
+        </Link>
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <Link href={href} className="ui-btn-ghost ui-btn-sm text-[var(--teal)]">
+            看馆藏
+          </Link>
+        </div>
+      </div>
     </li>
   );
 }

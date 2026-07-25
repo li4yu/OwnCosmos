@@ -1,0 +1,1 @@
+ALTER TABLE "plan" ALTER COLUMN "remind_days" SET DEFAULT 1;
