@@ -1,85 +1,120 @@
 import Link from "next/link";
-import { PageHeader } from "@/components/shell/page-header";
 import { PoeticName } from "@/components/ui/poetic-name";
+import { runEssayArchiveCatchUp } from "@/lib/archive-catchup";
 import { QUICK_JUMP_MODULES } from "@/lib/modules";
-import { displayInitial } from "@/lib/user-display";
+import { runPlanOverdueCatchUp } from "@/lib/plan-catchup";
 import { requireSession } from "@/lib/session";
+import { getHomeSummary } from "@/services/home-summary";
+
+function formatTodayLabel(d = new Date()) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  }).format(d);
+}
 
 export default async function AppHomePage() {
   const session = await requireSession();
+  await Promise.all([
+    runEssayArchiveCatchUp(session.user.id),
+    runPlanOverdueCatchUp(session.user.id),
+  ]);
+  const summary = await getHomeSummary(session.user.id);
   const user = session.user as typeof session.user & {
     bio?: string | null;
   };
 
   return (
-    <main className="flex flex-col gap-8">
-      <PageHeader
-        title="首页"
-        eyebrow="HOME"
-        description="欢迎回来。快捷入口按时序排列：过去 → 现在 → 将来，再接专注。"
-      />
+    <main className="home-v1 flex flex-col gap-10">
+      <section className="home-v1__hero">
+        <p className="home-v1__eyebrow">TEMPORAL PERSONAL UNIVERSE</p>
+        <h1 className="home-v1__brand">
+          自宇
+          <em>My Own Cosmos</em>
+        </h1>
+        <p className="home-v1__lede">
+          你好，{user.name}。留存过往，安住当下，奔赴未来——并以专注，把光阴凝成可回望的轨迹。
+        </p>
+        <p className="home-v1__date">{formatTodayLabel()}</p>
+      </section>
 
-      <section className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5">
-        <div className="flex items-start gap-4">
-          {user.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={user.image}
-              alt=""
-              className="h-14 w-14 rounded-full border border-[var(--line)] object-cover"
-            />
-          ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--field-bg)] font-mono text-lg text-[var(--paper)]">
-              {displayInitial(user.name)}
-            </div>
-          )}
-          <div>
-            <p className="font-mono text-xs tracking-[0.18em] text-[var(--teal)]">
-              SESSION
-            </p>
-            <p className="mt-2 text-lg text-[var(--paper)]">你好，{user.name}</p>
-            <p className="mt-1 text-sm text-[var(--mist)]">{user.email}</p>
-            {user.bio ? (
-              <p className="mt-3 text-sm leading-6 text-[var(--mist)]">{user.bio}</p>
-            ) : null}
-          </div>
+      <section className="home-v1__summary" aria-label="今日摘要">
+        <div className="home-v1__summary-head">
+          <h2>今日摘要</h2>
+          <p>只读聚合 · 不改写各模块本体</p>
+        </div>
+        <ul className="home-v1__metrics">
+          <li>
+            <Link href="/app/present/due" className="home-v1__metric">
+              <span className="home-v1__metric-label">临期</span>
+              <span className="home-v1__metric-value">{summary.dueCount}</span>
+              <span className="home-v1__metric-hint">进入提醒窗的计划</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/app/present/essays" className="home-v1__metric">
+              <span className="home-v1__metric-label">流动随笔</span>
+              <span className="home-v1__metric-value">
+                {summary.activeEssayCount}
+              </span>
+              <span className="home-v1__metric-hint">尚未沉淀入馆藏</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/app/focus/forward" className="home-v1__metric">
+              <span className="home-v1__metric-label">今日专注</span>
+              <span className="home-v1__metric-value home-v1__metric-value--text">
+                {summary.todayFocusLabel}
+              </span>
+              <span className="home-v1__metric-hint">含进行中累计</span>
+            </Link>
+          </li>
+        </ul>
+      </section>
+
+      <section className="home-v1__jumps" aria-label="时序入口">
+        <div className="home-v1__summary-head">
+          <h2>时序入口</h2>
+          <p>过去 → 现在 → 将来 → 专注</p>
+        </div>
+        <div className="home-v1__orbit-list">
+          {QUICK_JUMP_MODULES.map((mod, i) => (
+            <Link
+              key={mod.id}
+              href={mod.href}
+              className="home-v1__jump"
+              data-index={String(i + 1).padStart(2, "0")}
+            >
+              <span className="home-v1__jump-index">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span className="home-v1__jump-body">
+                <span className="home-v1__jump-eyebrow">{mod.eyebrow}</span>
+                <span className="home-v1__jump-name">
+                  <PoeticName name={mod.name} tip={mod.tip} />
+                </span>
+                <span className="home-v1__jump-tip">{mod.tip}</span>
+              </span>
+              <span className="home-v1__jump-go" aria-hidden="true">
+                →
+              </span>
+            </Link>
+          ))}
         </div>
       </section>
 
-      <section>
-        <h2 className="mb-3 text-sm tracking-[0.12em] text-[var(--mist)]">快捷进入</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {QUICK_JUMP_MODULES.map((mod) =>
-            mod.ready ? (
-              <Link
-                key={mod.id}
-                href={mod.href}
-                className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4 transition hover:border-[var(--amber)]"
-              >
-                <p className="font-mono text-[10px] tracking-[0.18em] text-[var(--teal)]">
-                  {mod.eyebrow}
-                </p>
-                <h3 className="mt-2 text-xl tracking-[0.14em] text-[var(--paper)]">
-                  <PoeticName name={mod.name} tip={mod.tip} />
-                </h3>
-                <p className="mt-2 text-sm text-[var(--mist)]">{mod.tip}</p>
-              </Link>
-            ) : (
-              <div
-                key={mod.id}
-                className="rounded-xl border border-dashed border-[var(--line)] p-4 opacity-70"
-              >
-                <p className="font-mono text-[10px] tracking-[0.18em] text-[var(--mist)]">
-                  {mod.eyebrow}
-                </p>
-                <h3 className="mt-2 text-xl tracking-[0.14em] text-[var(--mist)]">
-                  <PoeticName name={mod.name} tip={mod.tip} />
-                </h3>
-                <p className="mt-2 text-sm text-[var(--mist)]">后续 Phase 开放</p>
-              </div>
-            ),
-          )}
-        </div>
+      <section className="home-v1__actions" aria-label="快捷动作">
+        <Link href="/app/present/essays/new" className="home-v1__action">
+          写随笔
+        </Link>
+        <Link href="/app/future/plans/new" className="home-v1__action">
+          新建计划
+        </Link>
+        <Link href="/app/focus/forward" className="home-v1__action home-v1__action--primary">
+          开顺钟
+        </Link>
       </section>
     </main>
   );

@@ -115,10 +115,15 @@ export function AuthModal({ open, mode, onModeChange, onClose }: AuthModalProps)
 
 type AuthEntryProps = {
   initialMode?: AuthMode | null;
+  /** 营销落地顶栏：胶囊样式 */
+  variant?: "default" | "landing";
 };
 
 /** Syncs ?auth=login|register with modal; used on home. */
-export function AuthEntry({ initialMode = null }: AuthEntryProps) {
+export function AuthEntry({
+  initialMode = null,
+  variant = "default",
+}: AuthEntryProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -158,23 +163,34 @@ export function AuthEntry({ initialMode = null }: AuthEntryProps) {
     syncUrl(null);
   }
 
+  const loginClass =
+    variant === "landing" ? "guest-landing__chip" : "ui-btn-ghost";
+  const registerClass =
+    variant === "landing"
+      ? "guest-landing__chip guest-landing__chip--accent"
+      : "ui-btn-primary !w-auto px-3 py-1.5 text-xs";
+
   return (
     <>
-      <button
-        type="button"
-        onClick={() => openMode("login")}
-        className="ui-btn-ghost"
-      >
+      <button type="button" onClick={() => openMode("login")} className={loginClass}>
         登录
       </button>
       <button
         type="button"
         onClick={() => openMode("register")}
-        className="ui-btn-primary !w-auto px-3 py-1.5 text-xs"
+        className={registerClass}
       >
         注册
       </button>
-      <AuthModal open={open} mode={mode} onModeChange={(m) => { setMode(m); syncUrl(m); }} onClose={close} />
+      <AuthModal
+        open={open}
+        mode={mode}
+        onModeChange={(m) => {
+          setMode(m);
+          syncUrl(m);
+        }}
+        onClose={close}
+      />
     </>
   );
 }
