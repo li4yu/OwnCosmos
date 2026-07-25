@@ -35,6 +35,12 @@ export const auth = betterAuth({
         defaultValue: "",
         input: true,
       },
+      essayIdleHours: {
+        type: "number",
+        required: true,
+        defaultValue: 48,
+        input: true,
+      },
     },
     changeEmail: {
       enabled: false,

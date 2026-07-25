@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/session";
 import { createEssay, deleteActiveEssay, updateEssay } from "@/services/essays";
+import { archiveActiveEssay } from "@/services/archive";
+import { ARCHIVE_REASON_MANUAL } from "@/db/schema";
 
 export type EssayActionState = {
   error?: string;
@@ -57,5 +59,26 @@ export async function deleteEssayAction(
   revalidatePath("/app/present");
   revalidatePath("/app/present/essays");
   revalidatePath(`/app/present/essays/${essayId}`);
+  return {};
+}
+
+export async function archiveEssayAction(
+  essayId: string,
+): Promise<EssayActionState> {
+  const session = await requireSession();
+  const archiveId = await archiveActiveEssay(
+    session.user.id,
+    essayId,
+    ARCHIVE_REASON_MANUAL,
+  );
+  if (!archiveId) {
+    return { error: "随笔不存在或已归档，无法归档" };
+  }
+  revalidatePath("/app/present");
+  revalidatePath("/app/present/essays");
+  revalidatePath(`/app/present/essays/${essayId}`);
+  revalidatePath("/app/past");
+  revalidatePath("/app/past/gallery");
+  revalidatePath("/app/past/gallery/essay-sediment");
   return {};
 }

@@ -1,0 +1,26 @@
+import { GallerySectionNav } from "@/components/archive/gallery-section-nav";
+import { PoeticName } from "@/components/ui/poetic-name";
+
+export default function GalleryLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-5">
+      <div>
+        <h2 className="text-lg tracking-[0.12em] text-[var(--paper)]">
+          <PoeticName
+            name="拾忆馆藏"
+            tip="统一收纳流入的随笔、规划归档、专注记录，以及你上传的照片与文字回忆"
+          />
+        </h2>
+        <p className="mt-2 text-sm text-[var(--mist)]">
+          馆藏总库；「随笔沉淀」等为馆内分区。
+        </p>
+      </div>
+      <GallerySectionNav />
+      {children}
+    </div>
+  );
+}

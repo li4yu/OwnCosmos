@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import {
+  archiveEssayAction,
   createEssayAction,
   deleteEssayAction,
   updateEssayAction,
@@ -44,8 +45,9 @@ export function EssayEditor(props: EssayEditorProps) {
   const [wasPending, setWasPending] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deletePending, setDeletePending] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [actionPending, setActionPending] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (pending) {
@@ -88,16 +90,31 @@ export function EssayEditor(props: EssayEditorProps) {
 
   async function confirmDelete() {
     if (!isEdit) return;
-    setDeletePending(true);
-    setDeleteError(null);
+    setActionPending(true);
+    setActionError(null);
     const result = await deleteEssayAction(props.essayId);
     if (result?.error) {
-      setDeleteError(result.error);
-      setDeletePending(false);
+      setActionError(result.error);
+      setActionPending(false);
       return;
     }
     emitEssayDirty(false);
     router.push("/app/present/essays");
+    router.refresh();
+  }
+
+  async function confirmArchive() {
+    if (!isEdit) return;
+    setActionPending(true);
+    setActionError(null);
+    const result = await archiveEssayAction(props.essayId);
+    if (result?.error) {
+      setActionError(result.error);
+      setActionPending(false);
+      return;
+    }
+    emitEssayDirty(false);
+    router.push("/app/past/gallery/essay-sediment");
     router.refresh();
   }
 
@@ -140,9 +157,9 @@ export function EssayEditor(props: EssayEditorProps) {
           </p>
         ) : null}
 
-        {deleteError ? (
+        {actionError ? (
           <p className="text-sm text-[var(--danger)]" role="alert">
-            {deleteError}
+            {actionError}
           </p>
         ) : null}
 
@@ -170,16 +187,28 @@ export function EssayEditor(props: EssayEditorProps) {
             返回列表
           </button>
           {isEdit ? (
-            <button
-              type="button"
-              onClick={() => {
-                setDeleteError(null);
-                setDeleteOpen(true);
-              }}
-              className="ui-btn-danger ml-auto px-4 py-2.5"
-            >
-              删除
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setActionError(null);
+                  setArchiveOpen(true);
+                }}
+                className="ui-btn-ghost px-4 py-2.5 text-[var(--teal)] hover:border-[var(--teal)]"
+              >
+                归档
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActionError(null);
+                  setDeleteOpen(true);
+                }}
+                className="ui-btn-danger ml-auto px-4 py-2.5"
+              >
+                删除
+              </button>
+            </>
           ) : null}
         </div>
       </form>
@@ -200,15 +229,30 @@ export function EssayEditor(props: EssayEditorProps) {
       />
 
       <ConfirmDialog
+        open={archiveOpen}
+        title="归档这条随笔？"
+        message="将沉淀入昔时往拾忆馆藏（随笔沉淀），今时际不再可编辑。确定归档吗？"
+        confirmLabel="归档"
+        cancelLabel="取消"
+        pending={actionPending}
+        onCancel={() => {
+          if (!actionPending) setArchiveOpen(false);
+        }}
+        onConfirm={() => {
+          void confirmArchive();
+        }}
+      />
+
+      <ConfirmDialog
         open={deleteOpen}
         title="删除这条随笔？"
         message="流动中的随笔将永久删除，无法恢复。确定删除吗？"
         confirmLabel="删除"
         cancelLabel="取消"
         tone="danger"
-        pending={deletePending}
+        pending={actionPending}
         onCancel={() => {
-          if (!deletePending) setDeleteOpen(false);
+          if (!actionPending) setDeleteOpen(false);
         }}
         onConfirm={() => {
           void confirmDelete();

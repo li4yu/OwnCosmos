@@ -7,6 +7,7 @@ export const authClient = createAuthClient({
       user: {
         theme: { type: "string", required: true },
         bio: { type: "string", required: false },
+        essayIdleHours: { type: "number", required: true },
       },
     }),
   ],

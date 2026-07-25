@@ -46,7 +46,7 @@ export const APP_MODULES: readonly AppModuleDef[] = [
         href: "/app/past/gallery",
         name: "拾忆馆藏",
         tip: "统一收纳流入的随笔、规划归档、专注记录，以及你上传的照片与文字回忆",
-        ready: false,
+        ready: true,
       },
       {
         id: "corridor",

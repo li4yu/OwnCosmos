@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { deleteEssayAction } from "@/app/app/present/actions";
+import {
+  archiveEssayAction,
+  deleteEssayAction,
+} from "@/app/app/present/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type EssayListItemProps = {
@@ -21,6 +24,7 @@ export function EssayListItem({
 }: EssayListItemProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +38,19 @@ export function EssayListItem({
       return;
     }
     setDeleteOpen(false);
+    router.refresh();
+  }
+
+  async function confirmArchive() {
+    setPending(true);
+    setError(null);
+    const result = await archiveEssayAction(id);
+    if (result?.error) {
+      setError(result.error);
+      setPending(false);
+      return;
+    }
+    setArchiveOpen(false);
     router.refresh();
   }
 
@@ -60,6 +77,16 @@ export function EssayListItem({
           </Link>
           <button
             type="button"
+            className="ui-btn-ghost ui-btn-sm text-[var(--teal)]"
+            onClick={() => {
+              setError(null);
+              setArchiveOpen(true);
+            }}
+          >
+            归档
+          </button>
+          <button
+            type="button"
             className="ui-btn-danger ui-btn-sm"
             onClick={() => {
               setError(null);
@@ -75,6 +102,21 @@ export function EssayListItem({
           {error}
         </p>
       ) : null}
+
+      <ConfirmDialog
+        open={archiveOpen}
+        title="归档这条随笔？"
+        message="将沉淀入昔时往拾忆馆藏，今时际列表将不再显示。确定归档吗？"
+        confirmLabel="归档"
+        cancelLabel="取消"
+        pending={pending}
+        onCancel={() => {
+          if (!pending) setArchiveOpen(false);
+        }}
+        onConfirm={() => {
+          void confirmArchive();
+        }}
+      />
 
       <ConfirmDialog
         open={deleteOpen}

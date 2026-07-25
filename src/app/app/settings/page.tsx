@@ -1,11 +1,14 @@
 import { AppearanceForm } from "@/components/settings/appearance-form";
+import { ArchivePreferenceForm } from "@/components/settings/archive-preference-form";
 import { PageHeader } from "@/components/shell/page-header";
+import { PoeticName } from "@/components/ui/poetic-name";
 import { requireSession } from "@/lib/session";
 
 export default async function SettingsPage() {
   const session = await requireSession();
   const user = session.user as typeof session.user & {
     theme?: string;
+    essayIdleHours?: number;
   };
 
   return (
@@ -20,6 +23,17 @@ export default async function SettingsPage() {
       <section className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
         <h2 className="mb-4 text-lg tracking-[0.12em] text-[var(--paper)]">外观</h2>
         <AppearanceForm initialTheme={user.theme} />
+      </section>
+
+      <section className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
+        <h2 className="mb-4 text-lg tracking-[0.12em] text-[var(--paper)]">
+          <PoeticName
+            name="流思笺"
+            tip="快速记下当下灵感与草稿，未归档前可随时改"
+          />
+          · 归档
+        </h2>
+        <ArchivePreferenceForm initialIdleHours={user.essayIdleHours} />
       </section>
 
       <section className="rounded-xl border border-dashed border-[var(--line)] p-5">

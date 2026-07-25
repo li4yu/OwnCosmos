@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "essay_idle_hours" integer DEFAULT 48 NOT NULL;

@@ -33,6 +33,7 @@ export function RegisterForm({ nextPath = "/app", onSwitchLogin }: RegisterFormP
         password,
         name: displayName,
         theme: "night",
+        essayIdleHours: 48,
       });
       if (signUpError) {
         setError(signUpError.message || "注册失败，请稍后重试");

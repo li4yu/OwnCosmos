@@ -83,7 +83,7 @@ git checkout -b dev01
 
 ### 1) MVP 验收（先于任何 commit）
 
-对照 [docs/PRD-第一版.md](../../docs/PRD-第一版.md) 与 [docs/实现阶段规划.md](../../docs/实现阶段规划.md) 当前 Phase 的验收要点，列出简短检查清单，请用户本地点验。
+对照 [docs/prd/PRD-第一版.md](../../docs/prd/PRD-第一版.md) 与 [docs/实现阶段规划.md](../../docs/实现阶段规划.md) 当前 Phase 的验收要点，列出简短检查清单，请用户本地点验。
 
 **在用户确认 MVP 测过之前：禁止 commit、禁止 merge、禁止 push。**
 
