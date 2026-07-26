@@ -2305,3 +2305,125 @@ button,
     gap: 0.25rem;
   }
 }
+
+/* —— 伴读噜噜（spritesheet 剪辑） —— */
+:root,
+[data-theme="night"],
+[data-theme="khaki"] {
+  --xlm-shadow: rgba(0, 0, 0, 0.28);
+  --xlm-bubble-bg: color-mix(in srgb, var(--panel) 92%, transparent);
+  --xlm-photo-filter: saturate(0.88) brightness(0.98);
+}
+[data-theme="khaki"] {
+  --xlm-shadow: rgba(42, 35, 24, 0.2);
+  --xlm-photo-filter: saturate(0.82) brightness(1.02);
+}
+
+.xingluomao {
+  position: fixed;
+  z-index: 45;
+  width: 96px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.xingluomao:active {
+  cursor: grabbing;
+}
+.xingluomao__stage {
+  width: 96px;
+  height: 104px;
+  filter: drop-shadow(0 8px 12px var(--xlm-shadow));
+  transform-origin: 50% 90%;
+}
+.xingluomao__sprite {
+  width: 96px;
+  height: 104px;
+}
+.xingluomao__photo {
+  display: block;
+  width: 96px;
+  height: 104px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter: var(--xlm-photo-filter);
+  image-rendering: auto;
+}
+
+.xingluomao.is-idle .xingluomao__stage {
+  animation: xlm-breathe 6.5s ease-in-out infinite;
+}
+@keyframes xlm-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+
+.xingluomao.is-sleeping .xingluomao__stage {
+  transform: translateY(2px) scale(0.98, 0.96);
+  opacity: 0.92;
+}
+
+.xingluomao.is-waking .xingluomao__stage,
+.xingluomao.is-poke .xingluomao__stage,
+.xingluomao.is-happy .xingluomao__stage {
+  animation: xlm-bounce 0.55s ease both;
+}
+@keyframes xlm-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-6px);
+  }
+}
+
+.xingluomao.is-drag .xingluomao__stage {
+  transform: scale(1.05) rotate(-5deg);
+  transition: transform 0.12s ease;
+}
+
+.xingluomao__bubble {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  width: max-content;
+  max-width: min(240px, calc(100vw - 28px));
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--line);
+  background: var(--xlm-bubble-bg);
+  backdrop-filter: blur(8px);
+  color: var(--paper);
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 0.8rem;
+  line-height: 1.65;
+  letter-spacing: 0.03em;
+  border-radius: 12px 12px 12px 4px;
+  box-shadow: var(--dialog-shadow);
+  animation: xlm-bubble-in 0.35s ease both;
+  pointer-events: none;
+  white-space: pre-wrap;
+}
+@keyframes xlm-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xingluomao__stage,
+  .xingluomao__bubble {
+    animation: none !important;
+  }
+}

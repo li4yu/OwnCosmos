@@ -88,7 +88,6 @@ export function BrandMark() {
       aria-label="自宇"
       title="自宇 · My Own Cosmos"
     >
-      {/* TODO: 专属 logo 图片替换此处文字 */}
       <p className="font-[family-name:var(--font-cormorant)] text-sm tracking-[0.2em] text-[var(--amber)]">
         自宇
       </p>
