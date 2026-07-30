@@ -64,6 +64,27 @@
       "when": 1784990004316,
       "tag": "0008_military_mandarin",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1785441595655,
+      "tag": "0009_chubby_mastermind",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785443300743,
+      "tag": "0010_salty_monster_badoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1785443612915,
+      "tag": "0011_uneven_fantastic_four",
+      "breakpoints": true
     }
   ]
 }

@@ -23,7 +23,7 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
         {backHref ? (
           guardLeave ? (
@@ -31,7 +31,7 @@ export function PageHeader({
           ) : (
             <Link
               href={backHref}
-              className="mb-3 inline-flex items-center gap-1 rounded border border-[var(--line)] px-2.5 py-1 text-xs tracking-[0.06em] text-[var(--mist)] transition hover:border-[var(--amber)] hover:text-[var(--amber)]"
+              className="mb-2 inline-flex items-center gap-1 rounded border border-[var(--line)] px-2.5 py-1 text-xs tracking-[0.06em] text-[var(--mist)] transition hover:border-[var(--amber)] hover:text-[var(--amber)]"
             >
               ← {backLabel}
             </Link>

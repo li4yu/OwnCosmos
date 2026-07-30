@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { DueReminderSection } from "@/components/due/due-reminder-section";
+import { HomeCheckinBoard } from "@/components/home/home-checkin-board";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { runEssayArchiveCatchUp } from "@/lib/archive-catchup";
 import { QUICK_JUMP_MODULES } from "@/lib/modules";
@@ -8,10 +10,9 @@ import { getHomeSummary } from "@/services/home-summary";
 
 function formatTodayLabel(d = new Date()) {
   return new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
     month: "long",
     day: "numeric",
-    weekday: "long",
+    weekday: "short",
   }).format(d);
 }
 
@@ -27,30 +28,66 @@ export default async function AppHomePage() {
   };
 
   return (
-    <main className="home-v1 flex flex-col gap-10">
+    <main className="home-v1">
       <section className="home-v1__hero">
-        <p className="home-v1__eyebrow">TEMPORAL PERSONAL UNIVERSE</p>
-        <h1 className="home-v1__brand">
-          自宇
-          <em>My Own Cosmos</em>
-        </h1>
+        <div className="home-v1__hero-top">
+          <h1 className="home-v1__brand">
+            自宇
+            <em>My Own Cosmos</em>
+          </h1>
+          <p className="home-v1__date">{formatTodayLabel()}</p>
+        </div>
         <p className="home-v1__lede">
-          你好，{user.name}。留存过往，安住当下，奔赴未来——并以专注，把光阴凝成可回望的轨迹。
+          你好，{user.name}
+          <span className="home-v1__lede-tail">
+            · 留存过往，安住当下，奔赴未来
+          </span>
         </p>
-        <p className="home-v1__date">{formatTodayLabel()}</p>
+        <div className="home-v1__actions home-v1__actions--hero" aria-label="快捷动作">
+          <Link href="/app/present/essays/new" className="home-v1__action">
+            写随笔
+          </Link>
+          <Link href="/app/future/plans/new" className="home-v1__action">
+            新建计划
+          </Link>
+          <Link href="/app/future/daily" className="home-v1__action">
+            日课
+          </Link>
+          <Link
+            href="/app/focus/forward"
+            className="home-v1__action home-v1__action--primary"
+          >
+            开顺钟
+          </Link>
+        </div>
       </section>
+
+      <div className="home-v1__split">
+        <section className="home-v1__due" aria-label="临期帖">
+          <DueReminderSection
+            items={summary.dueItems}
+            compact
+            emptyHint="暂无临期。设置截止日期与临期配后会出现在这里。"
+          />
+        </section>
+
+        <HomeCheckinBoard
+          items={summary.checkinItems}
+          dailyDone={summary.dailyDone}
+          dailyTotal={summary.dailyTotal}
+        />
+      </div>
 
       <section className="home-v1__summary" aria-label="今日摘要">
         <div className="home-v1__summary-head">
           <h2>今日摘要</h2>
-          <p>只读聚合 · 不改写各模块本体</p>
+          <p>只读聚合</p>
         </div>
         <ul className="home-v1__metrics">
           <li>
             <Link href="/app/present/due" className="home-v1__metric">
               <span className="home-v1__metric-label">临期</span>
               <span className="home-v1__metric-value">{summary.dueCount}</span>
-              <span className="home-v1__metric-hint">进入提醒窗的计划</span>
             </Link>
           </li>
           <li>
@@ -59,7 +96,6 @@ export default async function AppHomePage() {
               <span className="home-v1__metric-value">
                 {summary.activeEssayCount}
               </span>
-              <span className="home-v1__metric-hint">尚未沉淀入馆藏</span>
             </Link>
           </li>
           <li>
@@ -68,7 +104,16 @@ export default async function AppHomePage() {
               <span className="home-v1__metric-value home-v1__metric-value--text">
                 {summary.todayFocusLabel}
               </span>
-              <span className="home-v1__metric-hint">含进行中累计</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/app/future/daily" className="home-v1__metric">
+              <span className="home-v1__metric-label">日课</span>
+              <span className="home-v1__metric-value home-v1__metric-value--text">
+                {summary.dailyTotal > 0
+                  ? `${summary.dailyDone}/${summary.dailyTotal}`
+                  : "—"}
+              </span>
             </Link>
           </li>
         </ul>
@@ -95,7 +140,6 @@ export default async function AppHomePage() {
                 <span className="home-v1__jump-name">
                   <PoeticName name={mod.name} tip={mod.tip} />
                 </span>
-                <span className="home-v1__jump-tip">{mod.tip}</span>
               </span>
               <span className="home-v1__jump-go" aria-hidden="true">
                 →
@@ -103,18 +147,6 @@ export default async function AppHomePage() {
             </Link>
           ))}
         </div>
-      </section>
-
-      <section className="home-v1__actions" aria-label="快捷动作">
-        <Link href="/app/present/essays/new" className="home-v1__action">
-          写随笔
-        </Link>
-        <Link href="/app/future/plans/new" className="home-v1__action">
-          新建计划
-        </Link>
-        <Link href="/app/focus/forward" className="home-v1__action home-v1__action--primary">
-          开顺钟
-        </Link>
       </section>
     </main>
   );

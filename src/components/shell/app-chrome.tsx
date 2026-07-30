@@ -13,7 +13,7 @@ type AppChromeProps = {
 export function AppChrome({ user }: AppChromeProps) {
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--panel)]/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
+      <div className="app-shell-width mx-auto flex items-center gap-3 py-2.5">
         <BrandMark />
         <ModuleNav />
         <div className="shrink-0">

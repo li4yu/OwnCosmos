@@ -6,15 +6,22 @@ import {
 import { PageHeader } from "@/components/shell/page-header";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { runPlanOverdueCatchUp } from "@/lib/plan-catchup";
-import { requireSession } from "@/lib/session";
 import { formatDueDateInput } from "@/lib/plan-dates";
-import { listCompletedPlans, listOpenPlans } from "@/services/plans";
+import { PLANNING_KINDS, planKindLabel } from "@/lib/plan-kinds";
+import { requireSession } from "@/lib/session";
+import {
+  listCompletedPlans,
+  listOpenPlanningPlans,
+} from "@/services/plans";
 
 export default async function FuturePlansPage() {
   const session = await requireSession();
   await runPlanOverdueCatchUp(session.user.id);
-  const openPlans = await listOpenPlans(session.user.id);
-  const completedPlans = await listCompletedPlans(session.user.id);
+  const openPlans = await listOpenPlanningPlans(session.user.id);
+  const completedPlans = await listCompletedPlans(
+    session.user.id,
+    PLANNING_KINDS,
+  );
 
   return (
     <main className="flex flex-col gap-8">
@@ -24,7 +31,7 @@ export default async function FuturePlansPage() {
           <>
             <PoeticName
               name="规划"
-              tip="来日途中的目标与日子；V1 先做单次事件"
+              tip="单次、愿景与阶段目标；轮期与胶囊见其它子功能"
             />
             · 未完成可编辑；「完成及归档」后仍在下方已完成中可查
           </>
@@ -48,7 +55,7 @@ export default async function FuturePlansPage() {
         </h2>
         {openPlans.length === 0 ? (
           <div className="rounded-xl border border-dashed border-[var(--line)] p-6 text-center text-sm text-[var(--mist)]">
-            暂无进行中的计划。点「新建」或把已完成项留在下方回顾。
+            暂无进行中的计划。点「新建」，或从流思笺「提炼」。
           </div>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -58,7 +65,8 @@ export default async function FuturePlansPage() {
                 id={item.id}
                 title={item.title}
                 body={item.body}
-                dueLabel={formatDueDateInput(item.dueAt)}
+                dueLabel={item.dueAt ? formatDueDateInput(item.dueAt) : null}
+                kindLabel={planKindLabel(item.kind)}
               />
             ))}
           </ul>
@@ -84,13 +92,14 @@ export default async function FuturePlansPage() {
                 id={item.id}
                 title={item.title}
                 body={item.body}
-                dueLabel={formatDueDateInput(item.dueAt)}
+                dueLabel={item.dueAt ? formatDueDateInput(item.dueAt) : null}
                 archivedLabel={
                   item.archivedAt
                     ? formatDueDateInput(item.archivedAt)
                     : null
                 }
                 archiveId={item.archiveId}
+                kindLabel={planKindLabel(item.kind)}
               />
             ))}
           </ul>

@@ -5,11 +5,15 @@ import {
   ARCHIVE_REASON_AUTO_48H,
   ARCHIVE_REASON_FOCUS_COMPLETE,
   ARCHIVE_REASON_MANUAL,
+  ARCHIVE_REASON_DAILY_CHECKIN,
   ARCHIVE_REASON_PLAN_COMPLETE,
+  ARCHIVE_REASON_PLAN_CYCLE_ROLLOVER,
   ARCHIVE_REASON_PLAN_OVERDUE,
+  ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
   ARCHIVE_TYPE_FOCUS_RECORD,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
+  ARCHIVE_TYPE_PLAN_CYCLE,
   archiveItem,
   essay,
 } from "@/db/schema";
@@ -141,6 +145,10 @@ export function archiveTypeLabel(type: string) {
       return "随笔沉淀";
     case ARCHIVE_TYPE_PLAN_ARCHIVE:
       return "规划归档";
+    case ARCHIVE_TYPE_PLAN_CYCLE:
+      return "轮期归档";
+    case ARCHIVE_TYPE_DAILY_CHECKIN:
+      return "日课归档";
     case ARCHIVE_TYPE_FOCUS_RECORD:
       return "凝录";
     case "memory_fragment":
@@ -175,6 +183,10 @@ export function archiveReasonLabel(reason: string) {
       return "临期完成归档";
     case ARCHIVE_REASON_PLAN_OVERDUE:
       return "逾期自动归档";
+    case ARCHIVE_REASON_PLAN_CYCLE_ROLLOVER:
+      return "轮期滚期计次";
+    case ARCHIVE_REASON_DAILY_CHECKIN:
+      return "日课打卡";
     case ARCHIVE_REASON_FOCUS_COMPLETE:
       return "专注结束凝录";
     default:

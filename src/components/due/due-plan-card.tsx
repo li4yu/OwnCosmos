@@ -14,6 +14,7 @@ type DueCardProps = {
   dueAt: Date;
   daysLeft: number;
   remindDays: number;
+  compact?: boolean;
 };
 
 export function DuePlanCard({
@@ -22,6 +23,7 @@ export function DuePlanCard({
   dueAt,
   daysLeft,
   remindDays,
+  compact = false,
 }: DueCardProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -44,35 +46,44 @@ export function DuePlanCard({
 
   return (
     <li
-      className={`rounded-xl border bg-[var(--panel)] p-4 ${
+      className={`rounded-xl border bg-[var(--panel)] ${
+        compact ? "p-2.5" : "p-4"
+      } ${
         overdue
           ? "border-[var(--danger)]/50"
           : "border-[var(--line)] hover:border-[var(--amber)]"
       }`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
-            临期帖 · 只读副本
-          </p>
-          <h3 className="mt-1 text-lg tracking-[0.06em] text-[var(--paper)]">
+          {!compact ? (
+            <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
+              临期帖 · 只读副本
+            </p>
+          ) : null}
+          <h3
+            className={`tracking-[0.06em] text-[var(--paper)] ${
+              compact ? "text-sm" : "mt-1 text-lg"
+            }`}
+          >
             {title}
           </h3>
           <p
-            className={`mt-2 font-mono text-sm tracking-wide ${
-              overdue ? "text-[var(--danger)]" : "text-[var(--amber)]"
-            }`}
+            className={`font-mono tracking-wide ${
+              compact ? "mt-0.5 text-xs" : "mt-2 text-sm"
+            } ${overdue ? "text-[var(--danger)]" : "text-[var(--amber)]"}`}
           >
             {remainingDaysLabel(daysLeft)}
           </p>
-          <p className="mt-1 font-mono text-[10px] tracking-wide text-[var(--mist)]">
-            截止 {formatDueDateInput(dueAt)} · 提前 {remindDays} 天提醒
+          <p className="mt-0.5 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+            截止 {formatDueDateInput(dueAt)}
+            {compact ? null : ` · 提前 ${remindDays} 天提醒`}
           </p>
         </div>
         <div className="flex shrink-0 flex-col gap-1.5">
           <button
             type="button"
-            className="ui-btn-primary !w-auto px-4 py-2 text-xs"
+            className="ui-btn-primary !w-auto px-3 py-1.5 text-xs"
             onClick={() => {
               setError(null);
               setOpen(true);
@@ -80,12 +91,14 @@ export function DuePlanCard({
           >
             完成
           </button>
-          <Link
-            href={`/app/future/plans/${id}`}
-            className="ui-btn-ghost ui-btn-sm text-center"
-          >
-            看来日途
-          </Link>
+          {!compact ? (
+            <Link
+              href={`/app/future/plans/${id}`}
+              className="ui-btn-ghost ui-btn-sm text-center"
+            >
+              看来日途
+            </Link>
+          ) : null}
         </div>
       </div>
       {error ? (

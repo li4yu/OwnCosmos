@@ -6,10 +6,12 @@ import {
   archiveEssayAction,
   createEssayAction,
   deleteEssayAction,
+  refineEssayAction,
   updateEssayAction,
   type EssayActionState,
 } from "@/app/app/present/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { NoticeDialog } from "@/components/ui/notice-dialog";
 
 type EssayEditorProps =
   | {
@@ -50,8 +52,12 @@ export function EssayEditor(props: EssayEditorProps) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [refineOpen, setRefineOpen] = useState(false);
   const [actionPending, setActionPending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ title: string; message: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (props.mode !== "edit") return;
@@ -135,6 +141,35 @@ export function EssayEditor(props: EssayEditorProps) {
     router.refresh();
   }
 
+  async function confirmRefine() {
+    if (!isEdit) return;
+    if (dirty) {
+      setRefineOpen(false);
+      setNotice({
+        title: "请先保存",
+        message: "有未保存更改。请先保存随笔，再提炼到来日途。",
+      });
+      return;
+    }
+    setActionPending(true);
+    setActionError(null);
+    const result = await refineEssayAction(props.essayId);
+    if (result?.error || !result?.refinedPlanId) {
+      setActionError(result?.error ?? "提炼失败");
+      setActionPending(false);
+      setRefineOpen(false);
+      setNotice({
+        title: "无法提炼",
+        message: result?.error ?? "提炼失败",
+      });
+      return;
+    }
+    emitEssayDirty(false);
+    setRefineOpen(false);
+    router.push(`/app/future/plans/${result.refinedPlanId}?saved=1`);
+    router.refresh();
+  }
+
   return (
     <>
       <form action={formAction} className="flex flex-col gap-4">
@@ -207,6 +242,17 @@ export function EssayEditor(props: EssayEditorProps) {
             <>
               <button
                 type="button"
+                disabled={actionPending}
+                onClick={() => {
+                  setActionError(null);
+                  setRefineOpen(true);
+                }}
+                className="ui-btn-ghost px-4 py-2.5 text-[var(--amber)] hover:border-[var(--amber)]"
+              >
+                提炼
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   setActionError(null);
                   setArchiveOpen(true);
@@ -246,6 +292,21 @@ export function EssayEditor(props: EssayEditorProps) {
       />
 
       <ConfirmDialog
+        open={refineOpen}
+        title="提炼为计划？"
+        message="将用当前标题与正文创建一条来日途计划（默认今天截止，可再改），并保留溯源到本随笔。确定提炼吗？"
+        confirmLabel="提炼"
+        cancelLabel="取消"
+        pending={actionPending}
+        onCancel={() => {
+          if (!actionPending) setRefineOpen(false);
+        }}
+        onConfirm={() => {
+          void confirmRefine();
+        }}
+      />
+
+      <ConfirmDialog
         open={archiveOpen}
         title="归档这条随笔？"
         message="将沉淀入昔时往拾忆馆藏（随笔沉淀），今时际不再可编辑。确定归档吗？"
@@ -274,6 +335,13 @@ export function EssayEditor(props: EssayEditorProps) {
         onConfirm={() => {
           void confirmDelete();
         }}
+      />
+
+      <NoticeDialog
+        open={Boolean(notice)}
+        title={notice?.title ?? "提示"}
+        message={notice?.message ?? ""}
+        onClose={() => setNotice(null)}
       />
     </>
   );

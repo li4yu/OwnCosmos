@@ -1,12 +1,21 @@
 import Link from "next/link";
 import { DuePlanCard } from "@/components/due/due-plan-card";
 import { PoeticName } from "@/components/ui/poetic-name";
-import { listDueReminderPlans } from "@/services/plans";
+
+export type DueReminderListItem = {
+  id: string;
+  title: string;
+  dueAt: Date;
+  daysLeft: number;
+  remindDays: number;
+};
 
 type DueReminderSectionProps = {
-  items: Awaited<ReturnType<typeof listDueReminderPlans>>;
+  items: DueReminderListItem[];
   /** 今时际首页用精简标题；临期帖子页可隐藏（外层已有 PageHeader） */
   showHeading?: boolean;
+  /** 首页紧凑：缩小标题与空态 */
+  compact?: boolean;
   emptyHint?: string;
 };
 
@@ -14,38 +23,53 @@ type DueReminderSectionProps = {
 export function DueReminderSection({
   items,
   showHeading = true,
+  compact = false,
   emptyHint = "当前没有临期提醒。在来日途·规划里设置截止日期与临期配后，进入窗口即会出现在这里。",
 }: DueReminderSectionProps) {
   return (
-    <section className="flex flex-col gap-3">
+    <section className={`flex flex-col ${compact ? "gap-2" : "gap-3"}`}>
       {showHeading ? (
-        <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="home-v1__summary-head !mb-0">
           <div>
-            <h2 className="text-lg tracking-[0.12em] text-[var(--paper)]">
+            <h2
+              className={
+                compact
+                  ? "text-sm tracking-[0.12em] text-[var(--paper)]"
+                  : "text-lg tracking-[0.12em] text-[var(--paper)]"
+              }
+            >
               <PoeticName
                 name="临期帖"
                 tip="来日途计划进入提醒窗口后的只读倒计时卡片"
               />
             </h2>
-            <p className="mt-1 text-sm text-[var(--mist)]">
-              提醒窗口内的计划 · 只读；完成即归档
-            </p>
+            {!compact ? (
+              <p className="mt-1 text-sm text-[var(--mist)]">
+                提醒窗口内的计划 · 只读；完成即归档
+              </p>
+            ) : null}
           </div>
           <Link
             href="/app/present/due"
             className="font-mono text-[10px] tracking-wide text-[var(--amber)] hover:underline"
           >
-            查看全部 →
+            全部 →
           </Link>
         </div>
       ) : null}
 
       {items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--line)] p-6 text-center text-sm text-[var(--mist)]">
+        <div
+          className={`rounded-xl border border-dashed border-[var(--line)] text-center text-sm text-[var(--mist)] ${
+            compact ? "px-3 py-4" : "p-6"
+          }`}
+        >
           {emptyHint}
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul
+          className={`flex flex-col ${compact ? "home-v1__due-list gap-2" : "gap-3"}`}
+        >
           {items.map((item) => (
             <DuePlanCard
               key={item.id}
@@ -54,6 +78,7 @@ export function DueReminderSection({
               dueAt={item.dueAt}
               daysLeft={item.daysLeft}
               remindDays={item.remindDays}
+              compact={compact}
             />
           ))}
         </ul>

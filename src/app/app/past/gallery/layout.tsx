@@ -17,7 +17,7 @@ export default function GalleryLayout({
           />
         </h2>
         <p className="mt-2 text-sm text-[var(--mist)]">
-          馆藏总库，详情只读；馆内分区含随笔沉淀、规划归档、凝录。
+          馆藏总库，详情只读；分区含随笔沉淀、规划归档、轮期/日课计次归档、凝录。
         </p>
       </div>
       <Suspense fallback={<div className="h-10 rounded-lg border border-[var(--line)]" />}>

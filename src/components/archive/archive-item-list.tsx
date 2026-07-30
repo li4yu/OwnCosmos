@@ -5,11 +5,16 @@ import {
   formatDwell,
   listArchiveItems,
 } from "@/services/archive";
-import { ARCHIVE_TYPE_ESSAY_SEDIMENT } from "@/db/schema";
+import {
+  ARCHIVE_TYPE_DAILY_CHECKIN,
+  ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_PLAN_CYCLE,
+} from "@/db/schema";
 import {
   galleryDetailHref,
   type GallerySectionId,
 } from "@/lib/gallery-sections";
+import { cycleUnitLabel } from "@/lib/plan-kinds";
 import { PoeticName } from "@/components/ui/poetic-name";
 
 function formatWhen(d: Date) {
@@ -60,6 +65,15 @@ export function ArchiveItemList({
             <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] tracking-wide text-[var(--teal)]">
               {showTypeChip ? <span>{archiveTypeLabel(item.type)}</span> : null}
               <span>{archiveReasonLabel(item.archiveReason)}</span>
+              {item.type === ARCHIVE_TYPE_PLAN_CYCLE ||
+              item.type === ARCHIVE_TYPE_DAILY_CHECKIN ? (
+                <>
+                  <span>已完成 {item.cycleCount ?? 0} 次</span>
+                  {item.type === ARCHIVE_TYPE_PLAN_CYCLE && item.cycleUnit ? (
+                    <span>{cycleUnitLabel(item.cycleUnit)}</span>
+                  ) : null}
+                </>
+              ) : null}
               {item.type === ARCHIVE_TYPE_ESSAY_SEDIMENT ? (
                 <span>
                   停留 {formatDwell(item.sourceCreatedAt, item.archivedAt)}

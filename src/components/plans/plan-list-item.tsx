@@ -11,7 +11,12 @@ type PlanListItemProps = {
   id: string;
   title: string;
   body: string;
-  dueLabel: string;
+  dueLabel: string | null;
+  duePrefix?: string;
+  kindLabel?: string;
+  locked?: boolean;
+  /** 胶囊等：不提供完成归档 */
+  allowArchive?: boolean;
 };
 
 /** 未完成计划行：可编辑 / 完成及归档 / 删除 */
@@ -20,6 +25,10 @@ export function PlanListItem({
   title,
   body,
   dueLabel,
+  duePrefix = "截止",
+  kindLabel,
+  locked,
+  allowArchive = true,
 }: PlanListItemProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -60,29 +69,38 @@ export function PlanListItem({
           <div className="flex flex-wrap items-start justify-between gap-2">
             <h3 className="text-base text-[var(--paper)]">{title}</h3>
             <div className="flex shrink-0 flex-col items-end gap-1 font-mono text-[10px] tracking-wide text-[var(--mist)]">
-              <time>截止 {dueLabel}</time>
-              <span className="text-[var(--amber)]">未完成</span>
+              {kindLabel ? <span>{kindLabel}</span> : null}
+              {dueLabel ? <time>{duePrefix} {dueLabel}</time> : <span>无截止</span>}
+              {locked ? (
+                <span className="text-[var(--amber)]">未解锁</span>
+              ) : (
+                <span className="text-[var(--amber)]">未完成</span>
+              )}
             </div>
           </div>
           <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--mist)]">
-            {body.trim() || "（无描述）"}
+            {locked
+              ? "内容将在解锁日揭晓"
+              : body.trim() || "（无描述）"}
           </p>
         </Link>
         <div className="flex shrink-0 flex-col gap-1.5">
           <Link href={`/app/future/plans/${id}`} className="ui-btn-ghost ui-btn-sm">
-            编辑
+            {locked ? "查看" : "编辑"}
           </Link>
-          <button
-            type="button"
-            disabled={pending}
-            className="ui-btn-ghost ui-btn-sm text-[var(--teal)]"
-            onClick={() => {
-              setError(null);
-              setCompleteOpen(true);
-            }}
-          >
-            完成及归档
-          </button>
+          {!locked && allowArchive ? (
+            <button
+              type="button"
+              disabled={pending}
+              className="ui-btn-ghost ui-btn-sm text-[var(--teal)]"
+              onClick={() => {
+                setError(null);
+                setCompleteOpen(true);
+              }}
+            >
+              完成及归档
+            </button>
+          ) : null}
           <button
             type="button"
             className="ui-btn-danger ui-btn-sm"
@@ -139,9 +157,10 @@ type PlanCompletedItemProps = {
   id: string;
   title: string;
   body: string;
-  dueLabel: string;
+  dueLabel: string | null;
   archivedLabel: string | null;
   archiveId: string | null;
+  kindLabel?: string;
 };
 
 /** 已完成计划行：只读回顾，可跳转馆藏 */
@@ -151,6 +170,7 @@ export function PlanCompletedListItem({
   dueLabel,
   archivedLabel,
   archiveId,
+  kindLabel,
 }: PlanCompletedItemProps) {
   const href = archiveId
     ? galleryDetailHref(archiveId, "plan-archive")
@@ -165,7 +185,8 @@ export function PlanCompletedListItem({
               {title}
             </h3>
             <div className="flex shrink-0 flex-col items-end gap-1 font-mono text-[10px] tracking-wide text-[var(--mist)]">
-              <time>截止 {dueLabel}</time>
+              {kindLabel ? <span>{kindLabel}</span> : null}
+              {dueLabel ? <time>截止 {dueLabel}</time> : <span>无截止</span>}
               {archivedLabel ? <time>归档 {archivedLabel}</time> : null}
               <span className="text-[var(--teal)]">已完成</span>
             </div>

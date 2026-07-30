@@ -1,0 +1,3 @@
+ALTER TABLE "archive_item" ADD COLUMN "source_habit_id" text;--> statement-breakpoint
+ALTER TABLE "archive_item" ADD CONSTRAINT "archive_item_source_habit_id_daily_habit_id_fk" FOREIGN KEY ("source_habit_id") REFERENCES "public"."daily_habit"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "archive_item_user_habit_uidx" ON "archive_item" USING btree ("user_id","source_habit_id");

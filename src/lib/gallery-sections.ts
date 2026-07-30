@@ -1,7 +1,9 @@
 import {
+  ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
   ARCHIVE_TYPE_FOCUS_RECORD,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
+  ARCHIVE_TYPE_PLAN_CYCLE,
 } from "@/db/schema";
 
 /** 拾忆馆藏内部类型分区（三级导航；后续类型只加分区） */
@@ -33,6 +35,24 @@ export const GALLERY_SECTIONS = [
     filterType: ARCHIVE_TYPE_PLAN_ARCHIVE,
     ready: true,
     emptyHint: "尚无规划归档。完成带临期的计划后，将沉淀到此分区。",
+  },
+  {
+    id: "plan-cycle",
+    href: "/app/past/gallery/plan-cycle",
+    name: "轮期归档",
+    tip: "重复轮期按系列计次，不每期占一条",
+    filterType: ARCHIVE_TYPE_PLAN_CYCLE,
+    ready: true,
+    emptyHint: "尚无轮期归档。来日途轮期滚期或完成后，会在此累计次数。",
+  },
+  {
+    id: "daily-checkin",
+    href: "/app/past/gallery/daily-checkin",
+    name: "日课归档",
+    tip: "日课打卡按习惯计次，心得写入馆藏",
+    filterType: ARCHIVE_TYPE_DAILY_CHECKIN,
+    ready: true,
+    emptyHint: "尚无日课归档。首页或日课页打卡后，会在此累计次数。",
   },
   {
     id: "focus-record",

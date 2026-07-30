@@ -8,10 +8,13 @@ import {
   sourceModuleLabel,
 } from "@/services/archive";
 import {
+  ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
   ARCHIVE_TYPE_FOCUS_RECORD,
+  ARCHIVE_TYPE_PLAN_CYCLE,
 } from "@/db/schema";
 import { formatFocusDurationMs } from "@/lib/focus-duration";
+import { cycleUnitLabel } from "@/lib/plan-kinds";
 import { getFocusSession } from "@/services/focus";
 
 function formatWhen(d: Date) {
@@ -77,7 +80,36 @@ export async function ArchiveDetailView({
             </dt>
             <dd className="mt-0.5">{sourceModuleLabel(item.sourceModule)}</dd>
           </div>
-          {item.type === ARCHIVE_TYPE_FOCUS_RECORD ? (
+          {item.type === ARCHIVE_TYPE_PLAN_CYCLE ||
+          item.type === ARCHIVE_TYPE_DAILY_CHECKIN ? (
+            <>
+              <div>
+                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                  累计完成
+                </dt>
+                <dd className="mt-0.5 text-[var(--paper)]">
+                  {item.cycleCount ?? 0} 次
+                  {item.type === ARCHIVE_TYPE_PLAN_CYCLE && item.cycleUnit
+                    ? ` · ${cycleUnitLabel(item.cycleUnit)}`
+                    : null}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                  最近一次
+                </dt>
+                <dd className="mt-0.5">{formatWhen(item.archivedAt)}</dd>
+              </div>
+              <div>
+                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                  {item.type === ARCHIVE_TYPE_DAILY_CHECKIN
+                    ? "习惯起始"
+                    : "系列起始"}
+                </dt>
+                <dd className="mt-0.5">{formatWhen(item.sourceCreatedAt)}</dd>
+              </div>
+            </>
+          ) : item.type === ARCHIVE_TYPE_FOCUS_RECORD ? (
             <>
               <div>
                 <dt className="font-mono text-[10px] tracking-wide opacity-70">

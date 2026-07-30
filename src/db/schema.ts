@@ -7,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -16,6 +17,7 @@ import {
  * Phase 4: archive_item (拾忆馆藏); essay.archived_at 写入。
  * Phase 6: plan (来日途·规划，V1 仅单次事件).
  * Phase 8: focus_session (凝时·顺钟) → archive focus_record.
+ * Phase 10: plan 丰满 + plan_task / daily_habit / daily_checkin.
  */
 
 export const user = pgTable("user", {
@@ -102,6 +104,10 @@ export const essay = pgTable(
 export const ARCHIVE_TYPE_ESSAY_SEDIMENT = "essay_sediment" as const;
 /** Phase 7 写入；P5 仅分区空态预留 */
 export const ARCHIVE_TYPE_PLAN_ARCHIVE = "plan_archive" as const;
+/** Phase 10: 轮期系列计次归档（同 series 一条） */
+export const ARCHIVE_TYPE_PLAN_CYCLE = "plan_cycle_archive" as const;
+/** Phase 10: 日课习惯计次归档（同 habit 一条） */
+export const ARCHIVE_TYPE_DAILY_CHECKIN = "daily_checkin_archive" as const;
 /** Phase 8 写入；P5 仅分区空态预留 */
 export const ARCHIVE_TYPE_FOCUS_RECORD = "focus_record" as const;
 export const ARCHIVE_REASON_MANUAL = "manual" as const;
@@ -110,6 +116,10 @@ export const ARCHIVE_REASON_AUTO_48H = "auto_48h" as const;
 export const ARCHIVE_REASON_PLAN_COMPLETE = "plan_complete" as const;
 /** Phase 7: 逾期进站补算归档 */
 export const ARCHIVE_REASON_PLAN_OVERDUE = "plan_overdue" as const;
+/** Phase 10: 轮期当期结束滚下一期 */
+export const ARCHIVE_REASON_PLAN_CYCLE_ROLLOVER = "plan_cycle_rollover" as const;
+/** Phase 10: 日课打卡归档 */
+export const ARCHIVE_REASON_DAILY_CHECKIN = "daily_checkin" as const;
 /** Phase 8: 顺钟完整结束 → 凝录 */
 export const ARCHIVE_REASON_FOCUS_COMPLETE = "focus_complete" as const;
 
@@ -120,7 +130,7 @@ export const archiveItem = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    /** essay_sediment | plan_archive | focus_record | memory_fragment */
+    /** essay_sediment | plan_archive | plan_cycle_archive | daily_checkin_archive | focus_record */
     type: text("type").notNull(),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
@@ -138,6 +148,17 @@ export const archiveItem = pgTable(
       (): AnyPgColumn => focusSession.id,
       { onDelete: "set null" },
     ),
+    /** Phase 10: 日课习惯溯源 */
+    sourceHabitId: text("source_habit_id").references(
+      (): AnyPgColumn => dailyHabit.id,
+      { onDelete: "set null" },
+    ),
+    /** Phase 10: 轮期系列 id（与 plan.series_id 对齐） */
+    sourceSeriesId: text("source_series_id"),
+    /** Phase 10: 轮期 / 日课累计次数 */
+    cycleCount: integer("cycle_count"),
+    /** Phase 10: 轮期单位快照 day|week|month|year */
+    cycleUnit: text("cycle_unit"),
     archiveReason: text("archive_reason").notNull(),
     archivedAt: timestamp("archived_at").notNull(),
     /** 原随笔创建时间快照 */
@@ -148,13 +169,26 @@ export const archiveItem = pgTable(
   (t) => [
     index("archive_item_user_archived_idx").on(t.userId, t.archivedAt),
     index("archive_item_user_type_idx").on(t.userId, t.type),
+    uniqueIndex("archive_item_user_series_uidx").on(t.userId, t.sourceSeriesId),
+    uniqueIndex("archive_item_user_habit_uidx").on(t.userId, t.sourceHabitId),
   ],
 );
 
-/** Phase 6: 来日途 · 规划（V1 仅 kind=once） */
+/** Phase 6+: 来日途 · 规划 */
 export const PLAN_KIND_ONCE = "once" as const;
+export const PLAN_KIND_VISION = "vision" as const;
+export const PLAN_KIND_STAGE = "stage" as const;
+export const PLAN_KIND_CYCLE = "cycle" as const;
+export const PLAN_KIND_CAPSULE = "capsule" as const;
 export const PLAN_STATUS_OPEN = "open" as const;
 export const PLAN_STATUS_DONE = "done" as const;
+export const CYCLE_UNIT_DAY = "day" as const;
+export const CYCLE_UNIT_WEEK = "week" as const;
+export const CYCLE_UNIT_MONTH = "month" as const;
+export const CYCLE_UNIT_YEAR = "year" as const;
+export const PLAN_TASK_STATUS_OPEN = "open" as const;
+export const PLAN_TASK_STATUS_DONE = "done" as const;
+export const PLAN_TASK_STATUS_DEFERRED = "deferred" as const;
 
 export const plan = pgTable(
   "plan",
@@ -163,18 +197,31 @@ export const plan = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    /** once | vision | stage | cycle | capsule — 本阶段仅 once */
+    /** once | vision | stage | cycle | capsule */
     kind: text("kind").notNull().default(PLAN_KIND_ONCE),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
-    /** 截止日期 */
-    dueAt: timestamp("due_at").notNull(),
+    /** 截止日期 / 轮期期末 / 胶囊解锁日；愿景可空 */
+    dueAt: timestamp("due_at"),
     /** Phase 7: 临期配，提前几天进入提醒窗（默认 1） */
     remindDays: integer("remind_days").notNull().default(1),
     /** open | done */
     status: text("status").notNull().default(PLAN_STATUS_OPEN),
-    /** NULL = 仍在来日途；P7 归档馆藏时写入 */
+    /** NULL = 仍在来日途；归档馆藏时写入 */
     archivedAt: timestamp("archived_at"),
+    /** Phase 10: 提炼自流思笺 */
+    sourceEssayId: text("source_essay_id").references(() => essay.id, {
+      onDelete: "set null",
+    }),
+    /** Phase 10: 轮期单位 day|week|month|year */
+    cycleUnit: text("cycle_unit"),
+    /** Phase 10: 轮期系列 id（同系列共享） */
+    seriesId: text("series_id"),
+    /** Phase 10: 阶段任务挂愿景等 */
+    parentPlanId: text("parent_plan_id").references(
+      (): AnyPgColumn => plan.id,
+      { onDelete: "set null" },
+    ),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -182,6 +229,72 @@ export const plan = pgTable(
     index("plan_user_archived_idx").on(t.userId, t.archivedAt),
     index("plan_user_due_idx").on(t.userId, t.dueAt),
     index("plan_user_status_idx").on(t.userId, t.status),
+    index("plan_user_source_essay_idx").on(t.userId, t.sourceEssayId),
+    index("plan_user_kind_idx").on(t.userId, t.kind),
+    index("plan_user_series_idx").on(t.userId, t.seriesId),
+  ],
+);
+
+/** Phase 10: 规划子任务 */
+export const planTask = pgTable(
+  "plan_task",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    planId: text("plan_id")
+      .notNull()
+      .references(() => plan.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    /** open | done | deferred */
+    status: text("status").notNull().default(PLAN_TASK_STATUS_OPEN),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("plan_task_user_plan_idx").on(t.userId, t.planId),
+    index("plan_task_plan_sort_idx").on(t.planId, t.sortOrder),
+  ],
+);
+
+/** Phase 10: 日课习惯模板 */
+export const dailyHabit = pgTable(
+  "daily_habit",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    body: text("body").notNull().default(""),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("daily_habit_user_active_idx").on(t.userId, t.active)],
+);
+
+/** Phase 10: 日课打卡 */
+export const dailyCheckin = pgTable(
+  "daily_checkin",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    habitId: text("habit_id")
+      .notNull()
+      .references(() => dailyHabit.id, { onDelete: "cascade" }),
+    /** YYYY-MM-DD 本地日历日 */
+    checkinDate: text("checkin_date").notNull(),
+    note: text("note").notNull().default(""),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("daily_checkin_habit_date_uidx").on(t.habitId, t.checkinDate),
+    index("daily_checkin_user_date_idx").on(t.userId, t.checkinDate),
   ],
 );
 
@@ -227,6 +340,9 @@ export const userRelations = relations(user, ({ many }) => ({
   essays: many(essay),
   archiveItems: many(archiveItem),
   plans: many(plan),
+  planTasks: many(planTask),
+  dailyHabits: many(dailyHabit),
+  dailyCheckins: many(dailyCheckin),
   focusSessions: many(focusSession),
 }));
 
@@ -250,6 +366,7 @@ export const essayRelations = relations(essay, ({ one, many }) => ({
     references: [user.id],
   }),
   archiveItems: many(archiveItem),
+  refinedPlans: many(plan),
 }));
 
 export const archiveItemRelations = relations(archiveItem, ({ one }) => ({
@@ -269,6 +386,10 @@ export const archiveItemRelations = relations(archiveItem, ({ one }) => ({
     fields: [archiveItem.sourceFocusSessionId],
     references: [focusSession.id],
   }),
+  sourceHabit: one(dailyHabit, {
+    fields: [archiveItem.sourceHabitId],
+    references: [dailyHabit.id],
+  }),
 }));
 
 export const planRelations = relations(plan, ({ one, many }) => ({
@@ -276,7 +397,48 @@ export const planRelations = relations(plan, ({ one, many }) => ({
     fields: [plan.userId],
     references: [user.id],
   }),
+  sourceEssay: one(essay, {
+    fields: [plan.sourceEssayId],
+    references: [essay.id],
+  }),
+  parentPlan: one(plan, {
+    fields: [plan.parentPlanId],
+    references: [plan.id],
+    relationName: "plan_parent",
+  }),
+  childPlans: many(plan, { relationName: "plan_parent" }),
   archiveItems: many(archiveItem),
+  tasks: many(planTask),
+}));
+
+export const planTaskRelations = relations(planTask, ({ one }) => ({
+  user: one(user, {
+    fields: [planTask.userId],
+    references: [user.id],
+  }),
+  plan: one(plan, {
+    fields: [planTask.planId],
+    references: [plan.id],
+  }),
+}));
+
+export const dailyHabitRelations = relations(dailyHabit, ({ one, many }) => ({
+  user: one(user, {
+    fields: [dailyHabit.userId],
+    references: [user.id],
+  }),
+  checkins: many(dailyCheckin),
+}));
+
+export const dailyCheckinRelations = relations(dailyCheckin, ({ one }) => ({
+  user: one(user, {
+    fields: [dailyCheckin.userId],
+    references: [user.id],
+  }),
+  habit: one(dailyHabit, {
+    fields: [dailyCheckin.habitId],
+    references: [dailyHabit.id],
+  }),
 }));
 
 export const focusSessionRelations = relations(focusSession, ({ one, many }) => ({

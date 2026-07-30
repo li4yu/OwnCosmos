@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import {
@@ -10,11 +11,29 @@ import {
   updatePlanAction,
   type PlanActionState,
 } from "@/app/app/future/actions";
+import { PlanTaskPanel, type PlanTaskItem } from "@/components/plans/plan-task-panel";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
-import { PLAN_STATUS_DONE, PLAN_STATUS_OPEN } from "@/db/schema";
+import {
+  CYCLE_UNIT_DAY,
+  CYCLE_UNIT_MONTH,
+  CYCLE_UNIT_WEEK,
+  CYCLE_UNIT_YEAR,
+  PLAN_KIND_CAPSULE,
+  PLAN_KIND_CYCLE,
+  PLAN_KIND_ONCE,
+  PLAN_KIND_STAGE,
+  PLAN_KIND_VISION,
+  PLAN_STATUS_DONE,
+  PLAN_STATUS_OPEN,
+} from "@/db/schema";
 import { formatDueDateInput, parseDueDateInput } from "@/lib/plan-dates";
+import {
+  cycleUnitLabel,
+  planKindLabel,
+  type PlanKind,
+} from "@/lib/plan-kinds";
 import {
   DEFAULT_REMIND_DAYS,
   clampRemindDays,
@@ -24,20 +43,46 @@ import {
   validateRemindDays,
 } from "@/lib/plan-remind";
 
+type SourceLink = {
+  title: string;
+  href: string;
+  archived: boolean;
+};
+
 type PlanEditorProps =
-  | { mode: "create" }
+  | {
+      mode: "create";
+      defaultKind?: PlanKind;
+      initialTitle?: string;
+      initialBody?: string;
+      sourceEssayId?: string | null;
+      listHref?: string;
+    }
   | {
       mode: "edit";
       planId: string;
       initialTitle: string;
       initialBody: string;
-      initialDueAt: Date;
+      initialDueAt: Date | null;
       initialRemindDays: number;
       initialStatus: string;
+      initialKind: PlanKind;
+      initialCycleUnit?: string | null;
+      capsuleLocked?: boolean;
+      sourceLink?: SourceLink | null;
+      tasks?: PlanTaskItem[];
       justCreated?: boolean;
+      listHref?: string;
     };
 
 const initialState: PlanActionState = {};
+
+const KIND_OPTIONS: { value: PlanKind; tip: string }[] = [
+  { value: PLAN_KIND_ONCE, tip: "有明确截止日的单次事项" },
+  { value: PLAN_KIND_VISION, tip: "长期愿景，截止日可选" },
+  { value: PLAN_KIND_STAGE, tip: "阶段目标" },
+  { value: PLAN_KIND_CYCLE, tip: "按周期滚动" },
+];
 
 function emitDirty(dirty: boolean) {
   window.dispatchEvent(
@@ -48,20 +93,45 @@ function emitDirty(dirty: boolean) {
 export function PlanEditor(props: PlanEditorProps) {
   const router = useRouter();
   const isEdit = props.mode === "edit";
+  const listHref =
+    props.listHref ??
+    (isEdit
+      ? props.initialKind === PLAN_KIND_CYCLE
+        ? "/app/future/cycles"
+        : props.initialKind === PLAN_KIND_CAPSULE
+          ? "/app/future/capsule"
+          : "/app/future/plans"
+      : props.defaultKind === PLAN_KIND_CYCLE
+        ? "/app/future/cycles"
+        : props.defaultKind === PLAN_KIND_CAPSULE
+          ? "/app/future/capsule"
+          : "/app/future/plans");
+
   const action = isEdit
     ? updatePlanAction.bind(null, props.planId)
     : createPlanAction;
 
   const [state, formAction, pending] = useActionState(action, initialState);
-  const [title, setTitle] = useState(isEdit ? props.initialTitle : "");
-  const [body, setBody] = useState(isEdit ? props.initialBody : "");
-  const [dueAt, setDueAt] = useState(
-    isEdit
-      ? formatDueDateInput(props.initialDueAt)
-      : formatDueDateInput(new Date()),
+  const [kind, setKind] = useState<PlanKind>(
+    isEdit ? props.initialKind : (props.defaultKind ?? PLAN_KIND_ONCE),
+  );
+  const [title, setTitle] = useState(
+    isEdit ? props.initialTitle : (props.initialTitle ?? ""),
+  );
+  const [body, setBody] = useState(
+    isEdit ? props.initialBody : (props.initialBody ?? ""),
+  );
+  const [dueAt, setDueAt] = useState(() => {
+    if (isEdit) {
+      return props.initialDueAt ? formatDueDateInput(props.initialDueAt) : "";
+    }
+    return formatDueDateInput(new Date());
+  });
+  const [cycleUnit, setCycleUnit] = useState(
+    isEdit ? (props.initialCycleUnit ?? CYCLE_UNIT_WEEK) : CYCLE_UNIT_WEEK,
   );
   const [remindDays, setRemindDays] = useState(() => {
-    if (isEdit) {
+    if (isEdit && props.initialDueAt) {
       return clampRemindDays(props.initialRemindDays, props.initialDueAt);
     }
     return clampRemindDays(DEFAULT_REMIND_DAYS, new Date());
@@ -79,10 +149,23 @@ export function PlanEditor(props: PlanEditorProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
   const [actionPending, setActionPending] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [status, setStatus] = useState(
     isEdit ? props.initialStatus : PLAN_STATUS_OPEN,
   );
+
+  const capsuleLocked = isEdit && Boolean(props.capsuleLocked);
+  const needsDue = kind !== PLAN_KIND_VISION;
+  /** 轮期 / 胶囊无临期配；轮期到期当天起出现在首页 */
+  const showRemind =
+    kind !== PLAN_KIND_CAPSULE &&
+    kind !== PLAN_KIND_CYCLE &&
+    Boolean(dueAt);
+  const dueLabel =
+    kind === PLAN_KIND_CAPSULE
+      ? "解锁日期"
+      : kind === PLAN_KIND_CYCLE
+        ? "本期结束"
+        : "截止日期";
 
   useEffect(() => {
     if (props.mode !== "edit") return;
@@ -125,12 +208,12 @@ export function PlanEditor(props: PlanEditorProps) {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [dirty]);
 
-  const dueDate = parseDueDateInput(dueAt);
+  const dueDate = dueAt ? parseDueDateInput(dueAt) : null;
   const remindMax = dueDate ? maxRemindDaysForDue(dueDate) : DEFAULT_REMIND_DAYS;
   const remindPresets = dueDate ? remindPresetsForDue(dueDate) : [1];
 
   useEffect(() => {
-    if (!dueDate) return;
+    if (!dueDate || kind === PLAN_KIND_CAPSULE) return;
     const next = clampRemindDays(remindDays, dueDate);
     if (next !== remindDays) {
       setRemindDays(next);
@@ -140,9 +223,8 @@ export function PlanEditor(props: PlanEditorProps) {
         message: `截止日期变更后，提前天数不能超过「今天 → 截止」的跨度，已改为提前 ${next} 天。`,
       });
     }
-    // 仅随截止日期变化纠偏
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dueAt]);
+  }, [dueAt, kind]);
 
   function showNotice(title: string, message: string) {
     setNotice({ title, message });
@@ -159,10 +241,7 @@ export function PlanEditor(props: PlanEditorProps) {
       setRemindDays(clamped);
       setRemindDraft(String(clamped));
       markDirty();
-      showNotice(
-        "临期配无效",
-        `${err} 已为你调整为提前 ${clamped} 天。`,
-      );
+      showNotice("临期配无效", `${err} 已为你调整为提前 ${clamped} 天。`);
       return;
     }
     setRemindDays(n);
@@ -181,49 +260,43 @@ export function PlanEditor(props: PlanEditorProps) {
       setLeaveOpen(true);
       return;
     }
-    router.push("/app/future/plans");
+    router.push(listHref);
   }
 
   async function confirmDelete() {
     if (!isEdit) return;
     setActionPending(true);
-    setActionError(null);
     const result = await deletePlanAction(props.planId);
     if (result?.error) {
-      setActionError(result.error);
       setActionPending(false);
       showNotice("操作失败", result.error);
       return;
     }
     emitDirty(false);
-    router.push("/app/future/plans");
+    router.push(listHref);
     router.refresh();
   }
 
   async function confirmComplete() {
     if (!isEdit) return;
     setActionPending(true);
-    setActionError(null);
     const result = await completePlanAction(props.planId);
     if (result?.error) {
-      setActionError(result.error);
       setActionPending(false);
       showNotice("操作失败", result.error);
       return;
     }
     emitDirty(false);
     setCompleteOpen(false);
-    router.push("/app/future/plans");
+    router.push(listHref);
     router.refresh();
   }
 
   async function reopen() {
     if (!isEdit) return;
     setActionPending(true);
-    setActionError(null);
     const result = await setPlanStatusAction(props.planId, PLAN_STATUS_OPEN);
     if (result?.error) {
-      setActionError(result.error);
       setActionPending(false);
       showNotice("操作失败", result.error);
       return;
@@ -236,11 +309,84 @@ export function PlanEditor(props: PlanEditorProps) {
   return (
     <>
       <form action={formAction} className="flex flex-col gap-4">
+        <input type="hidden" name="kind" value={kind} />
+        {!isEdit && props.sourceEssayId ? (
+          <input type="hidden" name="sourceEssayId" value={props.sourceEssayId} />
+        ) : null}
+
+        {isEdit && props.sourceLink ? (
+          <p className="text-sm text-[var(--mist)]">
+            提炼自
+            <Link
+              href={props.sourceLink.href}
+              className="mx-1 text-[var(--teal)] underline-offset-2 hover:underline"
+            >
+              {props.sourceLink.title}
+            </Link>
+            {props.sourceLink.archived ? "（馆藏）" : "（流思笺）"}
+          </p>
+        ) : null}
+
+        {!isEdit ? (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="text-sm text-[var(--mist)]">类型</legend>
+            <div className="flex flex-wrap gap-2">
+              {KIND_OPTIONS.filter((opt) => {
+                if (props.defaultKind === PLAN_KIND_CYCLE) {
+                  return opt.value === PLAN_KIND_CYCLE;
+                }
+                if (props.defaultKind === PLAN_KIND_CAPSULE) {
+                  return opt.value === PLAN_KIND_CAPSULE;
+                }
+                if (
+                  props.defaultKind === PLAN_KIND_ONCE ||
+                  !props.defaultKind
+                ) {
+                  return (
+                    opt.value === PLAN_KIND_ONCE ||
+                    opt.value === PLAN_KIND_VISION ||
+                    opt.value === PLAN_KIND_STAGE
+                  );
+                }
+                return true;
+              }).map((opt) => {
+                const active = kind === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    title={opt.tip}
+                    onClick={() => {
+                      setKind(opt.value);
+                      markDirty();
+                    }}
+                    className={`rounded-md px-3 py-2 text-sm transition ${
+                      active
+                        ? "bg-[var(--amber)] text-[var(--on-amber)]"
+                        : "border border-[var(--line)] bg-[var(--panel)] text-[var(--paper)] hover:border-[var(--amber)]"
+                    }`}
+                  >
+                    {planKindLabel(opt.value)}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        ) : (
+          <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
+            类型：{planKindLabel(kind)}
+            {kind === PLAN_KIND_CYCLE
+              ? ` · ${cycleUnitLabel(cycleUnit)}`
+              : null}
+          </p>
+        )}
+
         <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
           标题
           <input
             name="title"
             value={title}
+            disabled={capsuleLocked}
             onChange={(e) => {
               setTitle(e.target.value);
               markDirty();
@@ -251,96 +397,183 @@ export function PlanEditor(props: PlanEditorProps) {
           />
         </label>
 
-        <DatePickerField
-          name="dueAt"
-          value={dueAt}
-          onChange={(next) => {
-            setDueAt(next);
-            markDirty();
-          }}
-        />
-
-        <div className="flex flex-col gap-3 rounded-xl border border-[var(--line)] bg-[var(--field-bg)]/40 p-3 sm:p-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="text-sm text-[var(--paper)]">临期配</p>
-            <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
-              最多提前 {remindMax} 天（相对今天与截止日）
-            </p>
-          </div>
-          <p className="text-sm leading-6 text-[var(--mist)]">
-            默认提前 1 天；可点快捷值或自定义天数。
-          </p>
-          <input type="hidden" name="remindDays" value={remindDays} />
-          {remindPresets.length > 0 ? (
-            <div className="flex flex-wrap gap-2" role="group" aria-label="临期配快捷">
-              {remindPresets.map((d) => {
-                const active = remindDays === d;
-                return (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => applyRemindDays(d)}
-                    className={`min-w-[4.5rem] rounded-md px-3 py-2 text-sm tracking-[0.04em] transition ${
-                      active
-                        ? "bg-[var(--amber)] text-[var(--on-amber)] shadow-sm"
-                        : "border border-[var(--line)] bg-[var(--panel)] text-[var(--paper)] hover:border-[var(--amber)]"
-                    }`}
-                  >
-                    {d} 天
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
+        {kind === PLAN_KIND_CYCLE ? (
           <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
-            自定义提前天数
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="off"
-                value={remindDraft}
-                onChange={(e) => {
-                  setRemindDraft(e.target.value);
-                }}
-                onBlur={() => {
-                  const parsed = parseRemindDaysInput(remindDraft);
-                  if (parsed == null) {
-                    setRemindDraft(String(remindDays));
-                    showNotice("临期配无效", "请输入正整数天数。");
-                    return;
-                  }
-                  applyRemindDays(parsed);
-                }}
-                className="auth-field max-w-[8rem]"
-              />
-              <span className="text-sm text-[var(--mist)]">天</span>
-            </div>
+            轮期单位
+            <select
+              name="cycleUnit"
+              value={cycleUnit}
+              disabled={capsuleLocked}
+              onChange={(e) => {
+                setCycleUnit(e.target.value);
+                markDirty();
+              }}
+              className="auth-field"
+            >
+              <option value={CYCLE_UNIT_DAY}>每日</option>
+              <option value={CYCLE_UNIT_WEEK}>每周</option>
+              <option value={CYCLE_UNIT_MONTH}>每月</option>
+              <option value={CYCLE_UNIT_YEAR}>每年</option>
+            </select>
           </label>
-        </div>
+        ) : (
+          <input type="hidden" name="cycleUnit" value="" />
+        )}
 
-        <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
-          描述
-          <textarea
-            name="body"
-            value={body}
-            onChange={(e) => {
-              setBody(e.target.value);
+        {needsDue || dueAt ? (
+          <DatePickerField
+            name="dueAt"
+            label={dueLabel}
+            value={dueAt}
+            disabled={capsuleLocked}
+            onChange={(next) => {
+              setDueAt(next);
               markDirty();
             }}
-            rows={10}
-            className="auth-field min-h-[200px] resize-y leading-7"
-            placeholder="补充一点细节……"
           />
-        </label>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-[var(--mist)]">截止日期（可选）</p>
+            <button
+              type="button"
+              className="ui-btn-ghost w-fit px-3 py-2 text-sm"
+              onClick={() => {
+                setDueAt(formatDueDateInput(new Date()));
+                markDirty();
+              }}
+            >
+              添加截止日
+            </button>
+            <input type="hidden" name="dueAt" value="" />
+          </div>
+        )}
 
-        {isEdit ? (
+        {kind === PLAN_KIND_VISION && dueAt ? (
+          <button
+            type="button"
+            className="ui-btn-ghost w-fit px-3 py-1.5 text-xs"
+            onClick={() => {
+              setDueAt("");
+              markDirty();
+            }}
+          >
+            清除截止日
+          </button>
+        ) : null}
+
+        {showRemind ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-[var(--line)] bg-[var(--field-bg)]/40 p-3 sm:p-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="text-sm text-[var(--paper)]">临期配</p>
+              <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
+                最多提前 {remindMax} 天（相对今天与截止日）
+              </p>
+            </div>
+            <p className="text-sm leading-6 text-[var(--mist)]">
+              默认提前 1 天；可点快捷值或自定义天数。
+            </p>
+            <input type="hidden" name="remindDays" value={remindDays} />
+            {remindPresets.length > 0 ? (
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="临期配快捷"
+              >
+                {remindPresets.map((d) => {
+                  const active = remindDays === d;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      disabled={capsuleLocked}
+                      onClick={() => applyRemindDays(d)}
+                      className={`min-w-[4.5rem] rounded-md px-3 py-2 text-sm tracking-[0.04em] transition ${
+                        active
+                          ? "bg-[var(--amber)] text-[var(--on-amber)] shadow-sm"
+                          : "border border-[var(--line)] bg-[var(--panel)] text-[var(--paper)] hover:border-[var(--amber)]"
+                      }`}
+                    >
+                      {d} 天
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+            <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
+              自定义提前天数
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
+                  disabled={capsuleLocked}
+                  value={remindDraft}
+                  onChange={(e) => {
+                    setRemindDraft(e.target.value);
+                  }}
+                  onBlur={() => {
+                    const parsed = parseRemindDaysInput(remindDraft);
+                    if (parsed == null) {
+                      setRemindDraft(String(remindDays));
+                      showNotice("临期配无效", "请输入正整数天数。");
+                      return;
+                    }
+                    applyRemindDays(parsed);
+                  }}
+                  className="auth-field max-w-[8rem]"
+                />
+                <span className="text-sm text-[var(--mist)]">天</span>
+              </div>
+            </label>
+          </div>
+        ) : (
+          <input type="hidden" name="remindDays" value={remindDays} />
+        )}
+
+        {capsuleLocked ? (
+          <div className="rounded-xl border border-dashed border-[var(--line)] p-6 text-center">
+            <p className="text-sm text-[var(--paper)]">时间胶囊尚未解锁</p>
+            <p className="mt-2 text-sm text-[var(--mist)]">
+              解锁日 {dueAt || "未设"} 当天起可阅读正文。
+            </p>
+          </div>
+        ) : (
+          <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
+            描述
+            <textarea
+              name="body"
+              value={body}
+              onChange={(e) => {
+                setBody(e.target.value);
+                markDirty();
+              }}
+              rows={10}
+              className="auth-field min-h-[200px] resize-y leading-7"
+              placeholder={
+                kind === PLAN_KIND_CAPSULE
+                  ? "写给未来的自己……"
+                  : "补充一点细节……"
+              }
+            />
+          </label>
+        )}
+
+        {isEdit && !capsuleLocked ? (
+          <PlanTaskPanel planId={props.planId} tasks={props.tasks ?? []} />
+        ) : null}
+
+        {isEdit && kind !== PLAN_KIND_CAPSULE ? (
           <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
             状态：{status === PLAN_STATUS_DONE ? "已完成" : "未完成"}
             <span className="ml-2 text-[var(--mist)]">
               （完成会归档入馆藏，临期帖同步消失）
             </span>
+          </p>
+        ) : null}
+        {isEdit && kind === PLAN_KIND_CAPSULE && !capsuleLocked ? (
+          <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
+            已解锁 · 可随时重读，无需归档
           </p>
         ) : null}
 
@@ -356,13 +589,15 @@ export function PlanEditor(props: PlanEditorProps) {
         ) : null}
 
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="submit"
-            disabled={pending}
-            className="ui-btn-primary !w-auto px-5"
-          >
-            {pending ? "保存中…" : isEdit ? "保存" : "创建并保存"}
-          </button>
+          {!capsuleLocked ? (
+            <button
+              type="submit"
+              disabled={pending}
+              className="ui-btn-primary !w-auto px-5"
+            >
+              {pending ? "保存中…" : isEdit ? "保存" : "创建并保存"}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={requestLeave}
@@ -372,27 +607,25 @@ export function PlanEditor(props: PlanEditorProps) {
           </button>
           {isEdit ? (
             <>
+              {!capsuleLocked && kind !== PLAN_KIND_CAPSULE ? (
+                <button
+                  type="button"
+                  disabled={actionPending}
+                  onClick={() => {
+                    if (status === PLAN_STATUS_DONE) {
+                      void reopen();
+                      return;
+                    }
+                    setCompleteOpen(true);
+                  }}
+                  className="ui-btn-ghost px-4 py-2.5 text-[var(--teal)] hover:border-[var(--teal)]"
+                >
+                  {status === PLAN_STATUS_DONE ? "标为未完成" : "完成及归档"}
+                </button>
+              ) : null}
               <button
                 type="button"
-                disabled={actionPending}
-                onClick={() => {
-                  if (status === PLAN_STATUS_DONE) {
-                    void reopen();
-                    return;
-                  }
-                  setActionError(null);
-                  setCompleteOpen(true);
-                }}
-                className="ui-btn-ghost px-4 py-2.5 text-[var(--teal)] hover:border-[var(--teal)]"
-              >
-                {status === PLAN_STATUS_DONE ? "标为未完成" : "完成及归档"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActionError(null);
-                  setDeleteOpen(true);
-                }}
+                onClick={() => setDeleteOpen(true)}
                 className="ui-btn-danger ml-auto px-4 py-2.5"
               >
                 删除
@@ -413,7 +646,7 @@ export function PlanEditor(props: PlanEditorProps) {
           setLeaveOpen(false);
           setDirty(false);
           emitDirty(false);
-          router.push("/app/future/plans");
+          router.push(listHref);
         }}
       />
 
