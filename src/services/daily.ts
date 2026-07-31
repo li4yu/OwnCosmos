@@ -8,6 +8,7 @@ import {
   dailyCheckin,
   dailyHabit,
 } from "@/db/schema";
+import { mergeDatedArchiveBody } from "@/lib/dated-notes";
 import { formatDueDateInput } from "@/lib/plan-dates";
 
 function newId() {
@@ -95,10 +96,11 @@ export async function listTodayCheckins(userId: string, now = new Date()) {
     );
 }
 
-/** 日课习惯计次归档：同 habit 一条，新打卡日 +1，同日改心得只更新正文 */
+/** 日课习惯计次归档：同 habit 一条；新打卡日 +1；心得按日追加（日期在前） */
 async function upsertDailyHabitArchive(
   habit: DailyHabitRecord,
   note: string,
+  checkinDate: string,
   isNewDay: boolean,
   now: Date,
 ) {
@@ -114,8 +116,13 @@ async function upsertDailyHabitArchive(
     )
     .limit(1);
 
-  const body = note.trim() || habit.body || "（已打卡）";
   const prev = existing[0];
+  const body = mergeDatedArchiveBody(
+    prev?.body ?? "",
+    checkinDate,
+    note,
+    habit.body.trim() || "（已打卡）",
+  );
   if (prev) {
     await getDb()
       .update(archiveItem)
@@ -152,7 +159,7 @@ async function upsertDailyHabitArchive(
 }
 
 /**
- * 打卡；同日重复则更新 note，并同步馆藏日课归档（按习惯计次）
+ * 打卡；同日重复则更新 note，并同步馆藏日课归档（按习惯计次、按日追加心得）
  */
 export async function checkinHabit(
   userId: string,
@@ -197,7 +204,7 @@ export async function checkinHabit(
     });
   }
 
-  await upsertDailyHabitArchive(habit, note, isNewDay, now);
+  await upsertDailyHabitArchive(habit, note, checkinDate, isNewDay, now);
   return checkinId;
 }
 

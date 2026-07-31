@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, asc, desc, eq, inArray, isNotNull, isNull, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   ARCHIVE_REASON_PLAN_COMPLETE,
@@ -8,6 +8,8 @@ import {
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
+  CYCLE_UNIT_CUSTOM,
+  CYCLE_UNIT_DAY,
   PLAN_KIND_CAPSULE,
   PLAN_KIND_CYCLE,
   PLAN_KIND_ONCE,
@@ -16,10 +18,17 @@ import {
   archiveItem,
   essay,
   plan,
+  planTask,
 } from "@/db/schema";
-import { calendarDaysUntilDue, localTodayNoon } from "@/lib/plan-dates";
+import { mergeDatedArchiveBody, parseDatedNotes } from "@/lib/dated-notes";
+import {
+  calendarDaysUntilDue,
+  formatDueDateInput,
+  localTodayNoon,
+} from "@/lib/plan-dates";
 import {
   advanceCycleDue,
+  clampCycleEveryDays,
   isCapsuleLocked,
   isCycleUnit,
   participatesInDueReminders,
@@ -54,9 +63,19 @@ export type CreatePlanInput = {
   kind?: PlanKind;
   sourceEssayId?: string | null;
   cycleUnit?: CycleUnit | null;
+  cycleEveryDays?: number | null;
   seriesId?: string | null;
   parentPlanId?: string | null;
 };
+
+function resolveCycleEveryDays(
+  kind: PlanKind | string,
+  cycleUnit: CycleUnit | string | null | undefined,
+  raw: number | null | undefined,
+) {
+  if (kind !== PLAN_KIND_CYCLE || cycleUnit !== CYCLE_UNIT_CUSTOM) return null;
+  return clampCycleEveryDays(raw ?? NaN);
+}
 
 export function isInRemindWindow(
   dueAt: Date,
@@ -152,10 +171,26 @@ export async function listCompletedPlans(
     .where(and(...conditions))
     .orderBy(desc(plan.archivedAt), desc(plan.updatedAt));
 
-  return rows.map((r) => ({
-    ...redactIfLocked(r.plan),
-    archiveId: r.archiveId ?? null,
-  }));
+  // 同一 plan 若有多条 plan_archive 快照，join 会炸行；按 plan.id 去重
+  const byPlanId = new Map<
+    string,
+    PlanRecord & { archiveId: string | null }
+  >();
+  for (const r of rows) {
+    const next = {
+      ...redactIfLocked(r.plan),
+      archiveId: r.archiveId ?? null,
+    };
+    const prev = byPlanId.get(next.id);
+    if (!prev) {
+      byPlanId.set(next.id, next);
+      continue;
+    }
+    if (!prev.archiveId && next.archiveId) {
+      byPlanId.set(next.id, next);
+    }
+  }
+  return [...byPlanId.values()];
 }
 
 /** @deprecated 使用 listOpenPlans；保留给补算等需要「未归档含 done」的场景 */
@@ -271,10 +306,41 @@ export async function listDueReminderPlans(userId: string, now = new Date()) {
       daysLeft: calendarDaysUntilDue(row.dueAt, now),
     });
   }
-  return dueRows.sort(
-    (a, b) =>
-      a.daysLeft - b.daysLeft || a.dueAt.getTime() - b.dueAt.getTime(),
-  );
+  // 当日置顶，其余按剩余天数升序
+  return dueRows.sort((a, b) => {
+    const aToday = a.daysLeft === 0 ? 0 : 1;
+    const bToday = b.daysLeft === 0 ? 0 : 1;
+    return (
+      aToday - bToday ||
+      a.daysLeft - b.daysLeft ||
+      a.dueAt.getTime() - b.dueAt.getTime()
+    );
+  });
+}
+
+/** 临期帖延期：回写 due_at */
+export async function postponeDuePlan(
+  userId: string,
+  planId: string,
+  newDueAt: Date,
+) {
+  const existing = await getActivePlan(userId, planId);
+  if (!existing) return null;
+  if (existing.kind === PLAN_KIND_CAPSULE) return null;
+  const now = new Date();
+  const remindDays =
+    existing.kind === PLAN_KIND_CYCLE
+      ? existing.remindDays
+      : clampRemindDays(existing.remindDays, newDueAt);
+  await getDb()
+    .update(plan)
+    .set({
+      dueAt: newDueAt,
+      remindDays,
+      updatedAt: now,
+    })
+    .where(and(eq(plan.id, planId), eq(plan.userId, userId)));
+  return planId;
 }
 
 export async function createPlan(userId: string, input: CreatePlanInput) {
@@ -288,6 +354,11 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
       ? (input.seriesId ?? newId())
       : (input.seriesId ?? null);
   const cycleUnit = kind === PLAN_KIND_CYCLE ? (input.cycleUnit ?? null) : null;
+  const cycleEveryDays = resolveCycleEveryDays(
+    kind,
+    cycleUnit,
+    input.cycleEveryDays,
+  );
 
   await getDb().insert(plan).values({
     id,
@@ -307,6 +378,7 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
     archivedAt: null,
     sourceEssayId: input.sourceEssayId ?? null,
     cycleUnit,
+    cycleEveryDays,
     seriesId,
     parentPlanId: input.parentPlanId ?? null,
     createdAt: now,
@@ -352,6 +424,7 @@ export async function updatePlan(
     dueAt: Date | null;
     remindDays: number;
     cycleUnit?: CycleUnit | null;
+    cycleEveryDays?: number | null;
   },
 ) {
   const existing = await getActivePlan(userId, planId);
@@ -381,6 +454,11 @@ export async function updatePlan(
     isCycleUnit(input.cycleUnit)
   ) {
     patch.cycleUnit = input.cycleUnit;
+    patch.cycleEveryDays = resolveCycleEveryDays(
+      existing.kind,
+      input.cycleUnit,
+      input.cycleEveryDays,
+    );
   }
   await getDb()
     .update(plan)
@@ -429,8 +507,129 @@ async function insertPlanArchive(
   return id;
 }
 
+/** 去掉段落中的「子任务」快照段，保留心得 */
+function stripCycleTaskSnapshot(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+  const cut = trimmed.search(/\n\n子任务\n/);
+  if (cut >= 0) return trimmed.slice(0, cut).trim();
+  if (trimmed === "子任务" || trimmed.startsWith("子任务\n")) return "";
+  return trimmed;
+}
+
+/** 本期心得 + 子任务打卡次数快照（写入馆藏按日段落） */
+function buildCyclePeriodArchiveNote(
+  note: string | undefined,
+  tasks: { title: string; checkCount: number }[],
+) {
+  const base = note?.trim() || "（已打卡）";
+  if (tasks.length === 0) return base;
+  const lines = tasks.map((t) => `${t.title} · ${t.checkCount} 次`);
+  return `${base}\n\n子任务\n${lines.join("\n")}`;
+}
+
 /**
- * 轮期系列计次归档：同 series 只保留一条馆藏，cycle_count +1
+ * 参照日课：子任务打卡后，把「名称 · 次数」同步进轮期系列馆藏（按打卡日改写该段）。
+ * 不增加 cycle_count（计次仍只在完成本期 / 滚期时 +1）。
+ */
+export async function syncCycleArchiveTaskSnapshot(
+  userId: string,
+  planId: string,
+  now = new Date(),
+) {
+  const rows = await getDb()
+    .select()
+    .from(plan)
+    .where(
+      and(
+        eq(plan.id, planId),
+        eq(plan.userId, userId),
+        isNull(plan.archivedAt),
+        eq(plan.kind, PLAN_KIND_CYCLE),
+      ),
+    )
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+
+  const tasks = await getDb()
+    .select({
+      title: planTask.title,
+      checkCount: planTask.checkCount,
+    })
+    .from(planTask)
+    .where(and(eq(planTask.userId, userId), eq(planTask.planId, planId)))
+    .orderBy(asc(planTask.sortOrder), asc(planTask.createdAt));
+  if (tasks.length === 0) return null;
+
+  const seriesId = row.seriesId ?? row.id;
+  const checkinDate = formatDueDateInput(now);
+  const existing = await getDb()
+    .select()
+    .from(archiveItem)
+    .where(
+      and(
+        eq(archiveItem.userId, userId),
+        eq(archiveItem.type, ARCHIVE_TYPE_PLAN_CYCLE),
+        eq(archiveItem.sourceSeriesId, seriesId),
+      ),
+    )
+    .limit(1);
+  const prev = existing[0];
+  const { blocks } = parseDatedNotes(prev?.body ?? "");
+  const dayText = blocks.find((b) => b.date === checkinDate)?.text ?? "";
+  const noteOnly = stripCycleTaskSnapshot(dayText);
+  const body = mergeDatedArchiveBody(
+    prev?.body ?? "",
+    checkinDate,
+    buildCyclePeriodArchiveNote(
+      noteOnly && noteOnly !== "（已打卡）" ? noteOnly : undefined,
+      tasks,
+    ),
+    "（已打卡）",
+  );
+
+  if (prev) {
+    await getDb()
+      .update(archiveItem)
+      .set({
+        title: row.title,
+        body,
+        sourcePlanId: row.id,
+        cycleUnit: row.cycleUnit ?? prev.cycleUnit,
+        cycleEveryDays: row.cycleEveryDays ?? prev.cycleEveryDays,
+        archivedAt: now,
+        sourceUpdatedAt: now,
+      })
+      .where(eq(archiveItem.id, prev.id));
+    return prev.id;
+  }
+
+  const id = newId();
+  await getDb().insert(archiveItem).values({
+    id,
+    userId,
+    type: ARCHIVE_TYPE_PLAN_CYCLE,
+    title: row.title,
+    body,
+    sourceModule: "future",
+    sourceEssayId: row.sourceEssayId,
+    sourcePlanId: row.id,
+    sourceSeriesId: seriesId,
+    cycleCount: 0,
+    cycleUnit: row.cycleUnit,
+    cycleEveryDays: row.cycleEveryDays,
+    archiveReason: ARCHIVE_REASON_PLAN_CYCLE_ROLLOVER,
+    archivedAt: now,
+    sourceCreatedAt: row.createdAt,
+    sourceUpdatedAt: now,
+  });
+  return id;
+}
+
+/**
+ * 轮期系列计次归档：同 series 只保留一条馆藏，cycle_count +1；
+ * 心得按本期截止日追加（日期在前），与日课一致；有子任务时附带次数快照
  */
 async function upsertCycleSeriesArchive(
   row: PlanRecord,
@@ -442,7 +641,15 @@ async function upsertCycleSeriesArchive(
   note?: string,
 ) {
   const seriesId = row.seriesId ?? row.id;
-  const body = note?.trim() || row.body;
+  const periodDate = formatDueDateInput(row.dueAt ?? archivedAt);
+  const tasks = await getDb()
+    .select({
+      title: planTask.title,
+      checkCount: planTask.checkCount,
+    })
+    .from(planTask)
+    .where(and(eq(planTask.userId, row.userId), eq(planTask.planId, row.id)))
+    .orderBy(asc(planTask.sortOrder), asc(planTask.createdAt));
   const existing = await getDb()
     .select()
     .from(archiveItem)
@@ -456,6 +663,18 @@ async function upsertCycleSeriesArchive(
     .limit(1);
 
   const prev = existing[0];
+  const { blocks } = parseDatedNotes(prev?.body ?? "");
+  const dayText = blocks.find((b) => b.date === periodDate)?.text ?? "";
+  const preservedNote =
+    note?.trim() ||
+    stripCycleTaskSnapshot(dayText) ||
+    undefined;
+  const body = mergeDatedArchiveBody(
+    prev?.body ?? "",
+    periodDate,
+    buildCyclePeriodArchiveNote(preservedNote, tasks),
+    "（已打卡）",
+  );
   if (prev) {
     await getDb()
       .update(archiveItem)
@@ -466,6 +685,7 @@ async function upsertCycleSeriesArchive(
         sourceEssayId: row.sourceEssayId,
         cycleCount: (prev.cycleCount ?? 0) + 1,
         cycleUnit: row.cycleUnit ?? prev.cycleUnit,
+        cycleEveryDays: row.cycleEveryDays ?? prev.cycleEveryDays,
         archiveReason: reason,
         archivedAt,
         sourceUpdatedAt: row.updatedAt,
@@ -487,6 +707,7 @@ async function upsertCycleSeriesArchive(
     sourceSeriesId: seriesId,
     cycleCount: 1,
     cycleUnit: row.cycleUnit,
+    cycleEveryDays: row.cycleEveryDays,
     archiveReason: reason,
     archivedAt,
     sourceCreatedAt: row.createdAt,
@@ -497,7 +718,7 @@ async function upsertCycleSeriesArchive(
 
 /**
  * 完成并归档：写规划归档快照 + plan.archived_at + status=done
- * 轮期走系列计次（plan_cycle_archive），不每期新增一条
+ * 轮期走系列计次并滚下一期（与首页打卡同一路径）
  */
 export async function completeAndArchivePlan(
   userId: string,
@@ -522,19 +743,19 @@ export async function completeAndArchivePlan(
   if (!row) return null;
   // 时间胶囊不走完成归档
   if (row.kind === PLAN_KIND_CAPSULE) return null;
-  // 轮期手动完成：未到期不允许（与首页打卡一致）；逾期补算走 rolloverCyclePlan
-  if (
-    row.kind === PLAN_KIND_CYCLE &&
-    reason === ARCHIVE_REASON_PLAN_COMPLETE &&
-    !canCompleteCyclePeriod(row.dueAt)
-  ) {
-    return null;
+  // 轮期：到期当天起可完成；完成即滚下一期
+  if (row.kind === PLAN_KIND_CYCLE) {
+    if (
+      reason === ARCHIVE_REASON_PLAN_COMPLETE &&
+      !canCompleteCyclePeriod(row.dueAt)
+    ) {
+      return null;
+    }
+    const result = await rolloverCyclePlan(userId, planId);
+    return result?.archiveId ?? null;
   }
   const now = new Date();
-  const archiveId =
-    row.kind === PLAN_KIND_CYCLE
-      ? await upsertCycleSeriesArchive(row, reason, now, undefined)
-      : await insertPlanArchive(row, reason, now);
+  const archiveId = await insertPlanArchive(row, reason, now);
   await getDb()
     .update(plan)
     .set({
@@ -547,8 +768,57 @@ export async function completeAndArchivePlan(
 }
 
 /**
+ * 系列是否在某日做过滚期/完成本期（按 archivedAt 的本地日，避免超前滚掉的「未来截止日」被当成今日已完成）
+ */
+export async function seriesHasArchivedPeriodOnDate(
+  userId: string,
+  seriesId: string,
+  dateKey: string,
+) {
+  const rows = await getDb()
+    .select()
+    .from(plan)
+    .where(
+      and(
+        eq(plan.userId, userId),
+        eq(plan.seriesId, seriesId),
+        eq(plan.kind, PLAN_KIND_CYCLE),
+        isNotNull(plan.archivedAt),
+      ),
+    );
+  return rows.some(
+    (r) =>
+      r.archivedAt != null && formatDueDateInput(r.archivedAt) === dateKey,
+  );
+}
+
+/**
+ * 每日轮期若被超前滚过（open 截止在未来，但今天尚未有归档期），把截止拉回今天
+ */
+async function repairSkippedDailyCycles(userId: string, now = new Date()) {
+  const today = localTodayNoon(now);
+  const todayKey = formatDueDateInput(now);
+  const cycles = await listOpenCyclePlans(userId);
+  for (const row of cycles) {
+    if (row.cycleUnit !== CYCLE_UNIT_DAY || !row.dueAt) continue;
+    if (calendarDaysUntilDue(row.dueAt, now) <= 0) continue;
+    const seriesId = row.seriesId ?? row.id;
+    const doneToday = await seriesHasArchivedPeriodOnDate(
+      userId,
+      seriesId,
+      todayKey,
+    );
+    if (doneToday) continue;
+    await getDb()
+      .update(plan)
+      .set({ dueAt: today, updatedAt: now })
+      .where(and(eq(plan.id, row.id), eq(plan.userId, userId)));
+  }
+}
+
+/**
  * 轮期滚下一期：当期计次归档 + 同 series 开新一期
- * @param note 打卡心得（写入系列馆藏正文）
+ * @param note 打卡心得（按本期截止日追加到系列馆藏正文）
  */
 export async function rolloverCyclePlan(
   userId: string,
@@ -571,6 +841,12 @@ export async function rolloverCyclePlan(
   if (!row || !row.dueAt || !row.cycleUnit || !isCycleUnit(row.cycleUnit)) {
     return null;
   }
+  if (
+    row.cycleUnit === CYCLE_UNIT_CUSTOM &&
+    !clampCycleEveryDays(row.cycleEveryDays ?? NaN)
+  ) {
+    return null;
+  }
   const now = new Date();
   const archiveId = await upsertCycleSeriesArchive(
     row,
@@ -587,7 +863,11 @@ export async function rolloverCyclePlan(
     })
     .where(and(eq(plan.id, planId), eq(plan.userId, userId)));
 
-  const nextDue = advanceCycleDue(row.dueAt, row.cycleUnit);
+  const nextDue = advanceCycleDue(
+    row.dueAt,
+    row.cycleUnit,
+    row.cycleEveryDays,
+  );
   const nextId = await createPlan(userId, {
     title: row.title,
     body: row.body,
@@ -595,10 +875,14 @@ export async function rolloverCyclePlan(
     remindDays: row.remindDays,
     kind: PLAN_KIND_CYCLE,
     cycleUnit: row.cycleUnit,
+    cycleEveryDays: row.cycleEveryDays,
     seriesId: row.seriesId ?? newId(),
     sourceEssayId: row.sourceEssayId,
     parentPlanId: row.parentPlanId,
   });
+  // 子任务与打卡次数随系列带到下一期；与「完成本期」计次归档相互独立
+  const { copyPlanTasksToPlan } = await import("@/services/plan-tasks");
+  await copyPlanTasksToPlan(userId, planId, nextId);
   return { archiveId, nextId };
 }
 
@@ -653,16 +937,18 @@ export async function checkinCyclePlan(
 
 /**
  * 进站补算：
- * - 轮期逾期 → 滚期
+ * - 轮期逾期 → 连续滚期直到不逾期（一次进站补齐多日）
+ * - 每日轮期若被超前滚过今天 → 拉回今天
  * - 胶囊不自动归档
  * - 其余有截止日且逾期 → 逾期归档
+ *
+ * 逾期判定只用本地日历日差，避免 timestamp 无时区与 SQL 比较偏差。
  */
 export async function catchUpOverduePlanArchives(
   userId: string,
   now = new Date(),
 ) {
-  const today = localTodayNoon(now);
-  const overdue = await getDb()
+  const candidates = await getDb()
     .select()
     .from(plan)
     .where(
@@ -670,20 +956,15 @@ export async function catchUpOverduePlanArchives(
         eq(plan.userId, userId),
         isNull(plan.archivedAt),
         isNotNull(plan.dueAt),
-        lt(plan.dueAt, today),
       ),
     );
 
   let count = 0;
-  for (const row of overdue) {
+  for (const row of candidates) {
     if (!row.dueAt) continue;
     if (calendarDaysUntilDue(row.dueAt, now) >= 0) continue;
     if (row.kind === PLAN_KIND_CAPSULE) continue;
-    if (row.kind === PLAN_KIND_CYCLE) {
-      const result = await rolloverCyclePlan(userId, row.id);
-      if (result) count += 1;
-      continue;
-    }
+    if (row.kind === PLAN_KIND_CYCLE) continue;
     await completeAndArchivePlan(
       userId,
       row.id,
@@ -691,6 +972,23 @@ export async function catchUpOverduePlanArchives(
     );
     count += 1;
   }
+
+  for (let step = 0; step < 400; step += 1) {
+    const cycles = await listOpenCyclePlans(userId);
+    let rolled = false;
+    for (const row of cycles) {
+      if (!row.dueAt) continue;
+      if (calendarDaysUntilDue(row.dueAt, now) >= 0) continue;
+      const result = await rolloverCyclePlan(userId, row.id);
+      if (result) {
+        count += 1;
+        rolled = true;
+      }
+    }
+    if (!rolled) break;
+  }
+
+  await repairSkippedDailyCycles(userId, now);
   return count;
 }
 

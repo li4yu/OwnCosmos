@@ -90,7 +90,7 @@ export async function ArchiveDetailView({
                 <dd className="mt-0.5 text-[var(--paper)]">
                   {item.cycleCount ?? 0} 次
                   {item.type === ARCHIVE_TYPE_PLAN_CYCLE && item.cycleUnit
-                    ? ` · ${cycleUnitLabel(item.cycleUnit)}`
+                    ? ` · ${cycleUnitLabel(item.cycleUnit, item.cycleEveryDays)}`
                     : null}
                 </dd>
               </div>

@@ -1,0 +1,1 @@
+ALTER TABLE "plan_task" ADD COLUMN "last_checkin_date" text;

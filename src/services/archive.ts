@@ -44,6 +44,7 @@ async function insertEssaySediment(
     body: row.body,
     sourceModule: "present",
     sourceEssayId: row.id,
+    sourcePlanId: row.sourcePlanId,
     archiveReason: reason,
     archivedAt,
     sourceCreatedAt: row.createdAt,

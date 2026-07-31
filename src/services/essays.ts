@@ -34,7 +34,7 @@ export async function getActiveEssay(userId: string, essayId: string) {
 
 export async function createEssay(
   userId: string,
-  input: { title: string; body: string },
+  input: { title: string; body: string; sourcePlanId?: string | null },
 ) {
   const now = new Date();
   const id = newId();
@@ -48,8 +48,30 @@ export async function createEssay(
     createdAt: now,
     updatedAt: now,
     archivedAt: null,
+    sourcePlanId: input.sourcePlanId ?? null,
   });
   return id;
+}
+
+/**
+ * 缘想：临期帖附写 → 独立流思笺，溯源计划
+ */
+export async function createYuanxiangEssay(
+  userId: string,
+  planId: string,
+  body: string,
+) {
+  const { getActivePlan } = await import("@/services/plans");
+  const planRow = await getActivePlan(userId, planId);
+  if (!planRow || planRow.archivedAt) return null;
+  const text = body.trim();
+  if (!text) return null;
+  const title = `缘想 · ${planRow.title.trim() || "无标题"}`;
+  return createEssay(userId, {
+    title,
+    body: text,
+    sourcePlanId: planId,
+  });
 }
 
 export async function updateEssay(

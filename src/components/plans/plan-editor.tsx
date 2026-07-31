@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   completePlanAction,
   createPlanAction,
@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
 import {
+  CYCLE_UNIT_CUSTOM,
   CYCLE_UNIT_DAY,
   CYCLE_UNIT_MONTH,
   CYCLE_UNIT_WEEK,
@@ -23,14 +24,19 @@ import {
   PLAN_KIND_CAPSULE,
   PLAN_KIND_CYCLE,
   PLAN_KIND_ONCE,
-  PLAN_KIND_STAGE,
   PLAN_KIND_VISION,
   PLAN_STATUS_DONE,
   PLAN_STATUS_OPEN,
 } from "@/db/schema";
-import { formatDueDateInput, parseDueDateInput } from "@/lib/plan-dates";
+import {
+  calendarDaysUntilDue,
+  formatDueDateInput,
+  parseDueDateInput,
+} from "@/lib/plan-dates";
 import {
   cycleUnitLabel,
+  MAX_CYCLE_EVERY_DAYS,
+  MIN_CYCLE_EVERY_DAYS,
   planKindLabel,
   type PlanKind,
 } from "@/lib/plan-kinds";
@@ -68,9 +74,12 @@ type PlanEditorProps =
       initialStatus: string;
       initialKind: PlanKind;
       initialCycleUnit?: string | null;
+      initialCycleEveryDays?: number | null;
       capsuleLocked?: boolean;
       sourceLink?: SourceLink | null;
       tasks?: PlanTaskItem[];
+      /** 本系列今日是否已完成本期（与首页一致） */
+      periodDoneToday?: boolean;
       justCreated?: boolean;
       listHref?: string;
     };
@@ -79,8 +88,7 @@ const initialState: PlanActionState = {};
 
 const KIND_OPTIONS: { value: PlanKind; tip: string }[] = [
   { value: PLAN_KIND_ONCE, tip: "有明确截止日的单次事项" },
-  { value: PLAN_KIND_VISION, tip: "长期愿景，截止日可选" },
-  { value: PLAN_KIND_STAGE, tip: "阶段目标" },
+  { value: PLAN_KIND_VISION, tip: "长期愿景，截止日可选；无截止则不进临期帖" },
   { value: PLAN_KIND_CYCLE, tip: "按周期滚动" },
 ];
 
@@ -130,6 +138,12 @@ export function PlanEditor(props: PlanEditorProps) {
   const [cycleUnit, setCycleUnit] = useState(
     isEdit ? (props.initialCycleUnit ?? CYCLE_UNIT_WEEK) : CYCLE_UNIT_WEEK,
   );
+  const [cycleEveryDays, setCycleEveryDays] = useState(() => {
+    if (isEdit && props.initialCycleEveryDays != null) {
+      return String(props.initialCycleEveryDays);
+    }
+    return "3";
+  });
   const [remindDays, setRemindDays] = useState(() => {
     if (isEdit && props.initialDueAt) {
       return clampRemindDays(props.initialRemindDays, props.initialDueAt);
@@ -144,7 +158,7 @@ export function PlanEditor(props: PlanEditorProps) {
   const [savedFlash, setSavedFlash] = useState(
     () => isEdit && Boolean(props.justCreated),
   );
-  const [wasPending, setWasPending] = useState(false);
+  const sawPendingRef = useRef(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
@@ -166,22 +180,28 @@ export function PlanEditor(props: PlanEditorProps) {
       : kind === PLAN_KIND_CYCLE
         ? "本期结束"
         : "截止日期";
+  const periodDoneToday = isEdit ? Boolean(props.periodDoneToday) : false;
 
   useEffect(() => {
     if (props.mode !== "edit") return;
     emitDirty(false);
     if (props.justCreated) {
+      setSavedFlash(true);
+      setNotice({
+        title: "已创建",
+        message: "计划已保存，可继续编辑或返回列表。",
+      });
       router.replace(`/app/future/plans/${props.planId}`, { scroll: false });
     }
   }, [props, router]);
 
   useEffect(() => {
     if (pending) {
-      setWasPending(true);
+      sawPendingRef.current = true;
       return;
     }
-    if (!wasPending) return;
-    setWasPending(false);
+    if (!sawPendingRef.current) return;
+    sawPendingRef.current = false;
     if (state.error) {
       setNotice({ title: "无法保存", message: state.error });
       return;
@@ -192,11 +212,13 @@ export function PlanEditor(props: PlanEditorProps) {
 
     if (!isEdit && state.createdId) {
       router.push(`/app/future/plans/${state.createdId}?saved=1`);
-      router.refresh();
       return;
     }
-    if (isEdit) setSavedFlash(true);
-  }, [pending, wasPending, state.error, state.createdId, isEdit, router]);
+    if (isEdit) {
+      setSavedFlash(true);
+      setNotice({ title: "已保存", message: "修改已写入。" });
+    }
+  }, [pending, state.error, state.createdId, isEdit, router]);
 
   useEffect(() => {
     if (!dirty) return;
@@ -209,6 +231,11 @@ export function PlanEditor(props: PlanEditorProps) {
   }, [dirty]);
 
   const dueDate = dueAt ? parseDueDateInput(dueAt) : null;
+  const cycleCanComplete =
+    kind !== PLAN_KIND_CYCLE ||
+    (dueDate != null && calendarDaysUntilDue(dueDate) <= 0);
+  const cycleDoneToday =
+    kind === PLAN_KIND_CYCLE && periodDoneToday && !cycleCanComplete;
   const remindMax = dueDate ? maxRemindDaysForDue(dueDate) : DEFAULT_REMIND_DAYS;
   const remindPresets = dueDate ? remindPresetsForDue(dueDate) : [1];
 
@@ -308,7 +335,11 @@ export function PlanEditor(props: PlanEditorProps) {
 
   return (
     <>
-      <form action={formAction} className="flex flex-col gap-4">
+      <form
+        id="plan-editor-form"
+        action={formAction}
+        className="flex flex-col gap-4"
+      >
         <input type="hidden" name="kind" value={kind} />
         {!isEdit && props.sourceEssayId ? (
           <input type="hidden" name="sourceEssayId" value={props.sourceEssayId} />
@@ -340,12 +371,12 @@ export function PlanEditor(props: PlanEditorProps) {
                 }
                 if (
                   props.defaultKind === PLAN_KIND_ONCE ||
+                  props.defaultKind === PLAN_KIND_VISION ||
                   !props.defaultKind
                 ) {
                   return (
                     opt.value === PLAN_KIND_ONCE ||
-                    opt.value === PLAN_KIND_VISION ||
-                    opt.value === PLAN_KIND_STAGE
+                    opt.value === PLAN_KIND_VISION
                   );
                 }
                 return true;
@@ -376,7 +407,10 @@ export function PlanEditor(props: PlanEditorProps) {
           <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
             类型：{planKindLabel(kind)}
             {kind === PLAN_KIND_CYCLE
-              ? ` · ${cycleUnitLabel(cycleUnit)}`
+              ? ` · ${cycleUnitLabel(
+                  cycleUnit,
+                  Number(cycleEveryDays) || null,
+                )}`
               : null}
           </p>
         )}
@@ -398,26 +432,54 @@ export function PlanEditor(props: PlanEditorProps) {
         </label>
 
         {kind === PLAN_KIND_CYCLE ? (
-          <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
-            轮期单位
-            <select
-              name="cycleUnit"
-              value={cycleUnit}
-              disabled={capsuleLocked}
-              onChange={(e) => {
-                setCycleUnit(e.target.value);
-                markDirty();
-              }}
-              className="auth-field"
-            >
-              <option value={CYCLE_UNIT_DAY}>每日</option>
-              <option value={CYCLE_UNIT_WEEK}>每周</option>
-              <option value={CYCLE_UNIT_MONTH}>每月</option>
-              <option value={CYCLE_UNIT_YEAR}>每年</option>
-            </select>
-          </label>
+          <div className="flex flex-col gap-3">
+            <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
+              轮期单位
+              <select
+                name="cycleUnit"
+                value={cycleUnit}
+                disabled={capsuleLocked}
+                onChange={(e) => {
+                  setCycleUnit(e.target.value);
+                  markDirty();
+                }}
+                className="auth-field"
+              >
+                <option value={CYCLE_UNIT_DAY}>每日</option>
+                <option value={CYCLE_UNIT_WEEK}>每周</option>
+                <option value={CYCLE_UNIT_MONTH}>每月</option>
+                <option value={CYCLE_UNIT_YEAR}>每年</option>
+                <option value={CYCLE_UNIT_CUSTOM}>自定义天数</option>
+              </select>
+            </label>
+            {cycleUnit === CYCLE_UNIT_CUSTOM ? (
+              <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
+                间隔天数（{MIN_CYCLE_EVERY_DAYS}–{MAX_CYCLE_EVERY_DAYS}）
+                <input
+                  name="cycleEveryDays"
+                  type="number"
+                  min={MIN_CYCLE_EVERY_DAYS}
+                  max={MAX_CYCLE_EVERY_DAYS}
+                  step={1}
+                  value={cycleEveryDays}
+                  disabled={capsuleLocked}
+                  onChange={(e) => {
+                    setCycleEveryDays(e.target.value);
+                    markDirty();
+                  }}
+                  className="auth-field"
+                  placeholder="例如 3"
+                />
+              </label>
+            ) : (
+              <input type="hidden" name="cycleEveryDays" value="" />
+            )}
+          </div>
         ) : (
-          <input type="hidden" name="cycleUnit" value="" />
+          <>
+            <input type="hidden" name="cycleUnit" value="" />
+            <input type="hidden" name="cycleEveryDays" value="" />
+          </>
         )}
 
         {needsDue || dueAt ? (
@@ -559,10 +621,16 @@ export function PlanEditor(props: PlanEditorProps) {
           </label>
         )}
 
-        {isEdit && !capsuleLocked ? (
-          <PlanTaskPanel planId={props.planId} tasks={props.tasks ?? []} />
-        ) : null}
+      </form>
 
+      {/* 子任务仅轮期；须在计划 form 外，避免嵌套 form */}
+      {isEdit && !capsuleLocked && kind === PLAN_KIND_CYCLE ? (
+        <div className="mt-4">
+          <PlanTaskPanel planId={props.planId} tasks={props.tasks ?? []} />
+        </div>
+      ) : null}
+
+      <div className="mt-4 flex flex-col gap-4">
         {isEdit && kind !== PLAN_KIND_CAPSULE ? (
           <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
             状态：{status === PLAN_STATUS_DONE ? "已完成" : "未完成"}
@@ -592,6 +660,7 @@ export function PlanEditor(props: PlanEditorProps) {
           {!capsuleLocked ? (
             <button
               type="submit"
+              form="plan-editor-form"
               disabled={pending}
               className="ui-btn-primary !w-auto px-5"
             >
@@ -610,7 +679,10 @@ export function PlanEditor(props: PlanEditorProps) {
               {!capsuleLocked && kind !== PLAN_KIND_CAPSULE ? (
                 <button
                   type="button"
-                  disabled={actionPending}
+                  disabled={
+                    actionPending ||
+                    (status !== PLAN_STATUS_DONE && !cycleCanComplete)
+                  }
                   onClick={() => {
                     if (status === PLAN_STATUS_DONE) {
                       void reopen();
@@ -620,7 +692,15 @@ export function PlanEditor(props: PlanEditorProps) {
                   }}
                   className="ui-btn-ghost px-4 py-2.5 text-[var(--teal)] hover:border-[var(--teal)]"
                 >
-                  {status === PLAN_STATUS_DONE ? "标为未完成" : "完成及归档"}
+                  {status === PLAN_STATUS_DONE
+                    ? "标为未完成"
+                    : kind === PLAN_KIND_CYCLE
+                      ? cycleDoneToday
+                        ? "今日已完成"
+                        : cycleCanComplete
+                          ? "完成本期"
+                          : "未到期"
+                      : "完成及归档"}
                 </button>
               ) : null}
               <button
@@ -633,7 +713,7 @@ export function PlanEditor(props: PlanEditorProps) {
             </>
           ) : null}
         </div>
-      </form>
+      </div>
 
       <ConfirmDialog
         open={leaveOpen}
@@ -652,9 +732,13 @@ export function PlanEditor(props: PlanEditorProps) {
 
       <ConfirmDialog
         open={completeOpen}
-        title="完成及归档？"
-        message="将标记完成并沉淀入昔时往拾忆馆藏；来日途「已完成」仍可查看，今时际临期帖不再显示。确定吗？"
-        confirmLabel="完成及归档"
+        title={kind === PLAN_KIND_CYCLE ? "完成本期？" : "完成及归档？"}
+        message={
+          kind === PLAN_KIND_CYCLE
+            ? "将计次写入拾忆馆藏·轮期归档，并开启下一期。子任务打卡次数会带到下一期。确定吗？"
+            : "将标记完成并沉淀入昔时往拾忆馆藏；来日途「已完成」仍可查看，今时际临期帖不再显示。确定吗？"
+        }
+        confirmLabel={kind === PLAN_KIND_CYCLE ? "完成本期" : "完成及归档"}
         cancelLabel="取消"
         pending={actionPending}
         onCancel={() => {

@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { completePlanAction, deletePlanAction } from "@/app/app/future/actions";
+import {
+  CycleTasksInline,
+  type CycleTaskInlineItem,
+} from "@/components/plans/cycle-tasks-inline";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { galleryDetailHref } from "@/lib/gallery-sections";
 
@@ -17,6 +21,12 @@ type PlanListItemProps = {
   locked?: boolean;
   /** 胶囊等：不提供完成归档 */
   allowArchive?: boolean;
+  /** 轮期子任务（展示 + 打卡记次）；传入即视为轮期行 */
+  tasks?: CycleTaskInlineItem[];
+  /** 轮期：是否已到可完成本期日（与首页一致） */
+  canCompletePeriod?: boolean;
+  /** 轮期：本系列今日是否已滚期/完成（首页「今日已完成」） */
+  periodDoneToday?: boolean;
 };
 
 /** 未完成计划行：可编辑 / 完成及归档 / 删除 */
@@ -29,12 +39,18 @@ export function PlanListItem({
   kindLabel,
   locked,
   allowArchive = true,
+  tasks,
+  canCompletePeriod = true,
+  periodDoneToday = false,
 }: PlanListItemProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isCycle = tasks !== undefined;
+  const cycleCompleteReady = !isCycle || canCompletePeriod;
+  const cycleDoneToday = isCycle && periodDoneToday && !canCompletePeriod;
 
   async function confirmDelete() {
     setPending(true);
@@ -73,6 +89,10 @@ export function PlanListItem({
               {dueLabel ? <time>{duePrefix} {dueLabel}</time> : <span>无截止</span>}
               {locked ? (
                 <span className="text-[var(--amber)]">未解锁</span>
+              ) : cycleDoneToday ? (
+                <span className="text-[var(--teal)]">今日已完成</span>
+              ) : isCycle && !canCompletePeriod ? (
+                <span className="text-[var(--mist)]">未到期</span>
               ) : (
                 <span className="text-[var(--amber)]">未完成</span>
               )}
@@ -91,14 +111,20 @@ export function PlanListItem({
           {!locked && allowArchive ? (
             <button
               type="button"
-              disabled={pending}
+              disabled={pending || !cycleCompleteReady}
               className="ui-btn-ghost ui-btn-sm text-[var(--teal)]"
               onClick={() => {
                 setError(null);
                 setCompleteOpen(true);
               }}
             >
-              完成及归档
+              {isCycle
+                ? cycleDoneToday
+                  ? "今日已完成"
+                  : canCompletePeriod
+                    ? "完成本期"
+                    : "未到期"
+                : "完成及归档"}
             </button>
           ) : null}
           <button
@@ -113,6 +139,7 @@ export function PlanListItem({
           </button>
         </div>
       </div>
+      {tasks ? <CycleTasksInline planId={id} tasks={tasks} compact /> : null}
       {error ? (
         <p className="mt-2 text-sm text-[var(--danger)]" role="alert">
           {error}
@@ -121,9 +148,13 @@ export function PlanListItem({
 
       <ConfirmDialog
         open={completeOpen}
-        title="完成及归档？"
-        message="将标记完成并沉淀入昔时往拾忆馆藏（规划归档）；来日途「已完成」仍可查看，今时际临期帖不再显示。确定吗？"
-        confirmLabel="完成及归档"
+        title={isCycle ? "完成本期？" : "完成及归档？"}
+        message={
+          isCycle
+            ? "将计次写入拾忆馆藏·轮期归档，并开启下一期。子任务打卡次数会带到下一期。确定吗？"
+            : "将标记完成并沉淀入昔时往拾忆馆藏（规划归档）；来日途「已完成」仍可查看，今时际临期帖不再显示。确定吗？"
+        }
+        confirmLabel={isCycle ? "完成本期" : "完成及归档"}
         cancelLabel="取消"
         pending={pending}
         onCancel={() => {

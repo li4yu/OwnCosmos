@@ -31,7 +31,7 @@ export default async function FuturePlansPage() {
           <>
             <PoeticName
               name="规划"
-              tip="单次、愿景与阶段目标；轮期与胶囊见其它子功能"
+              tip="单次与愿景；轮期与胶囊见其它子功能"
             />
             · 未完成可编辑；「完成及归档」后仍在下方已完成中可查
           </>

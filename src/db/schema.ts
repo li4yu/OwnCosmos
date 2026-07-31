@@ -18,6 +18,7 @@ import {
  * Phase 6: plan (来日途·规划，V1 仅单次事件).
  * Phase 8: focus_session (凝时·顺钟) → archive focus_record.
  * Phase 10: plan 丰满 + plan_task / daily_habit / daily_checkin.
+ * Phase 11: essay.source_plan_id（缘想）；临期延期/完成（不做关卡）。
  */
 
 export const user = pgTable("user", {
@@ -93,10 +94,16 @@ export const essay = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
     /** NULL = 流动中；Phase 4 归档时写入 */
     archivedAt: timestamp("archived_at"),
+    /** Phase 11: 缘想自来日途计划 */
+    sourcePlanId: text("source_plan_id").references(
+      (): AnyPgColumn => plan.id,
+      { onDelete: "set null" },
+    ),
   },
   (t) => [
     index("essay_user_archived_idx").on(t.userId, t.archivedAt),
     index("essay_user_updated_idx").on(t.userId, t.updatedAt),
+    index("essay_user_source_plan_idx").on(t.userId, t.sourcePlanId),
   ],
 );
 
@@ -157,8 +164,10 @@ export const archiveItem = pgTable(
     sourceSeriesId: text("source_series_id"),
     /** Phase 10: 轮期 / 日课累计次数 */
     cycleCount: integer("cycle_count"),
-    /** Phase 10: 轮期单位快照 day|week|month|year */
+    /** Phase 10: 轮期单位快照 day|week|month|year|custom */
     cycleUnit: text("cycle_unit"),
+    /** Phase 10+: 自定义间隔天数快照（cycle_unit=custom） */
+    cycleEveryDays: integer("cycle_every_days"),
     archiveReason: text("archive_reason").notNull(),
     archivedAt: timestamp("archived_at").notNull(),
     /** 原随笔创建时间快照 */
@@ -186,6 +195,8 @@ export const CYCLE_UNIT_DAY = "day" as const;
 export const CYCLE_UNIT_WEEK = "week" as const;
 export const CYCLE_UNIT_MONTH = "month" as const;
 export const CYCLE_UNIT_YEAR = "year" as const;
+/** 自定义间隔天数（配合 plan.cycle_every_days） */
+export const CYCLE_UNIT_CUSTOM = "custom" as const;
 export const PLAN_TASK_STATUS_OPEN = "open" as const;
 export const PLAN_TASK_STATUS_DONE = "done" as const;
 export const PLAN_TASK_STATUS_DEFERRED = "deferred" as const;
@@ -213,8 +224,10 @@ export const plan = pgTable(
     sourceEssayId: text("source_essay_id").references(() => essay.id, {
       onDelete: "set null",
     }),
-    /** Phase 10: 轮期单位 day|week|month|year */
+    /** Phase 10: 轮期单位 day|week|month|year|custom */
     cycleUnit: text("cycle_unit"),
+    /** Phase 10+: 自定义间隔天数；仅 cycle_unit=custom 时使用（2–365） */
+    cycleEveryDays: integer("cycle_every_days"),
     /** Phase 10: 轮期系列 id（同系列共享） */
     seriesId: text("series_id"),
     /** Phase 10: 阶段任务挂愿景等 */
@@ -247,8 +260,12 @@ export const planTask = pgTable(
       .notNull()
       .references(() => plan.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
-    /** open | done | deferred */
+    /** open | done | deferred（轮期子任务以打卡次数为主，不依赖 done） */
     status: text("status").notNull().default(PLAN_TASK_STATUS_OPEN),
+    /** 打卡累计次数；与轮期「完成本期」无关 */
+    checkCount: integer("check_count").notNull().default(0),
+    /** 最近打卡本地日 YYYY-MM-DD；同一天不可再打 */
+    lastCheckinDate: text("last_checkin_date"),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -367,6 +384,11 @@ export const essayRelations = relations(essay, ({ one, many }) => ({
   }),
   archiveItems: many(archiveItem),
   refinedPlans: many(plan),
+  sourcePlan: one(plan, {
+    fields: [essay.sourcePlanId],
+    references: [plan.id],
+    relationName: "essay_from_plan",
+  }),
 }));
 
 export const archiveItemRelations = relations(archiveItem, ({ one }) => ({
@@ -401,6 +423,7 @@ export const planRelations = relations(plan, ({ one, many }) => ({
     fields: [plan.sourceEssayId],
     references: [essay.id],
   }),
+  yuanxiangEssays: many(essay, { relationName: "essay_from_plan" }),
   parentPlan: one(plan, {
     fields: [plan.parentPlanId],
     references: [plan.id],

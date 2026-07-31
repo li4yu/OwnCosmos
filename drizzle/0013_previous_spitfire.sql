@@ -1,0 +1,1 @@
+ALTER TABLE "plan_task" ADD COLUMN "check_count" integer DEFAULT 0 NOT NULL;

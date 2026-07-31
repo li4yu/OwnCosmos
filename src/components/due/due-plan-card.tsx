@@ -2,9 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { completeDuePlanAction } from "@/app/app/present/due/actions";
+import { useId, useState } from "react";
+import {
+  completeDuePlanAction,
+  createYuanxiangAction,
+  postponeDuePlanAction,
+} from "@/app/app/present/due/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DatePickerField } from "@/components/ui/date-picker-field";
+import { PoeticName } from "@/components/ui/poetic-name";
 import { formatDueDateInput } from "@/lib/plan-dates";
 import { remainingDaysLabel } from "@/lib/due-labels";
 
@@ -14,6 +20,7 @@ type DueCardProps = {
   dueAt: Date;
   daysLeft: number;
   remindDays: number;
+  kindLabel?: string;
   compact?: boolean;
 };
 
@@ -23,13 +30,23 @@ export function DuePlanCard({
   dueAt,
   daysLeft,
   remindDays,
+  kindLabel,
   compact = false,
 }: DueCardProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const yuanxiangTitleId = useId();
+  const postponeTitleId = useId();
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const [postponeOpen, setPostponeOpen] = useState(false);
+  const [yuanxiangOpen, setYuanxiangOpen] = useState(false);
+  const [postponeDate, setPostponeDate] = useState(() =>
+    formatDueDateInput(dueAt),
+  );
+  const [yuanxiangBody, setYuanxiangBody] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const overdue = daysLeft < 0;
+  const isToday = daysLeft === 0;
 
   async function confirmComplete() {
     setPending(true);
@@ -40,7 +57,36 @@ export function DuePlanCard({
       setPending(false);
       return;
     }
-    setOpen(false);
+    setCompleteOpen(false);
+    router.refresh();
+  }
+
+  async function confirmPostpone() {
+    setPending(true);
+    setError(null);
+    const result = await postponeDuePlanAction(id, postponeDate);
+    if (result?.error) {
+      setError(result.error);
+      setPending(false);
+      return;
+    }
+    setPostponeOpen(false);
+    router.refresh();
+  }
+
+  async function confirmYuanxiang() {
+    setPending(true);
+    setError(null);
+    const result = await createYuanxiangAction(id, yuanxiangBody);
+    if (result?.error || !result.essayId) {
+      setError(result?.error ?? "缘想失败");
+      setPending(false);
+      return;
+    }
+    setYuanxiangOpen(false);
+    setYuanxiangBody("");
+    setPending(false);
+    router.push(`/app/present/essays/${result.essayId}`);
     router.refresh();
   }
 
@@ -51,7 +97,9 @@ export function DuePlanCard({
       } ${
         overdue
           ? "border-[var(--danger)]/50"
-          : "border-[var(--line)] hover:border-[var(--amber)]"
+          : isToday
+            ? "border-[var(--amber)] shadow-[0_0_0_1px_var(--amber-soft)]"
+            : "border-[var(--line)] hover:border-[var(--amber)]"
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -59,6 +107,12 @@ export function DuePlanCard({
           {!compact ? (
             <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
               临期帖 · 只读副本
+              {kindLabel ? ` · ${kindLabel}` : ""}
+              {isToday ? " · 今日" : ""}
+            </p>
+          ) : isToday ? (
+            <p className="font-mono text-[10px] tracking-wide text-[var(--amber)]">
+              今日
             </p>
           ) : null}
           <h3
@@ -84,12 +138,38 @@ export function DuePlanCard({
           <button
             type="button"
             className="ui-btn-primary !w-auto px-3 py-1.5 text-xs"
+            disabled={pending}
             onClick={() => {
               setError(null);
-              setOpen(true);
+              setCompleteOpen(true);
             }}
           >
             完成
+          </button>
+          <button
+            type="button"
+            className="ui-btn-ghost ui-btn-sm"
+            disabled={pending}
+            onClick={() => {
+              setError(null);
+              setPostponeDate(formatDueDateInput(dueAt));
+              setPostponeOpen(true);
+            }}
+          >
+            延期
+          </button>
+          <button
+            type="button"
+            className="ui-btn-ghost ui-btn-sm"
+            disabled={pending}
+            title="针对这条计划随手写下想法，会存成一条随笔"
+            onClick={() => {
+              setError(null);
+              setYuanxiangBody("");
+              setYuanxiangOpen(true);
+            }}
+          >
+            缘想
           </button>
           {!compact ? (
             <Link
@@ -108,19 +188,145 @@ export function DuePlanCard({
       ) : null}
 
       <ConfirmDialog
-        open={open}
+        open={completeOpen}
         title="完成及归档？"
         message="将标记完成并沉淀入昔时往拾忆馆藏（规划归档）；来日途「已完成」仍可查看。确定吗？"
         confirmLabel="完成及归档"
         cancelLabel="取消"
         pending={pending}
         onCancel={() => {
-          if (!pending) setOpen(false);
+          if (!pending) setCompleteOpen(false);
         }}
         onConfirm={() => {
           void confirmComplete();
         }}
       />
+
+      {postponeOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="关闭"
+            className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-[2px]"
+            disabled={pending}
+            onClick={() => {
+              if (!pending) setPostponeOpen(false);
+            }}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={postponeTitleId}
+            className="relative z-10 w-full max-w-[400px] rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-[var(--dialog-shadow)]"
+          >
+            <h2
+              id={postponeTitleId}
+              className="text-lg tracking-[0.1em] text-[var(--paper)]"
+            >
+              延期
+            </h2>
+            <p className="mt-2 text-sm text-[var(--mist)]">
+              将回写来日途截止日期，临期帖按新窗口更新。
+            </p>
+            <div className="mt-4">
+              <DatePickerField
+                name="postponeDue"
+                label="新截止日期"
+                value={postponeDate}
+                onChange={setPostponeDate}
+                disabled={pending}
+              />
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="ui-btn-ghost px-4 py-2"
+                disabled={pending}
+                onClick={() => setPostponeOpen(false)}
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                className="ui-btn-primary !w-auto px-4 py-2"
+                disabled={pending}
+                onClick={() => {
+                  void confirmPostpone();
+                }}
+              >
+                {pending ? "保存中…" : "确认延期"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {yuanxiangOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="关闭"
+            className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-[2px]"
+            disabled={pending}
+            onClick={() => {
+              if (!pending) setYuanxiangOpen(false);
+            }}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={yuanxiangTitleId}
+            className="relative z-10 w-full max-w-[400px] rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-[var(--dialog-shadow)]"
+          >
+            <p className="font-mono text-[10px] tracking-[0.2em] text-[var(--teal)]">
+              YUANXIANG
+            </p>
+            <h2
+              id={yuanxiangTitleId}
+              className="mt-1 text-lg tracking-[0.1em] text-[var(--paper)]"
+            >
+              <PoeticName
+                name="缘想"
+                tip="针对这条计划随手写下想法，会存成一条随笔"
+              />
+            </h2>
+            <p className="mt-2 text-sm text-[var(--mist)]">
+              将生成一条独立流思笺，并关联本计划。
+            </p>
+            <label className="mt-4 flex flex-col gap-1.5 text-sm text-[var(--mist)]">
+              随想
+              <textarea
+                value={yuanxiangBody}
+                onChange={(e) => setYuanxiangBody(e.target.value)}
+                rows={4}
+                disabled={pending}
+                className="auth-field min-h-[6rem] resize-y"
+                placeholder="关于这件事的临时想法…"
+              />
+            </label>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="ui-btn-ghost px-4 py-2"
+                disabled={pending}
+                onClick={() => setYuanxiangOpen(false)}
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                className="ui-btn-primary !w-auto px-4 py-2"
+                disabled={pending || !yuanxiangBody.trim()}
+                onClick={() => {
+                  void confirmYuanxiang();
+                }}
+              >
+                {pending ? "保存中…" : "存为随笔"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </li>
   );
 }

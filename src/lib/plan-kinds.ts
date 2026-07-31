@@ -1,4 +1,5 @@
 import {
+  CYCLE_UNIT_CUSTOM,
   CYCLE_UNIT_DAY,
   CYCLE_UNIT_MONTH,
   CYCLE_UNIT_WEEK,
@@ -12,6 +13,7 @@ import {
 import { calendarDaysUntilDue } from "@/lib/plan-dates";
 
 export {
+  CYCLE_UNIT_CUSTOM,
   CYCLE_UNIT_DAY,
   CYCLE_UNIT_MONTH,
   CYCLE_UNIT_WEEK,
@@ -38,11 +40,15 @@ export const CYCLE_UNITS = [
   CYCLE_UNIT_WEEK,
   CYCLE_UNIT_MONTH,
   CYCLE_UNIT_YEAR,
+  CYCLE_UNIT_CUSTOM,
 ] as const;
 
 export type CycleUnit = (typeof CYCLE_UNITS)[number];
 
-/** 规划列表：单次 / 愿景 / 阶段 */
+export const MIN_CYCLE_EVERY_DAYS = 2;
+export const MAX_CYCLE_EVERY_DAYS = 365;
+
+/** 规划列表：单次 / 愿景（仍含历史 stage，避免旧数据从列表消失） */
 export const PLANNING_KINDS: readonly PlanKind[] = [
   PLAN_KIND_ONCE,
   PLAN_KIND_VISION,
@@ -55,6 +61,18 @@ export function isPlanKind(v: string): v is PlanKind {
 
 export function isCycleUnit(v: string): v is CycleUnit {
   return (CYCLE_UNITS as readonly string[]).includes(v);
+}
+
+export function clampCycleEveryDays(raw: number): number | null {
+  if (!Number.isFinite(raw)) return null;
+  const n = Math.floor(raw);
+  if (n < MIN_CYCLE_EVERY_DAYS || n > MAX_CYCLE_EVERY_DAYS) return null;
+  return n;
+}
+
+export function parseCycleEveryDaysInput(raw: string): number | null {
+  const n = Number(String(raw).trim());
+  return clampCycleEveryDays(n);
 }
 
 export function planKindLabel(kind: string) {
@@ -72,7 +90,10 @@ export function planKindLabel(kind: string) {
   }
 }
 
-export function cycleUnitLabel(unit: string | null | undefined) {
+export function cycleUnitLabel(
+  unit: string | null | undefined,
+  everyDays?: number | null,
+) {
   switch (unit) {
     case CYCLE_UNIT_DAY:
       return "每日";
@@ -82,6 +103,10 @@ export function cycleUnitLabel(unit: string | null | undefined) {
       return "每月";
     case CYCLE_UNIT_YEAR:
       return "每年";
+    case CYCLE_UNIT_CUSTOM: {
+      const n = clampCycleEveryDays(everyDays ?? NaN);
+      return n ? `每 ${n} 天` : "自定义";
+    }
     default:
       return "周期";
   }
@@ -109,7 +134,11 @@ export function participatesInDueReminders(
   );
 }
 
-export function advanceCycleDue(dueAt: Date, unit: CycleUnit): Date {
+export function advanceCycleDue(
+  dueAt: Date,
+  unit: CycleUnit,
+  everyDays?: number | null,
+): Date {
   const next = new Date(dueAt);
   switch (unit) {
     case CYCLE_UNIT_DAY:
@@ -124,6 +153,11 @@ export function advanceCycleDue(dueAt: Date, unit: CycleUnit): Date {
     case CYCLE_UNIT_YEAR:
       next.setFullYear(next.getFullYear() + 1);
       break;
+    case CYCLE_UNIT_CUSTOM: {
+      const n = clampCycleEveryDays(everyDays ?? NaN) ?? MIN_CYCLE_EVERY_DAYS;
+      next.setDate(next.getDate() + n);
+      break;
+    }
   }
   next.setHours(12, 0, 0, 0);
   return next;

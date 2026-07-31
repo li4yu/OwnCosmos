@@ -14,8 +14,13 @@ export default async function NewPlanPage({ searchParams }: Props) {
   if (raw === "capsule") {
     redirect("/app/future/capsule?compose=1");
   }
-  const defaultKind: PlanKind =
-    raw && isPlanKind(raw) && raw !== "capsule" ? raw : "once";
+  // 不做「阶段」类型；capsule 另走胶囊舱
+  let defaultKind: PlanKind = "once";
+  if (raw === "cycle" || raw === "vision" || raw === "once") {
+    defaultKind = raw;
+  } else if (raw && isPlanKind(raw) && raw !== "capsule" && raw !== "stage") {
+    defaultKind = raw;
+  }
 
   return (
     <main>
@@ -24,7 +29,7 @@ export default async function NewPlanPage({ searchParams }: Props) {
         backHref="/app/future/plans"
         backLabel="返回规划"
         guardLeave
-        description="单次 / 愿景 / 阶段：标题、日期、临期配与描述"
+        description="单次 / 愿景：标题、日期、临期配与描述"
       />
       <div className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
         <PlanEditor mode="create" defaultKind={defaultKind} />

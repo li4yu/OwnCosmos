@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import {
@@ -12,6 +13,7 @@ import {
 } from "@/app/app/present/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
+import { PoeticName } from "@/components/ui/poetic-name";
 
 type EssayEditorProps =
   | {
@@ -24,6 +26,8 @@ type EssayEditorProps =
       initialBody: string;
       /** 刚从「创建并保存」跳转过来 */
       justCreated?: boolean;
+      /** 缘想溯源：来日途计划 */
+      sourcePlanLink?: { title: string; href: string } | null;
     };
 
 const initialState: EssayActionState = {};
@@ -170,9 +174,27 @@ export function EssayEditor(props: EssayEditorProps) {
     router.refresh();
   }
 
+  const sourcePlanLink =
+    isEdit && props.sourcePlanLink ? props.sourcePlanLink : null;
+
   return (
     <>
       <form action={formAction} className="flex flex-col gap-4">
+        {sourcePlanLink ? (
+          <p className="text-sm text-[var(--mist)]">
+            <PoeticName
+              name="缘想"
+              tip="针对计划随手写下的想法，已存成独立随笔"
+            />
+            自{" "}
+            <Link
+              href={sourcePlanLink.href}
+              className="text-[var(--amber)] hover:underline"
+            >
+              {sourcePlanLink.title}
+            </Link>
+          </p>
+        ) : null}
         <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
           标题
           <input

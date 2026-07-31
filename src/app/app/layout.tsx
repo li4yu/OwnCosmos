@@ -1,5 +1,4 @@
 import { CapsuleUnlockOrb } from "@/components/capsule/capsule-unlock-orb";
-import { XingluomaoCompanion } from "@/components/companion/xingluomao";
 import { AppChrome } from "@/components/shell/app-chrome";
 import { formatDueDateInput } from "@/lib/plan-dates";
 import { requireSession } from "@/lib/session";
@@ -23,7 +22,6 @@ export default async function AppAreaLayout({
         }}
       />
       <div className="app-shell-width mx-auto py-5 sm:py-6">{children}</div>
-      <XingluomaoCompanion userName={session.user.name} />
       {readyCapsules.length > 0 ? (
         <CapsuleUnlockOrb
           userId={session.user.id}

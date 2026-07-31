@@ -1,13 +1,18 @@
 import { notFound, redirect } from "next/navigation";
 import { PlanEditor } from "@/components/plans/plan-editor";
 import { PageHeader } from "@/components/shell/page-header";
-import { PLAN_KIND_CAPSULE } from "@/db/schema";
+import { PLAN_KIND_CAPSULE, PLAN_KIND_CYCLE } from "@/db/schema";
 import { isPlanKind } from "@/lib/plan-kinds";
 import { requireSession } from "@/lib/session";
-import { listPlanTasks } from "@/services/plan-tasks";
+import {
+  listPlanTasks,
+  localTaskCheckinDate,
+  taskCheckedInOnDate,
+} from "@/services/plan-tasks";
 import {
   getActivePlanForEdit,
   resolvePlanSourceLink,
+  seriesHasArchivedPeriodOnDate,
 } from "@/services/plans";
 
 type Props = {
@@ -31,6 +36,15 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
     item.sourceEssayId,
   );
   const tasks = await listPlanTasks(session.user.id, item.id);
+  const todayKey = localTaskCheckinDate();
+  const periodDoneToday =
+    kind === PLAN_KIND_CYCLE
+      ? await seriesHasArchivedPeriodOnDate(
+          session.user.id,
+          item.seriesId ?? item.id,
+          todayKey,
+        )
+      : false;
   const listHref =
     kind === "cycle" ? "/app/future/cycles" : "/app/future/plans";
 
@@ -54,10 +68,14 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
           initialStatus={item.status}
           initialKind={kind}
           initialCycleUnit={item.cycleUnit}
+          initialCycleEveryDays={item.cycleEveryDays}
           sourceLink={sourceLink}
+          periodDoneToday={periodDoneToday}
           tasks={tasks.map((t) => ({
             id: t.id,
             title: t.title,
+            checkCount: t.checkCount,
+            checkedInToday: taskCheckedInOnDate(t.lastCheckinDate, todayKey),
             status: t.status,
           }))}
           justCreated={saved === "1"}

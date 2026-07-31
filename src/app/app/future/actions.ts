@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/session";
 import { parseDueDateInput, isDueDateBeforeToday } from "@/lib/plan-dates";
 import {
+  clampCycleEveryDays,
+  CYCLE_UNIT_CUSTOM,
   isCycleUnit,
   isPlanKind,
   type CycleUnit,
@@ -21,9 +23,6 @@ import {
   PLAN_KIND_VISION,
   PLAN_STATUS_DONE,
   PLAN_STATUS_OPEN,
-  PLAN_TASK_STATUS_DEFERRED,
-  PLAN_TASK_STATUS_DONE,
-  PLAN_TASK_STATUS_OPEN,
 } from "@/db/schema";
 import {
   checkinHabit,
@@ -31,10 +30,9 @@ import {
   deactivateHabit,
 } from "@/services/daily";
 import {
+  checkinPlanTask,
   createPlanTask,
   deletePlanTask,
-  setPlanTaskStatus,
-  type PlanTaskStatus,
 } from "@/services/plan-tasks";
 import {
   checkinCyclePlan,
@@ -92,12 +90,24 @@ function readPlanFields(formData: FormData) {
   const remindRaw = Number(formData.get("remindDays") ?? DEFAULT_REMIND_DAYS);
   const kind = readKind(formData);
   const cycleUnit = readCycleUnit(formData);
+  const cycleEveryDaysRaw = String(formData.get("cycleEveryDays") ?? "").trim();
   const sourceEssayId = String(formData.get("sourceEssayId") ?? "").trim() || null;
-  return { title, body, dueAt, dueRaw, remindRaw, kind, cycleUnit, sourceEssayId };
+  return {
+    title,
+    body,
+    dueAt,
+    dueRaw,
+    remindRaw,
+    kind,
+    cycleUnit,
+    cycleEveryDaysRaw,
+    sourceEssayId,
+  };
 }
 
 function validatePlanInput(fields: ReturnType<typeof readPlanFields>): string | null {
-  const { title, body, dueAt, remindRaw, kind, cycleUnit } = fields;
+  const { title, body, dueAt, remindRaw, kind, cycleUnit, cycleEveryDaysRaw } =
+    fields;
   if (!title.trim() && !body.trim()) {
     return "请至少填写标题或描述";
   }
@@ -126,6 +136,11 @@ function validatePlanInput(fields: ReturnType<typeof readPlanFields>): string | 
   if (kind === PLAN_KIND_CYCLE && !cycleUnit) {
     return "请选择轮期单位";
   }
+  if (kind === PLAN_KIND_CYCLE && cycleUnit === CYCLE_UNIT_CUSTOM) {
+    if (!clampCycleEveryDays(Number(cycleEveryDaysRaw))) {
+      return "自定义间隔请填写 2–365 天";
+    }
+  }
   // 轮期 / 胶囊无临期配
   if (kind !== PLAN_KIND_CAPSULE && kind !== PLAN_KIND_CYCLE) {
     const remindError = validateRemindDays(remindRaw, dueAt);
@@ -150,6 +165,7 @@ export async function createPlanAction(
     remindDays: fields.remindRaw,
     kind: fields.kind,
     cycleUnit: fields.cycleUnit,
+    cycleEveryDays: clampCycleEveryDays(Number(fields.cycleEveryDaysRaw)),
     sourceEssayId: fields.sourceEssayId,
   });
   revalidatePlans(id);
@@ -171,6 +187,7 @@ export async function updatePlanAction(
     dueAt: fields.dueAt,
     remindDays: fields.remindRaw,
     cycleUnit: fields.cycleUnit,
+    cycleEveryDays: clampCycleEveryDays(Number(fields.cycleEveryDaysRaw)),
   });
   if (!updated) {
     return { error: "计划不存在、已归档，或时间胶囊封存后不可修改" };
@@ -234,28 +251,33 @@ export async function createPlanTaskAction(
   const session = await requireSession();
   const title = String(formData.get("title") ?? "");
   const id = await createPlanTask(session.user.id, planId, title);
-  if (!id) return { error: "无法添加子任务" };
+  if (!id) return { error: "无法添加子任务（仅轮期可添加）" };
   revalidatePlans(planId);
-  return {};
+  return { createdId: id };
 }
 
-export async function setPlanTaskStatusAction(
+/** 轮期子任务打卡：只加次数，每天一次，不完成本期 */
+export async function checkinPlanTaskAction(
   planId: string,
   taskId: string,
-  status: PlanTaskStatus,
-): Promise<PlanActionState> {
+): Promise<
+  PlanActionState & { checkCount?: number; lastCheckinDate?: string }
+> {
   const session = await requireSession();
-  if (
-    status !== PLAN_TASK_STATUS_OPEN &&
-    status !== PLAN_TASK_STATUS_DONE &&
-    status !== PLAN_TASK_STATUS_DEFERRED
-  ) {
-    return { error: "无效状态" };
+  const result = await checkinPlanTask(session.user.id, taskId);
+  if (!result.ok) {
+    if (result.error === "already_today") {
+      return { error: "今天已经打过卡了，明天再来" };
+    }
+    return { error: "子任务不存在或不是进行中的轮期" };
   }
-  const ok = await setPlanTaskStatus(session.user.id, taskId, status);
-  if (!ok) return { error: "子任务不存在或计划已归档" };
   revalidatePlans(planId);
-  return {};
+  revalidatePath("/app");
+  revalidatePath("/app/past/gallery/plan-cycle");
+  return {
+    checkCount: result.checkCount,
+    lastCheckinDate: result.lastCheckinDate,
+  };
 }
 
 export async function deletePlanTaskAction(

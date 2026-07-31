@@ -8,6 +8,7 @@ import {
   quickCheckinHabitAction,
 } from "@/app/app/future/actions";
 import { CheckinNoteDialog } from "@/components/home/checkin-note-dialog";
+import { CycleTasksInline } from "@/components/plans/cycle-tasks-inline";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
 import { PoeticName } from "@/components/ui/poetic-name";
@@ -51,7 +52,7 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
         <h2>
           <PoeticName
             name="今日打卡"
-            tip="日课可写心得；轮期到期后出现并可完成本期"
+            tip="日课可写心得；轮期到期可完成本期；轮期子任务打卡只记次数，与完成本期无关"
           />
         </h2>
         <div className="flex flex-wrap items-center gap-3">
@@ -112,7 +113,11 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
                   }`}
                 >
                   <span className="home-v1__daily-mark" aria-hidden="true">
-                    {item.checkedIn ? "✓" : item.kind === "cycle" ? "↻" : "○"}
+                    {item.checkedIn
+                      ? "✓"
+                      : item.kind === "cycle"
+                        ? "↻"
+                        : "○"}
                   </span>
                   <div className="home-v1__daily-item-body min-w-0 flex-1">
                     <span className="home-v1__daily-title">{item.title}</span>
@@ -121,6 +126,13 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
                       <span className="home-v1__daily-note">
                         {item.note.trim()}
                       </span>
+                    ) : null}
+                    {item.kind === "cycle" && item.childTasks ? (
+                      <CycleTasksInline
+                        planId={item.id}
+                        tasks={item.childTasks}
+                        compact
+                      />
                     ) : null}
                   </div>
                   <div className="flex shrink-0 flex-col gap-1.5">

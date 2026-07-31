@@ -3,6 +3,7 @@ import { EssayEditor } from "@/components/essays/essay-editor";
 import { PageHeader } from "@/components/shell/page-header";
 import { requireSession } from "@/lib/session";
 import { getActiveEssay } from "@/services/essays";
+import { getActivePlan } from "@/services/plans";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -15,6 +16,22 @@ export default async function EditEssayPage({ params, searchParams }: Props) {
   const session = await requireSession();
   const item = await getActiveEssay(session.user.id, id);
   if (!item) notFound();
+
+  let sourcePlanLink: { title: string; href: string } | null = null;
+  if (item.sourcePlanId) {
+    const planRow = await getActivePlan(session.user.id, item.sourcePlanId);
+    if (planRow) {
+      sourcePlanLink = {
+        title: planRow.title,
+        href: `/app/future/plans/${planRow.id}`,
+      };
+    } else {
+      sourcePlanLink = {
+        title: "原计划（已归档）",
+        href: "/app/past/gallery/plan-archive",
+      };
+    }
+  }
 
   return (
     <main>
@@ -32,6 +49,7 @@ export default async function EditEssayPage({ params, searchParams }: Props) {
           initialTitle={item.title}
           initialBody={item.body}
           justCreated={saved === "1"}
+          sourcePlanLink={sourcePlanLink}
         />
       </div>
     </main>

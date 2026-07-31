@@ -70,7 +70,9 @@ export function ArchiveItemList({
                 <>
                   <span>已完成 {item.cycleCount ?? 0} 次</span>
                   {item.type === ARCHIVE_TYPE_PLAN_CYCLE && item.cycleUnit ? (
-                    <span>{cycleUnitLabel(item.cycleUnit)}</span>
+                    <span>
+                      {cycleUnitLabel(item.cycleUnit, item.cycleEveryDays)}
+                    </span>
                   ) : null}
                 </>
               ) : null}
@@ -80,7 +82,7 @@ export function ArchiveItemList({
                 </span>
               ) : null}
             </p>
-            <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--mist)]">
+            <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-[var(--mist)]">
               {item.body.trim() || "（无正文）"}
             </p>
           </Link>

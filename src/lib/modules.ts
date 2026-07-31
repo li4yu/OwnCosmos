@@ -100,14 +100,14 @@ export const APP_MODULES: readonly AppModuleDef[] = [
         id: "plans",
         href: "/app/future/plans",
         name: "规划",
-        tip: "单次、愿景与阶段：标题、描述与截止日期；可拆子任务",
+        tip: "单次与愿景：标题、描述与截止日期",
         ready: true,
       },
       {
         id: "cycles",
         href: "/app/future/cycles",
         name: "轮期",
-        tip: "按周期自动重复的计划，当期结束后开启下一轮",
+        tip: "按周期滚动；可挂子任务打卡记次（与完成本期无关）",
         ready: true,
       },
       {

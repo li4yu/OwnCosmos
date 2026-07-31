@@ -8,6 +8,7 @@ export type DueReminderListItem = {
   dueAt: Date;
   daysLeft: number;
   remindDays: number;
+  kindLabel?: string;
 };
 
 type DueReminderSectionProps = {
@@ -40,12 +41,12 @@ export function DueReminderSection({
             >
               <PoeticName
                 name="临期帖"
-                tip="来日途计划进入提醒窗口后的只读倒计时卡片"
-              />
+              tip="来日途计划进入提醒窗口后的倒计时卡片"
+            />
             </h2>
             {!compact ? (
               <p className="mt-1 text-sm text-[var(--mist)]">
-                提醒窗口内的计划 · 只读；完成即归档
+                提醒窗口内的计划 · 可完成、延期或缘想
               </p>
             ) : null}
           </div>
@@ -78,6 +79,7 @@ export function DueReminderSection({
               dueAt={item.dueAt}
               daysLeft={item.daysLeft}
               remindDays={item.remindDays}
+              kindLabel={item.kindLabel}
               compact={compact}
             />
           ))}
