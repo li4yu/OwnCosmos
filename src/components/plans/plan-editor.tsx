@@ -17,6 +17,7 @@ import { TagField } from "@/components/tags/tag-field";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
+import { formatFocusDurationMs } from "@/lib/focus-duration";
 import {
   CYCLE_UNIT_CUSTOM,
   CYCLE_UNIT_DAY,
@@ -90,6 +91,9 @@ type PlanEditorProps =
       periodDoneToday?: boolean;
       justCreated?: boolean;
       listHref?: string;
+      /** Phase 14: 绑定凝时累计 */
+      focusTotalMs?: number;
+      focusSessionCount?: number;
     };
 
 const initialState: PlanActionState = {};
@@ -374,6 +378,28 @@ export function PlanEditor(props: PlanEditorProps) {
               {props.sourceLink.title}
             </Link>
             {props.sourceLink.archived ? "（馆藏）" : "（流思笺）"}
+          </p>
+        ) : null}
+
+        {isEdit && (props.focusSessionCount ?? 0) > 0 ? (
+          <p className="text-xs text-[var(--mist)]">
+            凝时累计{" "}
+            <span className="text-[var(--paper)]">
+              {formatFocusDurationMs(props.focusTotalMs ?? 0)}
+            </span>
+            <span className="ml-1 font-mono text-[10px]">
+              · {props.focusSessionCount} 次完整专注
+            </span>
+          </p>
+        ) : isEdit ? (
+          <p className="text-xs text-[var(--mist)]">
+            尚无绑定本计划的凝时记录 ·{" "}
+            <Link
+              href="/app/focus/forward"
+              className="text-[var(--teal)] underline-offset-2 hover:underline"
+            >
+              去凝时
+            </Link>
           </p>
         ) : null}
 

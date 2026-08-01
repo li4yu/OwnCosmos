@@ -22,6 +22,7 @@ import {
  * Phase 11: essay.source_plan_id（缘想）；临期延期/完成（不做关卡）。
  * Phase 12: archive_item 藏忆 / 记忆碎片图文；抹忆硬删流入类。
  * Phase 13: 绪签 / 心情 / 素材匣（不做 plan_ref）。
+ * Phase 14: 凝时逆漏 / 绑计划 / 唤起随笔溯源。
  */
 
 export const user = pgTable("user", {
@@ -104,12 +105,18 @@ export const essay = pgTable(
     ),
     /** Phase 13: 固定心情 key（见 src/lib/moods.ts）；未选为 null */
     mood: text("mood"),
+    /** Phase 14: 凝时中唤起新建的随笔溯源 */
+    sourceFocusSessionId: text("source_focus_session_id").references(
+      (): AnyPgColumn => focusSession.id,
+      { onDelete: "set null" },
+    ),
   },
   (t) => [
     index("essay_user_archived_idx").on(t.userId, t.archivedAt),
     index("essay_user_updated_idx").on(t.userId, t.updatedAt),
     index("essay_user_source_plan_idx").on(t.userId, t.sourcePlanId),
     index("essay_user_mood_idx").on(t.userId, t.mood),
+    index("essay_user_source_focus_idx").on(t.userId, t.sourceFocusSessionId),
   ],
 );
 
@@ -468,9 +475,9 @@ export const dailyCheckin = pgTable(
   ],
 );
 
-/** Phase 8: 凝时会话（V1 仅顺钟 mode=forward） */
+/** Phase 8+: 凝时会话 mode */
 export const FOCUS_MODE_FORWARD = "forward" as const;
-/** 跨阶段预留字面量；本阶段不写入 */
+/** Phase 14: 逆漏 */
 export const FOCUS_MODE_COUNTDOWN = "countdown" as const;
 export const FOCUS_STATUS_RUNNING = "running" as const;
 export const FOCUS_STATUS_PAUSED = "paused" as const;
@@ -483,12 +490,22 @@ export const focusSession = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    /** forward | countdown — V1 仅 forward */
+    /** forward | countdown */
     mode: text("mode").notNull().default(FOCUS_MODE_FORWARD),
     /** running | paused | completed */
     status: text("status").notNull(),
     /** 已计入的专注毫秒（不含当前 running 段） */
     accumulatedMs: integer("accumulated_ms").notNull().default(0),
+    /** Phase 14: 逆漏目标毫秒；顺钟为 null */
+    targetMs: integer("target_ms"),
+    /** Phase 14: 绑定来日途计划（规划 / 当日轮期） */
+    planId: text("plan_id").references((): AnyPgColumn => plan.id, {
+      onDelete: "set null",
+    }),
+    /** Phase 14: 绑定未完成日课（与 plan_id 互斥） */
+    habitId: text("habit_id").references((): AnyPgColumn => dailyHabit.id, {
+      onDelete: "set null",
+    }),
     /** 当前 running 段起点；暂停 / 结束时清空 */
     runningSince: timestamp("running_since"),
     startedAt: timestamp("started_at").notNull(),
@@ -501,6 +518,8 @@ export const focusSession = pgTable(
   (t) => [
     index("focus_session_user_status_idx").on(t.userId, t.status),
     index("focus_session_user_ended_idx").on(t.userId, t.endedAt),
+    index("focus_session_user_plan_idx").on(t.userId, t.planId),
+    index("focus_session_user_habit_idx").on(t.userId, t.habitId),
   ],
 );
 
@@ -541,6 +560,11 @@ export const essayRelations = relations(essay, ({ one, many }) => ({
     fields: [essay.sourcePlanId],
     references: [plan.id],
     relationName: "essay_from_plan",
+  }),
+  sourceFocusSession: one(focusSession, {
+    fields: [essay.sourceFocusSessionId],
+    references: [focusSession.id],
+    relationName: "essay_from_focus",
   }),
   essayTags: many(essayTag),
 }));
@@ -588,6 +612,7 @@ export const planRelations = relations(plan, ({ one, many }) => ({
   archiveItems: many(archiveItem),
   tasks: many(planTask),
   planTags: many(planTag),
+  focusSessions: many(focusSession),
 }));
 
 export const tagRelations = relations(tag, ({ one, many }) => ({
@@ -699,5 +724,14 @@ export const focusSessionRelations = relations(focusSession, ({ one, many }) => 
     fields: [focusSession.userId],
     references: [user.id],
   }),
+  plan: one(plan, {
+    fields: [focusSession.planId],
+    references: [plan.id],
+  }),
+  habit: one(dailyHabit, {
+    fields: [focusSession.habitId],
+    references: [dailyHabit.id],
+  }),
   archiveItems: many(archiveItem),
+  essays: many(essay, { relationName: "essay_from_focus" }),
 }));

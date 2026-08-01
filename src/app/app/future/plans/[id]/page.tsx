@@ -9,6 +9,7 @@ import {
   localTaskCheckinDate,
   taskCheckedInOnDate,
 } from "@/services/plan-tasks";
+import { sumFocusMsForPlan } from "@/services/focus";
 import {
   getActivePlanForEdit,
   resolvePlanSourceLink,
@@ -36,10 +37,11 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
     session.user.id,
     item.sourceEssayId,
   );
-  const [tasks, tags, tagIds] = await Promise.all([
+  const [tasks, tags, tagIds, focusAgg] = await Promise.all([
     listPlanTasks(session.user.id, item.id),
     listActiveTags(session.user.id),
     listPlanTagIds(session.user.id, item.id),
+    sumFocusMsForPlan(session.user.id, item.id),
   ]);
   const todayKey = localTaskCheckinDate();
   const periodDoneToday =
@@ -92,6 +94,8 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
           }))}
           justCreated={saved === "1"}
           listHref={listHref}
+          focusTotalMs={focusAgg.totalMs}
+          focusSessionCount={focusAgg.count}
         />
       </div>
     </main>

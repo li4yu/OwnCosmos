@@ -146,7 +146,7 @@ export const APP_MODULES: readonly AppModuleDef[] = [
         href: "/app/focus/countdown",
         name: "逆漏",
         tip: "设定时长倒数，到点提醒，适合限时任务",
-        ready: false,
+        ready: true,
       },
       {
         id: "records",

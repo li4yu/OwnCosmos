@@ -14,6 +14,7 @@ import {
 import { createPlanAction, deletePlanAction } from "@/app/app/future/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePickerField } from "@/components/ui/date-picker-field";
+import { HoverTip } from "@/components/ui/hover-tip";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { PLAN_KIND_CAPSULE } from "@/db/schema";
 import { formatDueDateInput, parseDueDateInput } from "@/lib/plan-dates";
@@ -285,24 +286,37 @@ export function CapsuleChamber({
             </p>
           ) : (
             localItems.map((item, index) => (
-              <button
+              <HoverTip
                 key={item.id}
-                type="button"
+                tipClassName="ui-tooltip--capsule"
+                tip={
+                  <>
+                    {item.title || "（无标题）"}
+                    <span className="ui-tooltip__meta">
+                      解锁 {item.dueLabel}
+                      {item.locked ? " · 未解锁" : " · 已解锁"}
+                    </span>
+                  </>
+                }
                 className={`capsule-chamber__node ${item.locked ? "is-locked" : "is-ready"}`}
                 style={nodeAnchorStyle(item.id, index, localItems.length)}
-                onClick={() => openCapsule(item)}
-                aria-label={`${item.locked ? "未解锁" : "已解锁"}：${item.title}`}
-                title={`${item.title} · 解锁 ${item.dueLabel}`}
               >
-                <span
-                  className="capsule-chamber__node-float"
-                  data-path={String((hashId(item.id) % 4) + 1)}
-                  aria-hidden="true"
+                <button
+                  type="button"
+                  className="capsule-chamber__node-hit"
+                  onClick={() => openCapsule(item)}
+                  aria-label={`${item.locked ? "未解锁" : "已解锁"}：${item.title}，解锁日 ${item.dueLabel}`}
                 >
-                  <span className="capsule-chamber__node-core" />
-                  <span className="capsule-chamber__node-ring" />
-                </span>
-              </button>
+                  <span
+                    className="capsule-chamber__node-float"
+                    data-path={String((hashId(item.id) % 4) + 1)}
+                    aria-hidden="true"
+                  >
+                    <span className="capsule-chamber__node-core" />
+                    <span className="capsule-chamber__node-ring" />
+                  </span>
+                </button>
+              </HoverTip>
             ))
           )}
         </div>

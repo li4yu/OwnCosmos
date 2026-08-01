@@ -137,6 +137,7 @@ export async function createEssay(
     title: string;
     body: string;
     sourcePlanId?: string | null;
+    sourceFocusSessionId?: string | null;
     mood?: string | null;
   },
 ) {
@@ -153,6 +154,7 @@ export async function createEssay(
     updatedAt: now,
     archivedAt: null,
     sourcePlanId: input.sourcePlanId ?? null,
+    sourceFocusSessionId: input.sourceFocusSessionId ?? null,
     mood: parseMoodKey(input.mood),
   });
   return id;

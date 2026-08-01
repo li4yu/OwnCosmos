@@ -124,6 +124,27 @@ button,
   font-family: var(--font-noto-serif), "Songti SC", serif;
 }
 
+/* 时间胶囊星点悬停 */
+.ui-tooltip--capsule {
+  border-color: color-mix(in srgb, var(--amber) 45%, var(--line));
+  background: color-mix(in srgb, var(--panel) 92%, #070b14);
+  color: var(--paper);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  line-height: 1.55;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--amber) 18%, transparent),
+    0 16px 40px rgba(0, 0, 0, 0.45);
+}
+.ui-tooltip--capsule .ui-tooltip__meta {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--teal);
+}
+
 @layer components {
   .auth-field {
     @apply w-full rounded-md px-3 py-2.5 text-sm outline-none transition;
@@ -620,17 +641,27 @@ button,
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.75rem;
   left: 50%;
-  top: 52%;
-  transform: translate(-50%, -50%);
+  top: 50%;
+  transform: translate(-50%, -46%);
   width: min(86vw, 360px);
+  max-height: calc(100vh - 7.5rem);
+  overflow: visible;
   transition:
     left 1s cubic-bezier(0.22, 1, 0.36, 1),
     top 1s cubic-bezier(0.22, 1, 0.36, 1),
     bottom 1s cubic-bezier(0.22, 1, 0.36, 1),
     width 1s cubic-bezier(0.22, 1, 0.36, 1),
     transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* 逆漏空闲：星盘略缩小，腾出设定区 */
+.focus-chamber.is-idle .focus-dock:has(.focus-chamber__duration) {
+  width: min(78vw, 300px);
+  top: 48%;
+}
+.focus-chamber.is-idle .focus-dock:has(.focus-chamber__duration) .focus-dial {
+  width: 88%;
 }
 .focus-chamber.is-engaged .focus-dock {
   left: max(1rem, env(safe-area-inset-left));
@@ -640,9 +671,190 @@ button,
   width: min(42vw, 158px);
   gap: 0;
   align-items: flex-start;
+  overflow: visible;
 }
 .focus-dock__start {
   margin-top: 0.15rem;
+}
+
+/* 逆漏 / 顺钟：启钟前设置区（嵌在星盘下方） */
+.focus-chamber__setup {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 0.25rem;
+}
+.focus-chamber__setup-label {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  color: var(--teal);
+  text-align: center;
+}
+.focus-chamber__duration {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+}
+.focus-chamber__duration-fields {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.35rem;
+}
+.focus-chamber__duration-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--mist);
+}
+.focus-chamber__duration-input {
+  width: 3.5rem !important;
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
+  text-align: center;
+  font-size: 0.95rem !important;
+  color: var(--paper) !important;
+}
+.focus-chamber__duration-colon {
+  padding-bottom: 0.55rem;
+  font-size: 1.1rem;
+  color: var(--mist);
+}
+.focus-chamber__presets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+}
+.focus-chamber__preset {
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--mist);
+  background: color-mix(in srgb, var(--panel) 55%, transparent);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.focus-chamber__preset:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.focus-chamber__preset.is-active {
+  border-color: var(--amber);
+  background: var(--amber);
+  color: var(--on-amber);
+}
+/* 凝时绑定目标：自定义下拉 */
+.focus-bind {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  width: 100%;
+  max-width: 17rem;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.focus-bind__label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--mist);
+  text-align: center;
+}
+.focus-bind__trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--amber) 35%, var(--line));
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
+  padding: 0.55rem 0.9rem;
+  color: var(--paper);
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.focus-bind__trigger:hover,
+.focus-bind__trigger.is-open {
+  border-color: var(--amber);
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+}
+.focus-bind__value {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+.focus-bind__chevron {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--teal);
+}
+.focus-bind__menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  max-height: min(14rem, 42vh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, var(--line));
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--panel) 94%, #070b14);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--amber) 12%, transparent),
+    0 18px 40px rgba(0, 0, 0, 0.45);
+  padding: 0.35rem;
+}
+.focus-bind__group {
+  margin-top: 0.2rem;
+}
+.focus-bind__group-label {
+  padding: 0.35rem 0.65rem 0.2rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  color: var(--teal);
+}
+.focus-bind__option {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--paper);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.focus-bind__option:hover {
+  background: color-mix(in srgb, var(--amber) 14%, transparent);
+}
+.focus-bind__option.is-selected {
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 10%, transparent);
+}
+.focus-bind__empty {
+  padding: 0.65rem 0.7rem;
+  font-size: 0.75rem;
+  color: var(--mist);
+  text-align: center;
 }
 
 .focus-dial {
@@ -790,17 +1002,29 @@ button,
 }
 
 .focus-chamber__msg {
-  position: absolute;
-  left: 50%;
-  bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem));
-  transform: translateX(-50%);
   z-index: 4;
   width: min(90vw, 28rem);
+  max-width: 100%;
   font-family: var(--font-noto-serif), "Songti SC", serif;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
+  line-height: 1.55;
   letter-spacing: 0.06em;
   color: var(--mist);
   text-align: center;
+}
+/* 空闲：跟在启钟按钮下方，避免与中央 dial 叠字 */
+.focus-chamber.is-idle .focus-chamber__msg {
+  position: static;
+  transform: none;
+  margin-top: 0.15rem;
+  padding: 0 0.5rem;
+}
+/* 进行中：贴底居中，避开左右控制条 */
+.focus-chamber.is-engaged .focus-chamber__msg {
+  position: absolute;
+  left: 50%;
+  bottom: max(5.75rem, calc(env(safe-area-inset-bottom) + 4.75rem));
+  transform: translateX(-50%);
 }
 
 @keyframes focus-nebula-drift {
@@ -1539,6 +1763,9 @@ button,
 .capsule-chamber__field .capsule-chamber__node {
   pointer-events: auto;
 }
+.capsule-chamber__field .capsule-chamber__node-hit {
+  pointer-events: auto;
+}
 .capsule-chamber__empty {
   position: absolute;
   left: 50%;
@@ -1557,13 +1784,22 @@ button,
   --delay: 0s;
   position: absolute;
   z-index: 3;
+  display: block;
   width: 3.6rem;
   height: 3.6rem;
   border: 0;
   background: transparent;
   padding: 0;
-  cursor: pointer;
   transform: translate(-50%, -50%);
+}
+.capsule-chamber__node-hit {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
 }
 .capsule-chamber__node-float {
   position: absolute;

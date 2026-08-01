@@ -1,25 +1,21 @@
-import { ForwardTimer } from "@/components/focus/forward-timer";
+import { FocusTimer } from "@/components/focus/focus-timer";
+import { FOCUS_MODE_FORWARD } from "@/db/schema";
+import { loadFocusTimerActive } from "@/lib/focus-page";
 import { requireSession } from "@/lib/session";
-import { getActiveFocusSession } from "@/services/focus";
+import { listFocusBindOptions } from "@/services/focus";
 
 export default async function FocusForwardPage() {
   const session = await requireSession();
-  const active = await getActiveFocusSession(session.user.id);
+  const [active, bindOptions] = await Promise.all([
+    loadFocusTimerActive(session.user.id),
+    listFocusBindOptions(session.user.id),
+  ]);
 
   return (
-    <ForwardTimer
-      active={
-        active
-          ? {
-              id: active.id,
-              status: active.status,
-              accumulatedMs: active.accumulatedMs,
-              runningSince: active.runningSince
-                ? active.runningSince.toISOString()
-                : null,
-            }
-          : null
-      }
+    <FocusTimer
+      pageMode={FOCUS_MODE_FORWARD}
+      active={active}
+      bindOptions={bindOptions}
     />
   );
 }
