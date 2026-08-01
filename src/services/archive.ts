@@ -37,6 +37,7 @@ import {
 } from "@/db/schema";
 import { DEFAULT_ESSAY_IDLE_HOURS } from "@/lib/archive-constants";
 import { archiveHasKeepableText } from "@/lib/archive-labels";
+import { parseMoodKey, type MoodKey } from "@/lib/moods";
 
 export {
   archiveHasKeepableText,
@@ -519,5 +520,25 @@ export async function deleteMemoryFragment(userId: string, itemId: string) {
     .delete(archiveItem)
     .where(and(eq(archiveItem.id, itemId), eq(archiveItem.userId, userId)));
   return true;
+}
+
+/** Phase 15: 馆藏补改绪印（只改 mood，不改只读正文） */
+export async function setArchiveMood(
+  userId: string,
+  itemId: string,
+  mood: string | null,
+): Promise<{ ok: true; mood: MoodKey | null } | { ok: false; error: string }> {
+  const item = await getArchiveItem(userId, itemId);
+  if (!item) return { ok: false, error: "条目不存在" };
+  const next = mood === null || mood === "" ? null : parseMoodKey(mood);
+  if (mood && mood.trim() && !next) {
+    return { ok: false, error: "无效的心情" };
+  }
+  const now = new Date();
+  await getDb()
+    .update(archiveItem)
+    .set({ mood: next, updatedAt: now })
+    .where(and(eq(archiveItem.id, itemId), eq(archiveItem.userId, userId)));
+  return { ok: true, mood: next };
 }
 

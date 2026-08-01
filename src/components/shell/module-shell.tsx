@@ -28,7 +28,7 @@ export function ModuleHubCards({ moduleId }: { moduleId: string }) {
           <li key={sub.id}>
             <Link
               href={sub.href}
-              className="flex items-center justify-between gap-2 rounded-md border border-[var(--line)] bg-[var(--panel)] px-2.5 py-2 transition hover:border-[var(--amber)]"
+              className="ui-hover-card flex items-center justify-between gap-2 rounded-md border border-[var(--line)] bg-[var(--panel)] px-2.5 py-2"
             >
               <div className="min-w-0">
                 <h2 className="text-sm tracking-[0.08em] text-[var(--paper)]">

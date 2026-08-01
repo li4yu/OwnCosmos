@@ -8,6 +8,7 @@ import {
   deleteMemoryFragment,
   setArchiveKept,
   setArchiveKeptMany,
+  setArchiveMood,
   updateMemoryFragment,
   wipeInflowArchivesByIds,
 } from "@/services/archive";
@@ -113,5 +114,19 @@ export async function deleteFragmentAction(
   const ok = await deleteMemoryFragment(session.user.id, itemId);
   if (!ok) return { error: "无法删除该记忆碎片" };
   revalidateGallery();
+  return { ok: true };
+}
+
+/** Phase 15: 馆藏补改绪印 */
+export async function setArchiveMoodAction(
+  itemId: string,
+  mood: string | null,
+): Promise<PastActionState> {
+  const session = await requireSession();
+  const result = await setArchiveMood(session.user.id, itemId, mood);
+  if (!result.ok) return { error: result.error };
+  revalidateGallery(itemId);
+  revalidatePath("/app/past/mood");
+  revalidatePath("/app/past/corridor");
   return { ok: true };
 }

@@ -1,0 +1,24 @@
+---
+description: OwnCosmos 鼠标悬停样式统一（amber 交互强调，勿混 teal）
+alwaysApply: true
+---
+
+# 悬停样式约定
+
+交互强调色固定为 **`--amber`**。悬停不要用 `--teal`（teal 留给静态标签 / 眉题）。
+
+优先使用 `globals.css` 中的工具类：
+
+| 场景 | 类名 | 效果 |
+|------|------|------|
+| 有边框的卡片 / 列表行 | `ui-hover-card` | `hover:border-[var(--amber)]` |
+| mist 次要文字链 / 清除 | `ui-hover-link` | `hover:text-[var(--amber)]` |
+| 已是 amber 的「某某 →」入口 | `ui-hover-link-accent` | `hover:underline` |
+| 分段切换、筛选 chip（未选中） | `ui-hover-chip` | `hover:border-amber` + `hover:text-paper` |
+| 图表柱 / 色块 | `ui-hover-bar` + 父级 `group` | 用 `--ui-bar` 设默认色，**勿**行内 `background` / Tailwind `bg-*`（会盖住悬停）；悬停变 amber |
+
+补充：
+
+- 一律带 `transition`（工具类已含）。
+- 按钮仍用 `ui-btn-*`（ghost 已是 amber 边框+文字悬停）。
+- 新 UI 禁止再写 `hover:border-[var(--teal)]` / `hover:text-[var(--teal)]`。

@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { DueReminderSection } from "@/components/due/due-reminder-section";
 import { HomeCheckinBoard } from "@/components/home/home-checkin-board";
+import { HomePulseStrip } from "@/components/home/home-pulse-strip";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { runEssayArchiveCatchUp } from "@/lib/archive-catchup";
 import { QUICK_JUMP_MODULES } from "@/lib/modules";
 import { runPlanOverdueCatchUp } from "@/lib/plan-catchup";
 import { requireSession } from "@/lib/session";
+import {
+  getRecentCheckinDayCounts,
+  getRecentFocusDayStats,
+} from "@/services/home-pulse";
 import { getHomeSummary } from "@/services/home-summary";
 
 function formatTodayLabel(d = new Date()) {
@@ -22,7 +27,11 @@ export default async function AppHomePage() {
     runEssayArchiveCatchUp(session.user.id),
     runPlanOverdueCatchUp(session.user.id),
   ]);
-  const summary = await getHomeSummary(session.user.id);
+  const [summary, checkinDays, focusDays] = await Promise.all([
+    getHomeSummary(session.user.id),
+    getRecentCheckinDayCounts(session.user.id, 7),
+    getRecentFocusDayStats(session.user.id, 7),
+  ]);
   const user = session.user as typeof session.user & {
     bio?: string | null;
   };
@@ -77,6 +86,8 @@ export default async function AppHomePage() {
           dailyTotal={summary.dailyTotal}
         />
       </div>
+
+      <HomePulseStrip checkinDays={checkinDays} focusDays={focusDays} />
 
       <section className="home-v1__summary" aria-label="今日摘要">
         <div className="home-v1__summary-head">

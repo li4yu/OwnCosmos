@@ -41,6 +41,24 @@ export const auth = betterAuth({
         defaultValue: 48,
         input: true,
       },
+      anniversaryRemind: {
+        type: "boolean",
+        required: true,
+        defaultValue: false,
+        input: true,
+      },
+      notifyEnabled: {
+        type: "boolean",
+        required: true,
+        defaultValue: true,
+        input: true,
+      },
+      notifyDueReminder: {
+        type: "boolean",
+        required: true,
+        defaultValue: true,
+        input: true,
+      },
     },
     changeEmail: {
       enabled: false,

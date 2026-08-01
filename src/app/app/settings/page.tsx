@@ -1,5 +1,7 @@
 import { AppearanceForm } from "@/components/settings/appearance-form";
 import { ArchivePreferenceForm } from "@/components/settings/archive-preference-form";
+import { ExportOpenContent } from "@/components/settings/export-open-content";
+import { NotifyPreferenceForm } from "@/components/settings/notify-preference-form";
 import { PageHeader } from "@/components/shell/page-header";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { requireSession } from "@/lib/session";
@@ -9,6 +11,9 @@ export default async function SettingsPage() {
   const user = session.user as typeof session.user & {
     theme?: string;
     essayIdleHours?: number;
+    anniversaryRemind?: boolean;
+    notifyEnabled?: boolean;
+    notifyDueReminder?: boolean;
   };
 
   return (
@@ -16,7 +21,7 @@ export default async function SettingsPage() {
       <PageHeader
         title="设置"
         eyebrow="SETTINGS"
-        description="账号偏好；主题与流思笺归档节奏"
+        description="外观、归档节奏、通知偏好与数据导出"
         backHref="/app"
         backLabel="返回首页"
       />
@@ -46,13 +51,26 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-md border border-dashed border-[var(--line)] px-2.5 py-3">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--mist)]">
-          其他设置
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+          通知与回望
         </p>
-        <p className="mt-1 text-xs text-[var(--mist)]/80">
-          通知、数据导出等后续完善。
+        <div className="mt-1.5">
+          <NotifyPreferenceForm
+            initialNotifyEnabled={user.notifyEnabled ?? true}
+            initialNotifyDueReminder={user.notifyDueReminder ?? true}
+            initialAnniversaryRemind={Boolean(user.anniversaryRemind)}
+          />
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+          数据导出
         </p>
+        <div className="mt-1.5">
+          <ExportOpenContent />
+        </div>
       </section>
     </main>
   );

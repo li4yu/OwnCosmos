@@ -47,15 +47,15 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
   }
 
   return (
-    <section className="home-v1__daily" aria-label="今日打卡">
-      <div className="home-v1__summary-head">
+    <section className="home-v1__daily home-v1__pane" aria-label="今日打卡">
+      <div className="home-v1__split-head">
         <h2>
           <PoeticName
             name="今日打卡"
             tip="日课可写心得；轮期到期可完成本期；轮期子任务打卡只记次数，与完成本期无关"
           />
         </h2>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="home-v1__split-head-meta">
           <Link href="/app/future/daily" className="home-v1__daily-link">
             日课
           </Link>
@@ -73,22 +73,27 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
       </div>
 
       {total === 0 ? (
-        <div className="home-v1__daily-empty flex flex-wrap gap-3">
-          <Link
-            href="/app/future/daily"
-            className="ui-btn-primary !w-auto px-4 py-2 text-xs"
-          >
-            添加日课
-          </Link>
-          <Link
-            href="/app/future/plans/new?kind=cycle"
-            className="ui-btn-ghost px-4 py-2 text-xs"
-          >
-            新建轮期
-          </Link>
+        <div className="home-v1__daily-panel">
+          <p className="home-v1__daily-panel-hint">
+            还没有今日可打的日课或轮期
+          </p>
+          <div className="home-v1__daily-empty flex flex-wrap gap-2">
+            <Link
+              href="/app/future/daily"
+              className="ui-btn-primary ui-btn-sm !w-auto"
+            >
+              添加日课
+            </Link>
+            <Link
+              href="/app/future/plans/new?kind=cycle"
+              className="ui-btn-ghost ui-btn-sm"
+            >
+              新建轮期
+            </Link>
+          </div>
         </div>
       ) : (
-        <>
+        <div className="home-v1__daily-panel">
           <div
             className="home-v1__daily-bar"
             role="progressbar"
@@ -165,7 +170,7 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
               </li>
             ))}
           </ul>
-        </>
+        </div>
       )}
 
       <CheckinNoteDialog

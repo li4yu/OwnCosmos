@@ -34,6 +34,9 @@ export function RegisterForm({ nextPath = "/app", onSwitchLogin }: RegisterFormP
         name: displayName,
         theme: "night",
         essayIdleHours: 48,
+        anniversaryRemind: false,
+        notifyEnabled: true,
+        notifyDueReminder: true,
       });
       if (signUpError) {
         setError(signUpError.message || "注册失败，请稍后重试");

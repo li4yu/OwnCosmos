@@ -6,7 +6,7 @@ import {
 } from "@/services/archive";
 import { DEFAULT_ESSAY_IDLE_HOURS } from "@/lib/archive-constants";
 
-async function getEssayIdleHours(userId: string) {
+export async function getUserEssayIdleHours(userId: string) {
   const rows = await getDb()
     .select({ essayIdleHours: user.essayIdleHours })
     .from(user)
@@ -20,7 +20,7 @@ async function getEssayIdleHours(userId: string) {
  */
 export async function runEssayArchiveCatchUp(userId: string) {
   try {
-    const hours = await getEssayIdleHours(userId);
+    const hours = await getUserEssayIdleHours(userId);
     return await catchUpIdleEssayArchives(userId, hours);
   } catch (err) {
     console.error("[archive catch-up]", err);

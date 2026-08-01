@@ -23,6 +23,7 @@ import {
  * Phase 12: archive_item 藏忆 / 记忆碎片图文；抹忆硬删流入类。
  * Phase 13: 绪签 / 心情 / 素材匣（不做 plan_ref）。
  * Phase 14: 凝时逆漏 / 绑计划 / 唤起随笔溯源。
+ * Phase 15: 往迹廊 / 心绪鉴 / 通知偏好（复用 archive_item.mood）。
  */
 
 export const user = pgTable("user", {
@@ -40,6 +41,12 @@ export const user = pgTable("user", {
    * 设置页可改
    */
   essayIdleHours: integer("essay_idle_hours").notNull().default(48),
+  /** Phase 15: 同年回望（今时际轻提示） */
+  anniversaryRemind: boolean("anniversary_remind").notNull().default(false),
+  /** Phase 15: 总通知开关（偏好存储；桌面推送后置） */
+  notifyEnabled: boolean("notify_enabled").notNull().default(true),
+  /** Phase 15: 临期提醒偏好（偏好存储；桌面推送后置） */
+  notifyDueReminder: boolean("notify_due_reminder").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

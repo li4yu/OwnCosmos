@@ -21,7 +21,10 @@ type DueCardProps = {
   daysLeft: number;
   remindDays: number;
   kindLabel?: string;
+  /** @deprecated 改用 layout */
   compact?: boolean;
+  layout?: "row" | "square";
+  showActions?: boolean;
 };
 
 export function DuePlanCard({
@@ -32,7 +35,13 @@ export function DuePlanCard({
   remindDays,
   kindLabel,
   compact = false,
+  layout,
+  showActions = true,
 }: DueCardProps) {
+  const resolvedLayout = layout ?? (compact ? "row" : "row");
+  const isSquare = resolvedLayout === "square";
+  const isCompact = !isSquare && compact;
+
   const router = useRouter();
   const yuanxiangTitleId = useId();
   const postponeTitleId = useId();
@@ -90,98 +99,178 @@ export function DuePlanCard({
     router.refresh();
   }
 
+  const borderTone = overdue
+    ? "border-[var(--danger)]/50"
+    : isToday
+      ? "border-[var(--amber)] shadow-[0_0_0_1px_var(--amber-soft)]"
+      : "border-[var(--line)]";
+
   return (
-    <li
-      className={`rounded-xl border bg-[var(--panel)] ${
-        compact ? "p-2.5" : "p-4"
-      } ${
-        overdue
-          ? "border-[var(--danger)]/50"
-          : isToday
-            ? "border-[var(--amber)] shadow-[0_0_0_1px_var(--amber-soft)]"
-            : "border-[var(--line)] hover:border-[var(--amber)]"
-      }`}
+    <article
+      className={
+        isSquare
+          ? `due-deck__card ${borderTone}`
+          : `rounded-xl border bg-[var(--panel)] ${
+              isCompact ? "p-2.5" : "p-4"
+            } ${borderTone} ${overdue || isToday ? "" : "ui-hover-card"}`
+      }
     >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          {!compact ? (
-            <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
-              临期帖 · 只读副本
-              {kindLabel ? ` · ${kindLabel}` : ""}
-              {isToday ? " · 今日" : ""}
-            </p>
-          ) : isToday ? (
-            <p className="font-mono text-[10px] tracking-wide text-[var(--amber)]">
-              今日
-            </p>
-          ) : null}
-          <h3
-            className={`tracking-[0.06em] text-[var(--paper)] ${
-              compact ? "text-sm" : "mt-1 text-lg"
-            }`}
-          >
-            {title}
-          </h3>
+      {isSquare ? (
+        <div className="due-deck__card-body">
+          <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
+            临期帖
+            {kindLabel ? ` · ${kindLabel}` : ""}
+            {isToday ? " · 今日" : ""}
+          </p>
+          <h3 className="due-deck__card-title">{title}</h3>
           <p
-            className={`font-mono tracking-wide ${
-              compact ? "mt-0.5 text-xs" : "mt-2 text-sm"
-            } ${overdue ? "text-[var(--danger)]" : "text-[var(--amber)]"}`}
+            className={`due-deck__card-countdown ${
+              overdue ? "text-[var(--danger)]" : "text-[var(--amber)]"
+            }`}
           >
             {remainingDaysLabel(daysLeft)}
           </p>
-          <p className="mt-0.5 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+          <p className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
             截止 {formatDueDateInput(dueAt)}
-            {compact ? null : ` · 提前 ${remindDays} 天提醒`}
+            {` · 提前 ${remindDays} 天`}
           </p>
-        </div>
-        <div className="flex shrink-0 flex-col gap-1.5">
-          <button
-            type="button"
-            className="ui-btn-primary !w-auto px-3 py-1.5 text-xs"
-            disabled={pending}
-            onClick={() => {
-              setError(null);
-              setCompleteOpen(true);
-            }}
-          >
-            完成
-          </button>
-          <button
-            type="button"
-            className="ui-btn-ghost ui-btn-sm"
-            disabled={pending}
-            onClick={() => {
-              setError(null);
-              setPostponeDate(formatDueDateInput(dueAt));
-              setPostponeOpen(true);
-            }}
-          >
-            延期
-          </button>
-          <button
-            type="button"
-            className="ui-btn-ghost ui-btn-sm"
-            disabled={pending}
-            title="针对这条计划随手写下想法，会存成一条随笔"
-            onClick={() => {
-              setError(null);
-              setYuanxiangBody("");
-              setYuanxiangOpen(true);
-            }}
-          >
-            缘想
-          </button>
-          {!compact ? (
-            <Link
-              href={`/app/future/plans/${id}`}
-              className="ui-btn-ghost ui-btn-sm text-center"
-            >
-              看来日途
-            </Link>
+          {showActions ? (
+            <div className="due-deck__card-actions">
+              <button
+                type="button"
+                className="ui-btn-primary ui-btn-sm !w-auto"
+                disabled={pending}
+                onClick={() => {
+                  setError(null);
+                  setCompleteOpen(true);
+                }}
+              >
+                完成
+              </button>
+              <button
+                type="button"
+                className="ui-btn-ghost ui-btn-sm"
+                disabled={pending}
+                onClick={() => {
+                  setError(null);
+                  setPostponeDate(formatDueDateInput(dueAt));
+                  setPostponeOpen(true);
+                }}
+              >
+                延期
+              </button>
+              <button
+                type="button"
+                className="ui-btn-ghost ui-btn-sm"
+                disabled={pending}
+                title="针对这条计划随手写下想法，会存成一条随笔"
+                onClick={() => {
+                  setError(null);
+                  setYuanxiangBody("");
+                  setYuanxiangOpen(true);
+                }}
+              >
+                缘想
+              </button>
+              <Link
+                href={`/app/future/plans/${id}`}
+                className="ui-btn-ghost ui-btn-sm text-center"
+              >
+                来日途
+              </Link>
+            </div>
+          ) : null}
+          {error ? (
+            <p className="text-xs text-[var(--danger)]" role="alert">
+              {error}
+            </p>
           ) : null}
         </div>
-      </div>
-      {error ? (
+      ) : (
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            {!isCompact ? (
+              <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
+                临期帖 · 只读副本
+                {kindLabel ? ` · ${kindLabel}` : ""}
+                {isToday ? " · 今日" : ""}
+              </p>
+            ) : isToday ? (
+              <p className="font-mono text-[10px] tracking-wide text-[var(--amber)]">
+                今日
+              </p>
+            ) : null}
+            <h3
+              className={`tracking-[0.06em] text-[var(--paper)] ${
+                isCompact ? "text-sm" : "mt-1 text-lg"
+              }`}
+            >
+              {title}
+            </h3>
+            <p
+              className={`font-mono tracking-wide ${
+                isCompact ? "mt-0.5 text-xs" : "mt-2 text-sm"
+              } ${overdue ? "text-[var(--danger)]" : "text-[var(--amber)]"}`}
+            >
+              {remainingDaysLabel(daysLeft)}
+            </p>
+            <p className="mt-0.5 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+              截止 {formatDueDateInput(dueAt)}
+              {isCompact ? null : ` · 提前 ${remindDays} 天提醒`}
+            </p>
+          </div>
+          {showActions ? (
+            <div className="flex shrink-0 flex-col gap-1.5">
+              <button
+                type="button"
+                className="ui-btn-primary !w-auto px-3 py-1.5 text-xs"
+                disabled={pending}
+                onClick={() => {
+                  setError(null);
+                  setCompleteOpen(true);
+                }}
+              >
+                完成
+              </button>
+              <button
+                type="button"
+                className="ui-btn-ghost ui-btn-sm"
+                disabled={pending}
+                onClick={() => {
+                  setError(null);
+                  setPostponeDate(formatDueDateInput(dueAt));
+                  setPostponeOpen(true);
+                }}
+              >
+                延期
+              </button>
+              <button
+                type="button"
+                className="ui-btn-ghost ui-btn-sm"
+                disabled={pending}
+                title="针对这条计划随手写下想法，会存成一条随笔"
+                onClick={() => {
+                  setError(null);
+                  setYuanxiangBody("");
+                  setYuanxiangOpen(true);
+                }}
+              >
+                缘想
+              </button>
+              {!isCompact ? (
+                <Link
+                  href={`/app/future/plans/${id}`}
+                  className="ui-btn-ghost ui-btn-sm text-center"
+                >
+                  看来日途
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {!isSquare && error ? (
         <p className="mt-2 text-sm text-[var(--danger)]" role="alert">
           {error}
         </p>
@@ -327,6 +416,6 @@ export function DuePlanCard({
           </div>
         </div>
       ) : null}
-    </li>
+    </article>
   );
 }

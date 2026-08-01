@@ -15,6 +15,7 @@ import {
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_CYCLE,
 } from "@/db/schema";
+import { ArchiveMoodEditor } from "@/components/archive/archive-mood-editor";
 import { FragmentActions } from "@/components/archive/fragment-actions";
 import { KeepArchiveButton } from "@/components/archive/keep-archive-button";
 import { QuoteNewActions } from "@/components/archive/quote-new-actions";
@@ -86,7 +87,7 @@ export async function ArchiveDetailView({
         <h1 className="mt-1 text-lg tracking-[0.08em] text-[var(--paper)]">
           {item.title}
         </h1>
-        {item.mood || tags.length > 0 ? (
+        {tags.length > 0 ? (
           <p className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[var(--mist)]">
             {item.mood ? <span>{moodDisplay(item.mood)}</span> : null}
             {tags.map((t) => (
@@ -98,7 +99,12 @@ export async function ArchiveDetailView({
               </span>
             ))}
           </p>
+        ) : item.mood ? (
+          <p className="mt-1 text-xs text-[var(--mist)]">
+            {moodDisplay(item.mood)}
+          </p>
         ) : null}
+        <ArchiveMoodEditor itemId={item.id} initialMood={item.mood} />
         <dl className="mt-2 grid gap-2 text-xs text-[var(--mist)] sm:grid-cols-2">
           <div>
             <dt className="font-mono text-[10px] tracking-wide opacity-70">

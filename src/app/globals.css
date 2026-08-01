@@ -226,6 +226,31 @@ button,
   .ui-btn-sm {
     @apply px-2.5 py-1 text-xs tracking-[0.06em];
   }
+
+  /**
+   * 悬停统一（交互强调色 = amber，勿混用 teal）
+   * - card: 有边框的卡片 / 列表行
+   * - link: mist 文字链 → amber
+   * - link-accent: 已是 amber 的入口链
+   * - chip: 分段 / 筛选未选中
+   * - bar: 图表柱等色块
+   */
+  .ui-hover-card {
+    @apply transition hover:border-[var(--amber)];
+  }
+
+  .ui-hover-link {
+    @apply transition hover:text-[var(--amber)];
+  }
+
+  .ui-hover-link-accent {
+    @apply transition hover:underline;
+  }
+
+  .ui-hover-chip {
+    @apply transition hover:border-[var(--amber)] hover:text-[var(--paper)];
+  }
+
 }
 
 @layer utilities {
@@ -239,6 +264,27 @@ button,
       radial-gradient(ellipse 50% 40% at 100% 100%, var(--amber-soft), transparent 50%),
       var(--background);
   }
+}
+
+/**
+ * 图表柱悬停（放在 @layer 外，避免被未分层的模块样式盖住）
+ * 默认色用 --ui-bar；悬停整列加 .group 即可
+ */
+.ui-hover-bar {
+  --ui-bar: color-mix(in srgb, var(--teal) 70%, transparent);
+  background: var(--ui-bar) !important;
+  transition:
+    background-color 0.15s ease,
+    filter 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.ui-hover-bar:hover,
+.group:hover > .ui-hover-bar,
+.group:hover .ui-hover-bar {
+  --ui-bar: color-mix(in srgb, var(--amber) 82%, transparent) !important;
+  background: var(--ui-bar) !important;
+  filter: brightness(1.12);
 }
 
 /* ?? ?? ? ???? ? ?? ?? */
@@ -1323,15 +1369,190 @@ button,
   white-space: nowrap;
 }
 
+/* 首页 · 今日脉搏（紧凑一行，不做成厚卡片） */
+.home-v1__pulse {
+  display: grid;
+  gap: 1rem 1.25rem;
+  grid-template-columns: 1fr;
+  padding: 0.35rem 0 0.55rem;
+  border-top: 1px solid color-mix(in srgb, var(--line) 50%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent);
+}
+@media (min-width: 720px) {
+  .home-v1__pulse {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+@media (min-width: 1100px) {
+  .home-v1__pulse {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(9.5rem, 0.75fr);
+  }
+}
+.home-v1__pulse-block {
+  min-width: 0;
+}
+.home-v1__pulse-block--pie {
+  display: flex;
+  flex-direction: column;
+}
+.home-v1__pulse-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.home-v1__pulse-label {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--teal);
+}
+.home-v1__pulse-empty,
+.home-v1__pulse-foot {
+  margin: 0.2rem 0 0;
+  min-height: 1.1rem;
+  font-size: 11px;
+  color: var(--mist);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+.home-v1__pulse-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.home-v1__pulse-swatch {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 1px;
+}
+.home-v1__pulse-swatch--habit {
+  background: color-mix(in srgb, var(--amber) 80%, transparent);
+}
+.home-v1__pulse-swatch--cycle {
+  background: color-mix(in srgb, var(--teal) 75%, transparent);
+}
+.home-v1__pulse-swatch--focus {
+  background: color-mix(in srgb, var(--amber) 45%, var(--paper));
+}
+.home-v1__pulse-svg {
+  display: block;
+  width: 100%;
+  max-width: 26rem;
+  height: auto;
+}
+.home-v1__pulse-svg--lg {
+  min-height: 5.75rem;
+}
+.home-v1__pulse-pie-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 5.75rem;
+  flex: 1;
+}
+.home-v1__pulse-pie {
+  width: 7.5rem;
+  height: 7.5rem;
+}
+.home-v1__pulse-pie-slice {
+  cursor: default;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.home-v1__pulse-pie-slice:hover {
+  filter: brightness(1.12);
+}
+.home-v1__pulse-pie--habit {
+  fill: color-mix(in srgb, var(--amber) 78%, transparent);
+}
+.home-v1__pulse-pie--cycle {
+  fill: color-mix(in srgb, var(--teal) 72%, transparent);
+}
+.home-v1__pulse-pie--focus {
+  fill: color-mix(in srgb, var(--amber) 40%, var(--paper));
+}
+.home-v1__pulse-pie-hole {
+  fill: var(--background);
+}
+.home-v1__pulse-pie-empty-ring {
+  fill: none;
+  stroke: color-mix(in srgb, var(--line) 80%, transparent);
+  stroke-width: 14;
+}
+.home-v1__pulse-pie-center {
+  fill: var(--paper);
+  font-size: 16px;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+}
+.home-v1__pulse-pie-sub {
+  fill: var(--mist);
+  font-size: 9px;
+  font-family: ui-monospace, monospace;
+}
+.home-v1__pulse-axis {
+  stroke: color-mix(in srgb, var(--line) 75%, transparent);
+  stroke-width: 1;
+}
+.home-v1__pulse-svg-tick {
+  fill: var(--mist);
+  font-size: 7px;
+  font-family: ui-monospace, monospace;
+}
+.home-v1__pulse-stem:hover .home-v1__pulse-stem-habit {
+  filter: brightness(1.15);
+}
+.home-v1__pulse-stem:hover .home-v1__pulse-stem-cycle {
+  filter: brightness(1.15);
+}
+.home-v1__pulse-stem-habit {
+  fill: color-mix(in srgb, var(--amber) 78%, transparent);
+  transition: filter 0.15s ease;
+}
+.home-v1__pulse-stem-cycle {
+  fill: color-mix(in srgb, var(--teal) 72%, transparent);
+  transition: filter 0.15s ease;
+}
+.home-v1__pulse-dot-empty {
+  fill: color-mix(in srgb, var(--line) 80%, transparent);
+}
+.home-v1__pulse-area {
+  fill: color-mix(in srgb, var(--amber) 14%, transparent);
+}
+.home-v1__pulse-line {
+  stroke: color-mix(in srgb, var(--amber) 85%, var(--teal));
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.home-v1__pulse-node {
+  fill: var(--amber);
+  stroke: color-mix(in srgb, var(--panel) 70%, transparent);
+  stroke-width: 1;
+  transition: r 0.15s ease, filter 0.15s ease;
+}
+.home-v1__pulse-node:hover {
+  filter: brightness(1.2);
+}
+
 .home-v1__split {
   display: grid;
-  gap: 0.85rem;
+  gap: 1rem;
   grid-template-columns: 1fr;
+  padding-block: 0.15rem;
 }
 @media (min-width: 900px) {
+  /* 左栏贴合临期方卡，右栏吃剩余，不平分 */
   .home-v1__split {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(14rem, 17.5rem) minmax(0, 1fr);
     align-items: start;
+    gap: 1rem 1.35rem;
   }
 }
 
@@ -1357,25 +1578,89 @@ button,
   color: var(--mist);
 }
 
-.home-v1__due,
-.home-v1__daily {
-  padding: 0.75rem 0.85rem 0.85rem;
-  border-radius: 0.85rem;
-  min-height: 0;
+/* 首页双栏标题行：同一高度、同一字号，左右对齐 */
+.home-v1__pane {
+  min-width: 0;
 }
-.home-v1__due {
-  border: 1px solid color-mix(in srgb, var(--danger, #c45c5c) 35%, var(--line));
+.home-v1__split-head {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  min-height: 1.75rem;
+  margin: 0;
+}
+.home-v1__split-head h2 {
+  margin: 0;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.2em;
+  line-height: 1.2;
+  color: var(--paper);
+}
+.home-v1__split-head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+.home-v1__split-head-link {
+  flex-shrink: 0;
+}
+
+.home-v1__daily-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-height: 17.5rem;
+  padding: 1rem 1.1rem 0.9rem;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
   background:
     linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--amber) 14%, transparent),
-      color-mix(in srgb, var(--teal) 6%, transparent) 50%,
-      transparent 70%
-    ),
-    color-mix(in srgb, var(--panel) 94%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--amber) 12%, transparent);
+      160deg,
+      color-mix(in srgb, var(--amber) 10%, transparent),
+      color-mix(in srgb, var(--panel) 96%, transparent) 42%,
+      var(--panel)
+    );
+  box-shadow:
+    0 12px 28px color-mix(in srgb, var(--ink) 28%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--amber) 8%, transparent);
+}
+.home-v1__daily-panel-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--mist);
+}
+
+/* 首页双栏：去厚重卡片壳，只留分区，避免与内层方卡叠框 */
+.home-v1__due,
+.home-v1__daily {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  background: transparent;
+  box-shadow: none;
+}
+@media (min-width: 900px) {
+  .home-v1__due {
+    padding-right: 1.1rem;
+    border-right: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  }
+}
+
+/* 首页内临期方卡略收，避免占半屏 */
+.home-v1__due .due-deck__stage,
+.home-v1__due .due-deck__controls,
+.home-v1__due .due-deck__dots {
+  width: min(100%, 17.5rem);
 }
 .home-v1__due .home-v1__summary-head,
+.home-v1__due .home-v1__split-head,
 .home-v1__due h2 {
   margin: 0;
 }
@@ -1384,16 +1669,196 @@ button,
   overflow: auto;
 }
 
-.home-v1__daily {
-  border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line));
+/* —— 临期帖方形层叠翻阅 —— */
+.due-deck {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.due-deck__stage {
+  position: relative;
+  width: min(100%, 20rem);
+  aspect-ratio: 1;
+  margin-inline: 0;
+  perspective: 900px;
+}
+
+.due-deck__peek,
+.due-deck__front {
+  position: absolute;
+  inset: 0;
+  transform-origin: center bottom;
+  transition:
+    transform 0.28s ease,
+    opacity 0.28s ease;
+}
+
+.due-deck__peek {
+  pointer-events: none;
+}
+
+.due-deck__peek-face,
+.due-deck__card {
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
   background:
     linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--amber) 12%, transparent),
-      transparent 55%
-    ),
-    color-mix(in srgb, var(--panel) 92%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--amber) 10%, transparent);
+      160deg,
+      color-mix(in srgb, var(--amber) 10%, transparent),
+      color-mix(in srgb, var(--panel) 96%, transparent) 42%,
+      var(--panel)
+    );
+  box-shadow:
+    0 12px 28px color-mix(in srgb, var(--ink) 35%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--amber) 8%, transparent);
+}
+
+.due-deck__peek-face {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+}
+
+.due-deck__peek-title {
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--paper);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.due-deck__peek-days {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--amber);
+}
+
+.due-deck__front--out-left {
+  animation: due-deck-out-left 0.28s ease both;
+}
+
+.due-deck__front--in-right {
+  animation: due-deck-in-right 0.28s ease both;
+}
+
+@keyframes due-deck-out-left {
+  from {
+    opacity: 1;
+    transform: translateX(0) rotate(0deg);
+  }
+  to {
+    opacity: 0.35;
+    transform: translateX(-18%) rotate(-4deg);
+  }
+}
+
+@keyframes due-deck-in-right {
+  from {
+    opacity: 0.4;
+    transform: translateX(14%) rotate(3deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotate(0deg);
+  }
+}
+
+.due-deck__card {
+  display: flex;
+  flex-direction: column;
+}
+
+.due-deck__card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1rem 1.1rem 0.9rem;
+  min-height: 0;
+}
+
+.due-deck__card-title {
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  color: var(--paper);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.due-deck__card-countdown {
+  margin-top: auto;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 1.35rem;
+  letter-spacing: 0.1em;
+}
+
+.due-deck__card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.due-deck__controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  width: min(100%, 20rem);
+}
+
+.due-deck__pager {
+  flex: 1;
+  text-align: center;
+}
+
+.due-deck__dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  max-width: 20rem;
+}
+
+.due-deck__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--mist) 45%, transparent);
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.due-deck__dot:hover {
+  background: color-mix(in srgb, var(--amber) 55%, transparent);
+}
+
+.due-deck__dot--active {
+  background: var(--amber);
+  transform: scale(1.25);
+}
+
+.home-v1__daily {
+  /* 与 .home-v1__due 一致：透明分区，不另套强调边框 */
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 .home-v1__daily-link {
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -1409,14 +1874,12 @@ button,
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.35rem 0 0;
+  margin-top: auto;
+  padding: 0;
   font-size: 0.85rem;
   line-height: 1.5;
   letter-spacing: 0.04em;
   color: var(--mist);
-}
-.home-v1__daily-empty:hover {
-  color: var(--paper);
 }
 .home-v1__daily-bar {
   height: 0.28rem;
