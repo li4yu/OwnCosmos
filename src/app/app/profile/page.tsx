@@ -9,7 +9,7 @@ export default async function ProfilePage() {
   };
 
   return (
-    <main className="flex flex-col gap-8">
+    <main className="flex flex-col gap-3">
       <PageHeader
         title="编辑资料"
         eyebrow="PROFILE"
@@ -17,7 +17,7 @@ export default async function ProfilePage() {
         backLabel="返回首页"
       />
 
-      <section className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
         <ProfileForm
           email={user.email}
           initialName={user.name}

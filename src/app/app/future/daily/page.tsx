@@ -16,7 +16,7 @@ export default async function FutureDailyPage() {
   const todayLabel = localCheckinDate();
 
   return (
-    <main className="flex flex-col gap-6">
+    <main className="flex flex-col gap-3">
       <PageHeader
         title="日课"
         description={

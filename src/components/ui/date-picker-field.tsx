@@ -22,6 +22,14 @@ type DatePickerFieldProps = {
   onChange: (next: string) => void;
   label?: string;
   disabled?: boolean;
+  /** 允许选择今天之前的日期（馆藏筛选等）；默认 false，与计划截止日期一致 */
+  allowPastDates?: boolean;
+  /** 允许清空已选日期 */
+  clearable?: boolean;
+  /** 可选下限 YYYY-MM-DD（含当日） */
+  minDate?: string;
+  /** 可选上限 YYYY-MM-DD（含当日） */
+  maxDate?: string;
 };
 
 function startOfMonth(d: Date) {
@@ -76,6 +84,10 @@ export function DatePickerField({
   onChange,
   label = "截止日期",
   disabled = false,
+  allowPastDates = false,
+  clearable = false,
+  minDate,
+  maxDate,
 }: DatePickerFieldProps) {
   const labelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -85,6 +97,14 @@ export function DatePickerField({
   const [pos, setPos] = useState<PopPos | null>(null);
   const [mounted, setMounted] = useState(false);
   const selected = parseDueDateInput(value);
+  const minBound = useMemo(
+    () => (minDate ? parseDueDateInput(minDate) : null),
+    [minDate],
+  );
+  const maxBound = useMemo(
+    () => (maxDate ? parseDueDateInput(maxDate) : null),
+    [maxDate],
+  );
   const today = useMemo(() => {
     const t = new Date();
     return new Date(t.getFullYear(), t.getMonth(), t.getDate(), 12, 0, 0, 0);
@@ -210,7 +230,9 @@ export function DatePickerField({
                   type="button"
                   className="ui-btn-ghost ui-btn-sm px-1.5 disabled:opacity-30"
                   aria-label="上一年"
-                  disabled={isBeforeCurrentYear(view, today)}
+                  disabled={
+                    !allowPastDates && isBeforeCurrentYear(view, today)
+                  }
                   onClick={() => setView((v) => addYears(v, -1))}
                 >
                   «
@@ -219,7 +241,9 @@ export function DatePickerField({
                   type="button"
                   className="ui-btn-ghost ui-btn-sm px-1.5 disabled:opacity-30"
                   aria-label="上一月"
-                  disabled={isBeforeCurrentMonth(view, today)}
+                  disabled={
+                    !allowPastDates && isBeforeCurrentMonth(view, today)
+                  }
                   onClick={() => setView((v) => addMonths(v, -1))}
                 >
                   ‹
@@ -264,21 +288,34 @@ export function DatePickerField({
                 const ymd = formatDueDateInput(cell);
                 const isSelected = selected ? sameYmd(cell, selected) : false;
                 const isToday = sameYmd(cell, today);
-                const isPast = cell.getTime() < today.getTime();
+                const isPast =
+                  !allowPastDates && cell.getTime() < today.getTime();
+                const beforeMin =
+                  minBound != null && cell.getTime() < minBound.getTime();
+                const afterMax =
+                  maxBound != null && cell.getTime() > maxBound.getTime();
+                const blocked = isPast || beforeMin || afterMax;
+                const blockTitle = isPast
+                  ? "不能选择过去的日期"
+                  : beforeMin
+                    ? "不能早于起始日期"
+                    : afterMax
+                      ? "不能晚于截止日期"
+                      : undefined;
                 return (
                   <button
                     key={ymd}
                     type="button"
-                    disabled={isPast}
-                    aria-disabled={isPast}
-                    title={isPast ? "不能选择过去的日期" : undefined}
+                    disabled={blocked}
+                    aria-disabled={blocked}
+                    title={blockTitle}
                     onClick={() => {
-                      if (isPast) return;
+                      if (blocked) return;
                       onChange(ymd);
                       setOpen(false);
                     }}
                     className={`h-8 rounded-md text-sm transition ${
-                      isPast
+                      blocked
                         ? "cursor-not-allowed text-[var(--mist)]/35"
                         : isSelected
                           ? "bg-[var(--amber)] text-[var(--on-amber)]"
@@ -294,16 +331,36 @@ export function DatePickerField({
             </div>
 
             <div className="mt-2 flex justify-between gap-2">
-              <button
-                type="button"
-                className="ui-btn-ghost ui-btn-sm"
-                onClick={() => {
-                  onChange(formatDueDateInput(today));
-                  setOpen(false);
-                }}
-              >
-                今天
-              </button>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  className="ui-btn-ghost ui-btn-sm disabled:opacity-30"
+                  disabled={
+                    (minBound != null && today.getTime() < minBound.getTime()) ||
+                    (maxBound != null && today.getTime() > maxBound.getTime())
+                  }
+                  onClick={() => {
+                    if (minBound && today.getTime() < minBound.getTime()) return;
+                    if (maxBound && today.getTime() > maxBound.getTime()) return;
+                    onChange(formatDueDateInput(today));
+                    setOpen(false);
+                  }}
+                >
+                  今天
+                </button>
+                {clearable ? (
+                  <button
+                    type="button"
+                    className="ui-btn-ghost ui-btn-sm"
+                    onClick={() => {
+                      onChange("");
+                      setOpen(false);
+                    }}
+                  >
+                    清除
+                  </button>
+                ) : null}
+              </div>
               <button
                 type="button"
                 className="ui-btn-ghost ui-btn-sm"
@@ -320,7 +377,7 @@ export function DatePickerField({
   return (
     <div
       ref={rootRef}
-      className="relative flex flex-col gap-1.5 text-sm text-[var(--mist)]"
+      className="relative flex flex-col gap-1 text-xs text-[var(--mist)]"
     >
       <span id={labelId}>{label}</span>
       <input type="hidden" name={name} value={value} />
@@ -335,7 +392,7 @@ export function DatePickerField({
           if (disabled) return;
           setOpen((v) => !v);
         }}
-        className="auth-field flex w-full items-center justify-between gap-3 text-left text-[var(--paper)] disabled:opacity-50"
+        className="auth-field flex w-full items-center justify-between gap-2 !py-1.5 text-left text-sm text-[var(--paper)] disabled:opacity-50"
       >
         <span>{formatDisplay(value)}</span>
         <span className="font-mono text-[10px] tracking-wide text-[var(--teal)]">

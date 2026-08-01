@@ -22,7 +22,7 @@ export default async function FocusRecordsPage() {
   const records = await listCompletedFocusSessions(session.user.id);
 
   return (
-    <main className="flex flex-col gap-6">
+    <main className="flex flex-col gap-3">
       <PageHeader
         title="凝录"
         description={
@@ -37,7 +37,7 @@ export default async function FocusRecordsPage() {
         actions={
           <Link
             href="/app/focus/forward"
-            className="ui-btn-primary !w-auto px-4 py-2 text-xs"
+            className="ui-btn-primary ui-btn-sm shrink-0"
           >
             开顺钟
           </Link>
@@ -45,11 +45,11 @@ export default async function FocusRecordsPage() {
       />
 
       {records.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--mist)]">
+        <div className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
           尚无凝录。完成一次顺钟后会出现在这里，并同步进入拾忆馆藏。
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-1.5">
           {records.map((item) => {
             const href = item.archiveId
               ? galleryDetailHref(item.archiveId, "focus-record")
@@ -58,18 +58,18 @@ export default async function FocusRecordsPage() {
               <li key={item.id}>
                 <Link
                   href={href}
-                  className="block rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4 transition hover:border-[var(--amber)]"
+                  className="block rounded-md border border-[var(--line)] bg-[var(--panel)] px-2.5 py-2 transition hover:border-[var(--amber)]"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h3 className="text-base text-[var(--paper)]">
+                    <h3 className="text-sm text-[var(--paper)]">
                       {item.title || "凝录"}
                     </h3>
-                    <div className="flex shrink-0 flex-col items-end gap-1 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+                    <div className="flex shrink-0 flex-col items-end gap-0.5 font-mono text-[10px] tracking-wide text-[var(--mist)]">
                       <span>{formatFocusDurationMs(item.elapsedMs)}</span>
                       <time>{formatWhen(item.endedAt)}</time>
                     </div>
                   </div>
-                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--mist)]">
+                  <p className="mt-0.5 line-clamp-2 text-xs text-[var(--mist)]">
                     {item.reflection.trim() || "（无心得）"}
                   </p>
                 </Link>

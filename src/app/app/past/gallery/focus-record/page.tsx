@@ -1,22 +1,22 @@
-import { ArchiveItemList } from "@/components/archive/archive-item-list";
-import { getGallerySection } from "@/lib/gallery-sections";
+import { GallerySectionView } from "@/components/archive/gallery-section-view";
 import { requireSession } from "@/lib/session";
-import { listArchiveItems } from "@/services/archive";
 
-/** 拾忆馆藏 · 凝录分区 */
-export default async function GalleryFocusRecordPage() {
+type Props = {
+  searchParams: Promise<{
+    q?: string;
+    from?: string;
+    to?: string;
+    page?: string;
+  }>;
+};
+
+export default async function GalleryFocusRecordPage({ searchParams }: Props) {
   const session = await requireSession();
-  const section = getGallerySection("focus-record")!;
-  const items = await listArchiveItems(session.user.id, {
-    type: section.filterType!,
-  });
-
   return (
-    <ArchiveItemList
-      items={items}
-      emptyHint={section.emptyHint}
+    <GallerySectionView
+      userId={session.user.id}
       sectionId="focus-record"
-      showTypeChip={false}
+      searchParams={await searchParams}
     />
   );
 }

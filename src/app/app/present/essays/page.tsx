@@ -21,7 +21,7 @@ export default async function EssaysPage() {
   const essays = await listActiveEssays(session.user.id);
 
   return (
-    <main className="flex flex-col gap-6">
+    <main className="flex flex-col gap-3">
       <PageHeader
         title="流思笺"
         description={
@@ -42,7 +42,7 @@ export default async function EssaysPage() {
         actions={
           <Link
             href="/app/present/essays/new"
-            className="ui-btn-primary !w-auto px-4 py-2 text-xs"
+            className="ui-btn-primary ui-btn-sm shrink-0"
           >
             新建
           </Link>
@@ -50,11 +50,11 @@ export default async function EssaysPage() {
       />
 
       {essays.length === 0 ? (
-        <section className="rounded-xl border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--mist)]">
+        <section className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
           还没有流动中的思绪。点「新建」写下第一条。
         </section>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-1.5">
           {essays.map((item) => (
             <EssayListItem
               key={item.id}

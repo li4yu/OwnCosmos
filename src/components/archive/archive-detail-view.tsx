@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  archiveHasKeepableText,
   archiveReasonLabel,
   archiveTypeLabel,
   formatDwell,
@@ -11,8 +12,11 @@ import {
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
   ARCHIVE_TYPE_FOCUS_RECORD,
+  ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_CYCLE,
 } from "@/db/schema";
+import { FragmentActions } from "@/components/archive/fragment-actions";
+import { KeepArchiveButton } from "@/components/archive/keep-archive-button";
 import { formatFocusDurationMs } from "@/lib/focus-duration";
 import { cycleUnitLabel } from "@/lib/plan-kinds";
 import { getFocusSession } from "@/services/focus";
@@ -43,28 +47,41 @@ export async function ArchiveDetailView({
   const item = await getArchiveItem(userId, itemId);
   if (!item) notFound();
 
+  const isFragment = item.type === ARCHIVE_TYPE_MEMORY_FRAGMENT;
   const focusSession =
     item.type === ARCHIVE_TYPE_FOCUS_RECORD && item.sourceFocusSessionId
       ? await getFocusSession(userId, item.sourceFocusSessionId)
       : null;
 
   return (
-    <main className="flex flex-col gap-6">
-      <Link href={backHref} className="ui-btn-ghost ui-btn-sm w-fit">
-        ← {backLabel}
-      </Link>
+    <main className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Link href={backHref} className="ui-btn-ghost ui-btn-sm w-fit">
+          ← {backLabel}
+        </Link>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <KeepArchiveButton
+            itemId={item.id}
+            kept={item.inKnowledge}
+            canKeep={archiveHasKeepableText(item)}
+          />
+          {isFragment ? <FragmentActions itemId={item.id} /> : null}
+        </div>
+      </div>
 
-      <article className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
-        <p className="font-mono text-[10px] tracking-[0.18em] text-[var(--teal)]">
-          {archiveTypeLabel(item.type)} · 只读 · 不可编辑
+      <article className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
+        <p className="font-mono text-[9px] tracking-[0.18em] text-[var(--teal)]">
+          {archiveTypeLabel(item.type)}
+          {item.inKnowledge ? " · 已藏忆" : ""}
+          {isFragment ? " · 可编辑" : " · 只读 · 不可编辑"}
         </p>
-        <h1 className="mt-2 text-2xl tracking-[0.08em] text-[var(--paper)]">
+        <h1 className="mt-1 text-lg tracking-[0.08em] text-[var(--paper)]">
           {item.title}
         </h1>
-        <dl className="mt-4 grid gap-3 text-sm text-[var(--mist)] sm:grid-cols-2">
+        <dl className="mt-2 grid gap-2 text-xs text-[var(--mist)] sm:grid-cols-2">
           <div>
             <dt className="font-mono text-[10px] tracking-wide opacity-70">
-              归档时间
+              {isFragment ? "拾取时间" : "归档时间"}
             </dt>
             <dd className="mt-0.5">{formatWhen(item.archivedAt)}</dd>
           </div>
@@ -80,6 +97,14 @@ export async function ArchiveDetailView({
             </dt>
             <dd className="mt-0.5">{sourceModuleLabel(item.sourceModule)}</dd>
           </div>
+          {item.inKnowledge && item.keptAt ? (
+            <div>
+              <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                藏忆时间
+              </dt>
+              <dd className="mt-0.5">{formatWhen(item.keptAt)}</dd>
+            </div>
+          ) : null}
           {item.type === ARCHIVE_TYPE_PLAN_CYCLE ||
           item.type === ARCHIVE_TYPE_DAILY_CHECKIN ? (
             <>
@@ -132,6 +157,13 @@ export async function ArchiveDetailView({
                 <dd className="mt-0.5">{formatWhen(item.sourceUpdatedAt)}</dd>
               </div>
             </>
+          ) : isFragment ? (
+            <div>
+              <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                最后编辑
+              </dt>
+              <dd className="mt-0.5">{formatWhen(item.updatedAt)}</dd>
+            </div>
           ) : (
             <div>
               <dt className="font-mono text-[10px] tracking-wide opacity-70">
@@ -162,11 +194,19 @@ export async function ArchiveDetailView({
             </>
           ) : null}
         </dl>
+        {item.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.imageUrl}
+            alt=""
+            className="mt-6 max-h-[420px] w-full rounded-lg border border-[var(--line)] object-contain"
+          />
+        ) : null}
         <div
           className="mt-6 whitespace-pre-wrap text-base leading-8 text-[var(--paper)] select-text"
-          aria-readonly="true"
+          aria-readonly={isFragment ? undefined : "true"}
         >
-          {item.body.trim() || "（无正文）"}
+          {item.body.trim() || (item.imageUrl ? "" : "（无正文）")}
         </div>
       </article>
     </main>

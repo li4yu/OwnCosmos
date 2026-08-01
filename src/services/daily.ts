@@ -154,6 +154,8 @@ async function upsertDailyHabitArchive(
     archivedAt: now,
     sourceCreatedAt: habit.createdAt,
     sourceUpdatedAt: now,
+    inKnowledge: true,
+    keptAt: now,
   });
   return id;
 }

@@ -45,7 +45,7 @@ export default async function FutureCyclesPage() {
   });
 
   return (
-    <main className="flex flex-col gap-8">
+    <main className="flex flex-col gap-3">
       <PageHeader
         title="轮期"
         description={
@@ -60,14 +60,14 @@ export default async function FutureCyclesPage() {
         actions={
           <Link
             href="/app/future/plans/new?kind=cycle"
-            className="ui-btn-primary !w-auto px-4 py-2 text-xs"
+            className="ui-btn-primary ui-btn-sm shrink-0"
           >
             新建轮期
           </Link>
         }
       />
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-1.5">
         <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
           进行中
           <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
@@ -75,11 +75,11 @@ export default async function FutureCyclesPage() {
           </span>
         </h2>
         {openPlans.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[var(--line)] p-6 text-center text-sm text-[var(--mist)]">
+          <div className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
             暂无轮期。新建后，本期结束会自动计次并滚入下一期。
           </div>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-1.5">
             {await Promise.all(
               openPlans.map(async (item) => {
                 const tasks = tasksByPlan.get(item.id) ?? [];
@@ -123,7 +123,7 @@ export default async function FutureCyclesPage() {
         )}
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-1.5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
             系列计次
@@ -139,15 +139,15 @@ export default async function FutureCyclesPage() {
           </Link>
         </div>
         {seriesArchives.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[var(--line)] p-6 text-center text-sm text-[var(--mist)]">
+          <div className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
             滚期或手动完成后，会在此按系列累计次数（馆藏只保留一条）。
           </div>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-1.5">
             {seriesArchives.map((item) => (
               <li
                 key={item.id}
-                className="rounded-xl border border-[var(--line)] bg-[var(--panel)]/70 p-4"
+                className="rounded-md border border-[var(--line)] bg-[var(--panel)]/70 px-2.5 py-2"
               >
                 <div className="flex items-start gap-3">
                   <Link

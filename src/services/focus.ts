@@ -200,6 +200,8 @@ export async function completeFocusSession(
     archivedAt: now,
     sourceCreatedAt: row.startedAt,
     sourceUpdatedAt: now,
+    inKnowledge: true,
+    keptAt: now,
   });
 
   await getDb()

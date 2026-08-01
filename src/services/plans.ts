@@ -503,6 +503,8 @@ async function insertPlanArchive(
     archivedAt,
     sourceCreatedAt: row.createdAt,
     sourceUpdatedAt: row.updatedAt,
+    inKnowledge: true,
+    keptAt: archivedAt,
   });
   return id;
 }
@@ -623,6 +625,8 @@ export async function syncCycleArchiveTaskSnapshot(
     archivedAt: now,
     sourceCreatedAt: row.createdAt,
     sourceUpdatedAt: now,
+    inKnowledge: true,
+    keptAt: now,
   });
   return id;
 }
@@ -712,6 +716,8 @@ async function upsertCycleSeriesArchive(
     archivedAt,
     sourceCreatedAt: row.createdAt,
     sourceUpdatedAt: row.updatedAt,
+    inKnowledge: true,
+    keptAt: archivedAt,
   });
   return id;
 }

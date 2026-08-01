@@ -14,7 +14,7 @@ export default async function NewEssayPage() {
         guardLeave
         description="手动保存；未保存离开会弹出确认小窗"
       />
-      <div className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
+      <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
         <EssayEditor mode="create" />
       </div>
     </main>

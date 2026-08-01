@@ -1,20 +1,27 @@
-import { ArchiveItemList } from "@/components/archive/archive-item-list";
+import { GallerySectionView } from "@/components/archive/gallery-section-view";
 import { runEssayArchiveCatchUp } from "@/lib/archive-catchup";
-import { getGallerySection } from "@/lib/gallery-sections";
 import { requireSession } from "@/lib/session";
-import { listArchiveItems } from "@/services/archive";
 
-export default async function GalleryPage() {
+type Props = {
+  searchParams: Promise<{
+    q?: string;
+    type?: string;
+    kept?: string;
+    from?: string;
+    to?: string;
+    page?: string;
+  }>;
+};
+
+export default async function GalleryPage({ searchParams }: Props) {
   const session = await requireSession();
   await runEssayArchiveCatchUp(session.user.id);
-  const items = await listArchiveItems(session.user.id);
-  const section = getGallerySection("all")!;
-
+  const sp = await searchParams;
   return (
-    <ArchiveItemList
-      items={items}
-      emptyHint={section.emptyHint}
+    <GallerySectionView
+      userId={session.user.id}
       sectionId="all"
+      searchParams={sp}
     />
   );
 }

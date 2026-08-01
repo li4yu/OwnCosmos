@@ -19,6 +19,7 @@ import {
  * Phase 8: focus_session (凝时·顺钟) → archive focus_record.
  * Phase 10: plan 丰满 + plan_task / daily_habit / daily_checkin.
  * Phase 11: essay.source_plan_id（缘想）；临期延期/完成（不做关卡）。
+ * Phase 12: archive_item 藏忆 / 记忆碎片图文；抹忆硬删流入类。
  */
 
 export const user = pgTable("user", {
@@ -117,6 +118,8 @@ export const ARCHIVE_TYPE_PLAN_CYCLE = "plan_cycle_archive" as const;
 export const ARCHIVE_TYPE_DAILY_CHECKIN = "daily_checkin_archive" as const;
 /** Phase 8 写入；P5 仅分区空态预留 */
 export const ARCHIVE_TYPE_FOCUS_RECORD = "focus_record" as const;
+/** Phase 12: 用户上传的记忆碎片 */
+export const ARCHIVE_TYPE_MEMORY_FRAGMENT = "memory_fragment" as const;
 export const ARCHIVE_REASON_MANUAL = "manual" as const;
 export const ARCHIVE_REASON_AUTO_48H = "auto_48h" as const;
 /** Phase 7: 临期帖完成归档 */
@@ -129,6 +132,15 @@ export const ARCHIVE_REASON_PLAN_CYCLE_ROLLOVER = "plan_cycle_rollover" as const
 export const ARCHIVE_REASON_DAILY_CHECKIN = "daily_checkin" as const;
 /** Phase 8: 顺钟完整结束 → 凝录 */
 export const ARCHIVE_REASON_FOCUS_COMPLETE = "focus_complete" as const;
+/** Phase 12: 记忆碎片上传 */
+export const ARCHIVE_REASON_USER_UPLOAD = "user_upload" as const;
+
+/** 抹忆可删的流入类（不含轮期 / 日课 / 碎片） */
+export const WIPE_ARCHIVE_TYPES = [
+  ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_PLAN_ARCHIVE,
+  ARCHIVE_TYPE_FOCUS_RECORD,
+] as const;
 
 export const archiveItem = pgTable(
   "archive_item",
@@ -137,7 +149,7 @@ export const archiveItem = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    /** essay_sediment | plan_archive | plan_cycle_archive | daily_checkin_archive | focus_record */
+    /** essay_sediment | plan_archive | plan_cycle_archive | daily_checkin_archive | focus_record | memory_fragment */
     type: text("type").notNull(),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
@@ -174,10 +186,26 @@ export const archiveItem = pgTable(
     sourceCreatedAt: timestamp("source_created_at").notNull(),
     /** 原随笔最后编辑时间快照 */
     sourceUpdatedAt: timestamp("source_updated_at").notNull(),
+    /** Phase 12: 藏忆（知识库标记，无向量）；归档默认 true，记忆碎片显式 false */
+    inKnowledge: boolean("in_knowledge").notNull().default(true),
+    /** Phase 12: 藏忆时间 */
+    keptAt: timestamp("kept_at"),
+    /** Phase 12: 记忆碎片图片 URL */
+    imageUrl: text("image_url"),
+    /** Phase 12: 对象存储 / 本地 key，删图用 */
+    imageKey: text("image_key"),
+    /** Phase 12: 碎片可编辑 */
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [
     index("archive_item_user_archived_idx").on(t.userId, t.archivedAt),
     index("archive_item_user_type_idx").on(t.userId, t.type),
+    index("archive_item_user_knowledge_idx").on(t.userId, t.inKnowledge),
+    index("archive_item_user_type_archived_idx").on(
+      t.userId,
+      t.type,
+      t.archivedAt,
+    ),
     uniqueIndex("archive_item_user_series_uidx").on(t.userId, t.sourceSeriesId),
     uniqueIndex("archive_item_user_habit_uidx").on(t.userId, t.sourceHabitId),
   ],

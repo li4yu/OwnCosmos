@@ -1012,10 +1012,10 @@ button,
   }
 }
 
-/* 登录后内容区：与顶栏同宽、收紧左右边距 */
+/* 登录后内容区：与顶栏同宽；大屏放宽上限，减少两侧空带 */
 .app-shell-width {
   width: 100%;
-  max-width: 72rem; /* ~max-w-6xl，比原 5xl 略宽 */
+  max-width: 80rem; /* ~1280px */
   padding-left: 0.75rem;
   padding-right: 0.75rem;
 }
@@ -1029,6 +1029,13 @@ button,
   .app-shell-width {
     padding-left: 1.25rem;
     padding-right: 1.25rem;
+  }
+}
+@media (min-width: 1536px) {
+  .app-shell-width {
+    max-width: 96rem; /* ~1536px，宽屏更满 */
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 

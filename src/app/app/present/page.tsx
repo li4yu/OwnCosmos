@@ -19,9 +19,9 @@ export default async function PresentHubPage() {
   }));
 
   return (
-    <main className="flex flex-col gap-8">
+    <main className="flex flex-col gap-3">
       <ModuleHubCards moduleId="present" />
-      <DueReminderSection items={dueItems} />
+      <DueReminderSection items={dueItems} compact />
     </main>
   );
 }

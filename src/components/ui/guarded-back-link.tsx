@@ -40,7 +40,7 @@ export function GuardedBackLink({ href, label = "返回" }: GuardedBackProps) {
       <button
         type="button"
         onClick={attempt}
-        className="mb-3 inline-flex items-center gap-1 rounded border border-[var(--line)] px-2.5 py-1 text-xs tracking-[0.06em] text-[var(--mist)] transition hover:border-[var(--amber)] hover:text-[var(--amber)]"
+        className="mb-1 inline-flex items-center gap-1 rounded border border-[var(--line)] px-2 py-0.5 text-[11px] tracking-[0.06em] text-[var(--mist)] transition hover:border-[var(--amber)] hover:text-[var(--amber)]"
       >
         ← {label}
       </button>

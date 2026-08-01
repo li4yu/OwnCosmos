@@ -57,7 +57,7 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
         guardLeave
         description="可改标题、日期、描述、子任务与完成状态"
       />
-      <div className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
+      <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
         <PlanEditor
           mode="edit"
           planId={item.id}

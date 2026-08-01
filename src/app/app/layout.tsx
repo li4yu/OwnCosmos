@@ -21,7 +21,7 @@ export default async function AppAreaLayout({
           image: session.user.image,
         }}
       />
-      <div className="app-shell-width mx-auto py-5 sm:py-6">{children}</div>
+      <div className="app-shell-width mx-auto py-2.5 sm:py-3">{children}</div>
       {readyCapsules.length > 0 ? (
         <CapsuleUnlockOrb
           userId={session.user.id}

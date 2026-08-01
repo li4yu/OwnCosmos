@@ -2,6 +2,7 @@ import {
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
   ARCHIVE_TYPE_FOCUS_RECORD,
+  ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
 } from "@/db/schema";
@@ -12,11 +13,11 @@ export const GALLERY_SECTIONS = [
     id: "all",
     href: "/app/past/gallery",
     name: "全部",
-    tip: "馆藏总览，含各类沉淀",
+    tip: "馆藏总览，含各类沉淀；可查询并批量藏忆 / 抹忆",
     filterType: null as string | null,
     ready: true,
     emptyHint:
-      "馆藏尚空。可在流思笺中手动归档，或等待超过设定小时数未编辑后自动沉淀。",
+      "馆藏尚空。可在流思笺中手动归档，或等待超过设定小时数未编辑后自动沉淀；亦可上传记忆碎片。",
   },
   {
     id: "essay-sediment",
@@ -62,6 +63,15 @@ export const GALLERY_SECTIONS = [
     filterType: ARCHIVE_TYPE_FOCUS_RECORD,
     ready: true,
     emptyHint: "尚无凝录。走完一次凝时顺钟并结束后，将沉淀到此分区。",
+  },
+  {
+    id: "memory-fragment",
+    href: "/app/past/gallery/memory-fragment",
+    name: "记忆碎片",
+    tip: "你在昔时往直接上传的照片或文字回忆，可编辑、可删除",
+    filterType: ARCHIVE_TYPE_MEMORY_FRAGMENT,
+    ready: true,
+    emptyHint: "还没有记忆碎片。点「拾取碎片」上传照片或写下文字回忆。",
   },
 ] as const;
 

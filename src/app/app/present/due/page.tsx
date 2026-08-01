@@ -20,7 +20,7 @@ export default async function DueRemindersPage() {
   }));
 
   return (
-    <main className="flex flex-col gap-6">
+    <main className="flex flex-col gap-3">
       <PageHeader
         title="临期帖"
         description={

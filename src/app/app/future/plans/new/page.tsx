@@ -31,7 +31,7 @@ export default async function NewPlanPage({ searchParams }: Props) {
         guardLeave
         description="单次 / 愿景：标题、日期、临期配与描述"
       />
-      <div className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
+      <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
         <PlanEditor mode="create" defaultKind={defaultKind} />
       </div>
     </main>

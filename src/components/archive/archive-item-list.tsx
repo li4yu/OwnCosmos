@@ -8,6 +8,7 @@ import {
 import {
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_CYCLE,
 } from "@/db/schema";
 import {
@@ -65,6 +66,7 @@ export function ArchiveItemList({
             <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] tracking-wide text-[var(--teal)]">
               {showTypeChip ? <span>{archiveTypeLabel(item.type)}</span> : null}
               <span>{archiveReasonLabel(item.archiveReason)}</span>
+              {item.inKnowledge ? <span>已藏忆</span> : null}
               {item.type === ARCHIVE_TYPE_PLAN_CYCLE ||
               item.type === ARCHIVE_TYPE_DAILY_CHECKIN ? (
                 <>
@@ -82,8 +84,17 @@ export function ArchiveItemList({
                 </span>
               ) : null}
             </p>
+            {item.type === ARCHIVE_TYPE_MEMORY_FRAGMENT && item.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.imageUrl}
+                alt=""
+                className="mt-2 max-h-28 rounded-md border border-[var(--line)] object-cover"
+              />
+            ) : null}
             <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-[var(--mist)]">
-              {item.body.trim() || "（无正文）"}
+              {item.body.trim() ||
+                (item.imageUrl ? "（图片碎片）" : "（无正文）")}
             </p>
           </Link>
         </li>
@@ -102,7 +113,7 @@ export function GalleryIntro() {
         />
       </h2>
       <p className="mt-2 text-sm text-[var(--mist)]">
-        总库按归档时间倒序；馆内可用分区筛选。详情只读，不可改回流。
+        总库按归档时间倒序；可藏忆进知识库。流入类只读；记忆碎片可编辑删除。
       </p>
     </div>
   );

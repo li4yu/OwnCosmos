@@ -1,24 +1,24 @@
-import { ArchiveItemList } from "@/components/archive/archive-item-list";
+import { GallerySectionView } from "@/components/archive/gallery-section-view";
 import { runEssayArchiveCatchUp } from "@/lib/archive-catchup";
-import { getGallerySection } from "@/lib/gallery-sections";
 import { requireSession } from "@/lib/session";
-import { listArchiveItems } from "@/services/archive";
 
-/** 拾忆馆藏 · 随笔沉淀分区 */
-export default async function GalleryEssaySedimentPage() {
+type Props = {
+  searchParams: Promise<{
+    q?: string;
+    from?: string;
+    to?: string;
+    page?: string;
+  }>;
+};
+
+export default async function GalleryEssaySedimentPage({ searchParams }: Props) {
   const session = await requireSession();
   await runEssayArchiveCatchUp(session.user.id);
-  const section = getGallerySection("essay-sediment")!;
-  const items = await listArchiveItems(session.user.id, {
-    type: section.filterType!,
-  });
-
   return (
-    <ArchiveItemList
-      items={items}
-      emptyHint={section.emptyHint}
+    <GallerySectionView
+      userId={session.user.id}
       sectionId="essay-sediment"
-      showTypeChip={false}
+      searchParams={await searchParams}
     />
   );
 }

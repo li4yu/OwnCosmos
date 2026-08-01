@@ -1,23 +1,49 @@
 import { randomBytes } from "node:crypto";
-import { and, desc, eq, isNull, lt } from "drizzle-orm";
+import { unlink } from "node:fs/promises";
+import path from "node:path";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  type SQL,
+} from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   ARCHIVE_REASON_AUTO_48H,
+  ARCHIVE_REASON_DAILY_CHECKIN,
   ARCHIVE_REASON_FOCUS_COMPLETE,
   ARCHIVE_REASON_MANUAL,
-  ARCHIVE_REASON_DAILY_CHECKIN,
   ARCHIVE_REASON_PLAN_COMPLETE,
   ARCHIVE_REASON_PLAN_CYCLE_ROLLOVER,
   ARCHIVE_REASON_PLAN_OVERDUE,
+  ARCHIVE_REASON_USER_UPLOAD,
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
   ARCHIVE_TYPE_FOCUS_RECORD,
+  ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
+  WIPE_ARCHIVE_TYPES,
   archiveItem,
   essay,
 } from "@/db/schema";
 import { DEFAULT_ESSAY_IDLE_HOURS } from "@/lib/archive-constants";
+import { archiveHasKeepableText } from "@/lib/archive-labels";
+
+export {
+  archiveHasKeepableText,
+  archiveReasonLabel,
+  archiveTypeLabel,
+  formatDwell,
+  sourceModuleLabel,
+} from "@/lib/archive-labels";
 
 function newId() {
   return randomBytes(16).toString("hex");
@@ -49,6 +75,9 @@ async function insertEssaySediment(
     archivedAt,
     sourceCreatedAt: row.createdAt,
     sourceUpdatedAt: row.updatedAt,
+    inKnowledge: true,
+    keptAt: archivedAt,
+    updatedAt: archivedAt,
   });
   return id;
 }
@@ -118,17 +147,97 @@ export async function catchUpIdleEssayArchives(
 
 export async function listArchiveItems(
   userId: string,
-  opts?: { type?: string },
+  opts?: { type?: string; inKnowledge?: boolean },
 ) {
   const conditions = [eq(archiveItem.userId, userId)];
   if (opts?.type) {
     conditions.push(eq(archiveItem.type, opts.type));
+  }
+  if (opts?.inKnowledge === true) {
+    conditions.push(eq(archiveItem.inKnowledge, true));
   }
   return getDb()
     .select()
     .from(archiveItem)
     .where(and(...conditions))
     .orderBy(desc(archiveItem.archivedAt));
+}
+
+const DEFAULT_PAGE_SIZE = 10;
+
+export type ArchiveQueryOpts = {
+  type?: string;
+  types?: readonly string[];
+  inKnowledge?: boolean;
+  /** 标题模糊（不区分大小写） */
+  titleQ?: string;
+  archivedFrom?: Date;
+  archivedTo?: Date;
+  page?: number;
+  pageSize?: number;
+};
+
+function escapeIlike(raw: string) {
+  return raw.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}
+
+function buildArchiveConditions(
+  userId: string,
+  opts: ArchiveQueryOpts,
+): SQL | undefined {
+  const conditions: SQL[] = [eq(archiveItem.userId, userId)];
+  if (opts.type) conditions.push(eq(archiveItem.type, opts.type));
+  if (opts.types?.length) {
+    conditions.push(inArray(archiveItem.type, [...opts.types]));
+  }
+  if (opts.inKnowledge === true) {
+    conditions.push(eq(archiveItem.inKnowledge, true));
+  }
+  if (opts.inKnowledge === false) {
+    conditions.push(eq(archiveItem.inKnowledge, false));
+  }
+  const q = opts.titleQ?.trim();
+  if (q) {
+    conditions.push(ilike(archiveItem.title, `%${escapeIlike(q)}%`));
+  }
+  if (opts.archivedFrom) {
+    conditions.push(gte(archiveItem.archivedAt, opts.archivedFrom));
+  }
+  if (opts.archivedTo) {
+    conditions.push(lte(archiveItem.archivedAt, opts.archivedTo));
+  }
+  return and(...conditions);
+}
+
+/** 馆藏分页查询（藏忆 / 抹忆共用） */
+export async function queryArchiveItems(
+  userId: string,
+  opts: ArchiveQueryOpts = {},
+) {
+  const pageSize = Math.min(
+    10,
+    Math.max(1, Math.floor(opts.pageSize ?? DEFAULT_PAGE_SIZE)),
+  );
+  const page = Math.max(1, Math.floor(opts.page ?? 1));
+  const where = buildArchiveConditions(userId, opts);
+
+  const [totalRow] = await getDb()
+    .select({ n: count() })
+    .from(archiveItem)
+    .where(where);
+  const total = totalRow?.n ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(page, totalPages);
+
+  const items = await getDb()
+    .select()
+    .from(archiveItem)
+    .where(where)
+    .orderBy(desc(archiveItem.archivedAt))
+    .limit(pageSize)
+    .offset((safePage - 1) * pageSize);
+
+  return { items, total, page: safePage, pageSize, totalPages };
 }
 
 export async function getArchiveItem(userId: string, itemId: string) {
@@ -140,69 +249,258 @@ export async function getArchiveItem(userId: string, itemId: string) {
   return rows[0] ?? null;
 }
 
-export function archiveTypeLabel(type: string) {
-  switch (type) {
-    case ARCHIVE_TYPE_ESSAY_SEDIMENT:
-      return "随笔沉淀";
-    case ARCHIVE_TYPE_PLAN_ARCHIVE:
-      return "规划归档";
-    case ARCHIVE_TYPE_PLAN_CYCLE:
-      return "轮期归档";
-    case ARCHIVE_TYPE_DAILY_CHECKIN:
-      return "日课归档";
-    case ARCHIVE_TYPE_FOCUS_RECORD:
-      return "凝录";
-    case "memory_fragment":
-      return "记忆碎片";
-    default:
-      return type;
+/** 藏忆 / 取消藏忆；纯图无正文的碎片不可藏忆 */
+export async function setArchiveKept(
+  userId: string,
+  itemId: string,
+  kept: boolean,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const item = await getArchiveItem(userId, itemId);
+  if (!item) return { ok: false, error: "条目不存在" };
+  if (kept) {
+    if (!archiveHasKeepableText(item)) {
+      return { ok: false, error: "纯图无文字，无法藏忆进知识库" };
+    }
+  }
+  const now = new Date();
+  await getDb()
+    .update(archiveItem)
+    .set({
+      inKnowledge: kept,
+      keptAt: kept ? now : null,
+      updatedAt: now,
+    })
+    .where(and(eq(archiveItem.id, itemId), eq(archiveItem.userId, userId)));
+  return { ok: true };
+}
+
+/** 批量藏忆 / 取消藏忆 */
+export async function setArchiveKeptMany(
+  userId: string,
+  itemIds: string[],
+  kept: boolean,
+): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
+  const ids = [...new Set(itemIds.map((id) => id.trim()).filter(Boolean))];
+  if (ids.length === 0) return { ok: false, error: "请先选择条目" };
+
+  const rows = await getDb()
+    .select()
+    .from(archiveItem)
+    .where(and(eq(archiveItem.userId, userId), inArray(archiveItem.id, ids)));
+
+  if (rows.length === 0) return { ok: false, error: "未找到所选条目" };
+
+  let targetIds = rows.map((r) => r.id);
+  if (kept) {
+    targetIds = rows.filter(archiveHasKeepableText).map((r) => r.id);
+    if (targetIds.length === 0) {
+      return { ok: false, error: "所选条目均无可用文本，无法藏忆" };
+    }
+  }
+
+  const now = new Date();
+  await getDb()
+    .update(archiveItem)
+    .set({
+      inKnowledge: kept,
+      keptAt: kept ? now : null,
+      updatedAt: now,
+    })
+    .where(
+      and(eq(archiveItem.userId, userId), inArray(archiveItem.id, targetIds)),
+    );
+  return { ok: true, count: targetIds.length };
+}
+
+async function deleteLocalImage(imageKey: string | null | undefined) {
+  if (!imageKey) return;
+  if (imageKey.includes("..") || path.isAbsolute(imageKey)) return;
+  const abs = path.join(process.cwd(), "public", imageKey);
+  try {
+    await unlink(abs);
+  } catch {
+    // 文件可能已不在
   }
 }
 
-export function sourceModuleLabel(module: string) {
-  switch (module) {
-    case "present":
-      return "今时际";
-    case "future":
-      return "来日途";
-    case "focus":
-      return "凝时";
-    case "past":
-      return "昔时往";
-    default:
-      return module;
+async function hardDeleteArchiveRows(
+  userId: string,
+  rows: { id: string; imageKey: string | null }[],
+) {
+  for (const row of rows) {
+    await deleteLocalImage(row.imageKey);
   }
+  if (rows.length === 0) return 0;
+  await getDb()
+    .delete(archiveItem)
+    .where(
+      and(
+        eq(archiveItem.userId, userId),
+        inArray(
+          archiveItem.id,
+          rows.map((r) => r.id),
+        ),
+      ),
+    );
+  return rows.length;
 }
 
-export function archiveReasonLabel(reason: string) {
-  switch (reason) {
-    case ARCHIVE_REASON_MANUAL:
-      return "手动归档";
-    case ARCHIVE_REASON_AUTO_48H:
-      return "逾时自动归档";
-    case ARCHIVE_REASON_PLAN_COMPLETE:
-      return "临期完成归档";
-    case ARCHIVE_REASON_PLAN_OVERDUE:
-      return "逾期自动归档";
-    case ARCHIVE_REASON_PLAN_CYCLE_ROLLOVER:
-      return "轮期滚期计次";
-    case ARCHIVE_REASON_DAILY_CHECKIN:
-      return "日课打卡";
-    case ARCHIVE_REASON_FOCUS_COMPLETE:
-      return "专注结束凝录";
-    default:
-      return reason;
+/**
+ * 抹忆：按归档时间范围硬删流入类（随笔沉淀 / 规划归档 / 凝录）
+ */
+export async function wipeInflowArchives(
+  userId: string,
+  from: Date,
+  to: Date,
+) {
+  if (from.getTime() > to.getTime()) {
+    return { ok: false as const, error: "开始日期不能晚于结束日期", count: 0 };
   }
+  const rows = await getDb()
+    .select({
+      id: archiveItem.id,
+      imageKey: archiveItem.imageKey,
+    })
+    .from(archiveItem)
+    .where(
+      and(
+        eq(archiveItem.userId, userId),
+        inArray(archiveItem.type, [...WIPE_ARCHIVE_TYPES]),
+        gte(archiveItem.archivedAt, from),
+        lte(archiveItem.archivedAt, to),
+      ),
+    );
+
+  const deleted = await hardDeleteArchiveRows(userId, rows);
+  return { ok: true as const, count: deleted };
 }
 
-/** 停留时长文案（创建 → 归档） */
-export function formatDwell(createdAt: Date, archivedAt: Date) {
-  const ms = Math.max(0, archivedAt.getTime() - createdAt.getTime());
-  const minutes = Math.floor(ms / (60 * 1000));
-  if (minutes < 1) return "不足 1 分钟";
-  if (minutes < 60) return `约 ${minutes} 分钟`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 48) return `约 ${hours} 小时`;
-  const days = Math.floor(hours / 24);
-  return `约 ${days} 天`;
+/** 抹忆：按选中 id 硬删（仅流入类） */
+export async function wipeInflowArchivesByIds(
+  userId: string,
+  itemIds: string[],
+) {
+  const ids = [...new Set(itemIds.map((id) => id.trim()).filter(Boolean))];
+  if (ids.length === 0) {
+    return { ok: false as const, error: "请先选择条目", count: 0 };
+  }
+  const rows = await getDb()
+    .select({
+      id: archiveItem.id,
+      imageKey: archiveItem.imageKey,
+    })
+    .from(archiveItem)
+    .where(
+      and(
+        eq(archiveItem.userId, userId),
+        inArray(archiveItem.type, [...WIPE_ARCHIVE_TYPES]),
+        inArray(archiveItem.id, ids),
+      ),
+    );
+  if (rows.length === 0) {
+    return { ok: false as const, error: "所选条目不可抹忆或不存在", count: 0 };
+  }
+  const deleted = await hardDeleteArchiveRows(userId, rows);
+  return { ok: true as const, count: deleted };
 }
+
+export async function createMemoryFragment(
+  userId: string,
+  input: {
+    title: string;
+    body: string;
+    imageUrl?: string | null;
+    imageKey?: string | null;
+  },
+) {
+  const titleRaw = input.title.trim();
+  const title = titleRaw || "无标题";
+  const body = input.body.trim();
+  const imageUrl = input.imageUrl?.trim() || null;
+  const imageKey = input.imageKey?.trim() || null;
+  // 标题 / 正文 / 图片 至少一项
+  if (!titleRaw && !body && !imageUrl) return null;
+
+  const now = new Date();
+  const id = newId();
+  await getDb().insert(archiveItem).values({
+    id,
+    userId,
+    type: ARCHIVE_TYPE_MEMORY_FRAGMENT,
+    title,
+    body,
+    sourceModule: "past",
+    archiveReason: ARCHIVE_REASON_USER_UPLOAD,
+    archivedAt: now,
+    sourceCreatedAt: now,
+    sourceUpdatedAt: now,
+    imageUrl,
+    imageKey,
+    inKnowledge: false,
+    keptAt: null,
+    updatedAt: now,
+  });
+  return id;
+}
+
+export async function updateMemoryFragment(
+  userId: string,
+  itemId: string,
+  input: {
+    title: string;
+    body: string;
+    imageUrl?: string | null;
+    imageKey?: string | null;
+    clearImage?: boolean;
+  },
+) {
+  const item = await getArchiveItem(userId, itemId);
+  if (!item || item.type !== ARCHIVE_TYPE_MEMORY_FRAGMENT) return null;
+
+  const titleRaw = input.title.trim();
+  const title = titleRaw || "无标题";
+  const body = input.body.trim();
+  let imageUrl = item.imageUrl;
+  let imageKey = item.imageKey;
+  if (input.clearImage) {
+    await deleteLocalImage(item.imageKey);
+    imageUrl = null;
+    imageKey = null;
+  } else if (input.imageUrl !== undefined) {
+    if (input.imageKey && input.imageKey !== item.imageKey) {
+      await deleteLocalImage(item.imageKey);
+    }
+    imageUrl = input.imageUrl?.trim() || null;
+    imageKey = input.imageKey?.trim() || null;
+  }
+  if (!titleRaw && !body && !imageUrl) return null;
+
+  const now = new Date();
+  const keepable = archiveHasKeepableText({ title, body });
+  await getDb()
+    .update(archiveItem)
+    .set({
+      title,
+      body,
+      imageUrl,
+      imageKey,
+      sourceUpdatedAt: now,
+      updatedAt: now,
+      ...(keepable
+        ? {}
+        : { inKnowledge: false, keptAt: null }),
+    })
+    .where(and(eq(archiveItem.id, itemId), eq(archiveItem.userId, userId)));
+  return itemId;
+}
+
+export async function deleteMemoryFragment(userId: string, itemId: string) {
+  const item = await getArchiveItem(userId, itemId);
+  if (!item || item.type !== ARCHIVE_TYPE_MEMORY_FRAGMENT) return false;
+  await deleteLocalImage(item.imageKey);
+  await getDb()
+    .delete(archiveItem)
+    .where(and(eq(archiveItem.id, itemId), eq(archiveItem.userId, userId)));
+  return true;
+}
+
