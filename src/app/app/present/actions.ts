@@ -6,6 +6,8 @@ import { localTodayNoon } from "@/lib/plan-dates";
 import { createEssay, deleteActiveEssay, updateEssay } from "@/services/essays";
 import { archiveActiveEssay } from "@/services/archive";
 import { refineEssayToPlan } from "@/services/plans";
+import { setEssayTags } from "@/services/tags";
+import { searchArchivesForBorrow } from "@/services/search";
 import { ARCHIVE_REASON_MANUAL } from "@/db/schema";
 
 export type EssayActionState = {
@@ -16,6 +18,13 @@ export type EssayActionState = {
   refinedPlanId?: string;
 };
 
+function parseTagIds(formData: FormData) {
+  return String(formData.get("tagIds") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 export async function createEssayAction(
   _prev: EssayActionState,
   formData: FormData,
@@ -23,10 +32,17 @@ export async function createEssayAction(
   const session = await requireSession();
   const title = String(formData.get("title") ?? "");
   const body = String(formData.get("body") ?? "");
+  const mood = String(formData.get("mood") ?? "");
   if (!title.trim() && !body.trim()) {
     return { error: "请至少填写标题或正文" };
   }
-  const id = await createEssay(session.user.id, { title, body });
+  const id = await createEssay(session.user.id, { title, body, mood });
+  const tagResult = await setEssayTags(
+    session.user.id,
+    id,
+    parseTagIds(formData),
+  );
+  if ("error" in tagResult) return { error: tagResult.error };
   revalidatePath("/app/present");
   revalidatePath("/app/present/essays");
   return { createdId: id };
@@ -40,13 +56,24 @@ export async function updateEssayAction(
   const session = await requireSession();
   const title = String(formData.get("title") ?? "");
   const body = String(formData.get("body") ?? "");
+  const mood = String(formData.get("mood") ?? "");
   if (!title.trim() && !body.trim()) {
     return { error: "请至少填写标题或正文" };
   }
-  const updated = await updateEssay(session.user.id, essayId, { title, body });
+  const updated = await updateEssay(session.user.id, essayId, {
+    title,
+    body,
+    mood,
+  });
   if (!updated) {
     return { error: "随笔不存在或已归档" };
   }
+  const tagResult = await setEssayTags(
+    session.user.id,
+    essayId,
+    parseTagIds(formData),
+  );
+  if ("error" in tagResult) return { error: tagResult.error };
   revalidatePath("/app/present");
   revalidatePath("/app/present/essays");
   revalidatePath(`/app/present/essays/${essayId}`);
@@ -106,4 +133,17 @@ export async function refineEssayAction(
   revalidatePath("/app/future");
   revalidatePath("/app/future/plans");
   return { refinedPlanId: planId };
+}
+
+export async function searchArchivesForBorrowAction(q: string) {
+  const session = await requireSession();
+  if (!q.trim()) return { error: "请输入关键词" };
+  const hits = await searchArchivesForBorrow(session.user.id, q);
+  return {
+    hits: hits.map((h) => ({
+      id: h.id,
+      title: h.title,
+      body: h.body,
+    })),
+  };
 }

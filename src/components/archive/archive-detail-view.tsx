@@ -17,6 +17,9 @@ import {
 } from "@/db/schema";
 import { FragmentActions } from "@/components/archive/fragment-actions";
 import { KeepArchiveButton } from "@/components/archive/keep-archive-button";
+import { QuoteNewActions } from "@/components/archive/quote-new-actions";
+import { moodDisplay } from "@/lib/moods";
+import { listArchiveItemTags } from "@/services/tags";
 import { formatFocusDurationMs } from "@/lib/focus-duration";
 import { cycleUnitLabel } from "@/lib/plan-kinds";
 import { getFocusSession } from "@/services/focus";
@@ -48,10 +51,12 @@ export async function ArchiveDetailView({
   if (!item) notFound();
 
   const isFragment = item.type === ARCHIVE_TYPE_MEMORY_FRAGMENT;
-  const focusSession =
+  const [tags, focusSession] = await Promise.all([
+    listArchiveItemTags(userId, item.id),
     item.type === ARCHIVE_TYPE_FOCUS_RECORD && item.sourceFocusSessionId
-      ? await getFocusSession(userId, item.sourceFocusSessionId)
-      : null;
+      ? getFocusSession(userId, item.sourceFocusSessionId)
+      : Promise.resolve(null),
+  ]);
 
   return (
     <main className="flex flex-col gap-2">
@@ -59,13 +64,16 @@ export async function ArchiveDetailView({
         <Link href={backHref} className="ui-btn-ghost ui-btn-sm w-fit">
           ← {backLabel}
         </Link>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <KeepArchiveButton
-            itemId={item.id}
-            kept={item.inKnowledge}
-            canKeep={archiveHasKeepableText(item)}
-          />
-          {isFragment ? <FragmentActions itemId={item.id} /> : null}
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            <KeepArchiveButton
+              itemId={item.id}
+              kept={item.inKnowledge}
+              canKeep={archiveHasKeepableText(item)}
+            />
+            {isFragment ? <FragmentActions itemId={item.id} /> : null}
+          </div>
+          <QuoteNewActions archiveItemId={item.id} />
         </div>
       </div>
 
@@ -78,6 +86,19 @@ export async function ArchiveDetailView({
         <h1 className="mt-1 text-lg tracking-[0.08em] text-[var(--paper)]">
           {item.title}
         </h1>
+        {item.mood || tags.length > 0 ? (
+          <p className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[var(--mist)]">
+            {item.mood ? <span>{moodDisplay(item.mood)}</span> : null}
+            {tags.map((t) => (
+              <span
+                key={t.tagId}
+                className="rounded border border-[var(--line)] px-1.5 py-0.5"
+              >
+                {t.nameSnapshot}
+              </span>
+            ))}
+          </p>
+        ) : null}
         <dl className="mt-2 grid gap-2 text-xs text-[var(--mist)] sm:grid-cols-2">
           <div>
             <dt className="font-mono text-[10px] tracking-wide opacity-70">

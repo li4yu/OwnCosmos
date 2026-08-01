@@ -25,6 +25,8 @@ export default async function FocusRecordsPage() {
     <main className="flex flex-col gap-3">
       <PageHeader
         title="凝录"
+        backHref="/app/focus"
+        backLabel="返回凝时"
         description={
           <>
             <PoeticName

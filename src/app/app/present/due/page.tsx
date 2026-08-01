@@ -23,6 +23,8 @@ export default async function DueRemindersPage() {
     <main className="flex flex-col gap-3">
       <PageHeader
         title="临期帖"
+        backHref="/app/present"
+        backLabel="返回今时际"
         description={
           <>
             <PoeticName

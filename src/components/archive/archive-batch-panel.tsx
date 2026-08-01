@@ -48,9 +48,17 @@ type ArchiveBatchPanelProps = {
   page: number;
   pageSize?: number;
   totalPages: number;
-  filters: { q: string; type: string; kept: string; from: string; to: string };
+  filters: {
+    q: string;
+    type: string;
+    kept: string;
+    from: string;
+    to: string;
+    tag: string;
+  };
   /** 仅「全部」分区显示类型下拉 */
   typeOptions?: ArchiveTypeOption[];
+  tagOptions?: ArchiveTypeOption[];
   emptyHint: string;
   /** 当前分区是否允许抹忆（轮期/日课/碎片为 false） */
   allowWipe?: boolean;
@@ -78,6 +86,7 @@ export function ArchiveBatchPanel({
   totalPages,
   filters,
   typeOptions,
+  tagOptions,
   emptyHint,
   allowWipe = true,
   showTypeChip = true,
@@ -88,6 +97,7 @@ export function ArchiveBatchPanel({
   const [kept, setKept] = useState(filters.kept);
   const [from, setFrom] = useState(filters.from);
   const [to, setTo] = useState(filters.to);
+  const [tag, setTag] = useState(filters.tag);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
   const [batchKind, setBatchKind] = useState<BatchKind | null>(null);
@@ -125,6 +135,7 @@ export function ArchiveBatchPanel({
         kept,
         from,
         to,
+        tag,
         page: nextPage,
       }),
     );
@@ -216,7 +227,9 @@ export function ArchiveBatchPanel({
         </p>
         <div
           className={`mt-1.5 grid gap-1.5 sm:grid-cols-2 ${
-            typeOptions ? "lg:grid-cols-3 xl:grid-cols-5" : "lg:grid-cols-4"
+            typeOptions
+              ? "lg:grid-cols-3 xl:grid-cols-6"
+              : "lg:grid-cols-3 xl:grid-cols-5"
           }`}
         >
           <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
@@ -261,6 +274,23 @@ export function ArchiveBatchPanel({
               ))}
             </select>
           </label>
+          {tagOptions && tagOptions.length > 0 ? (
+            <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+              绪签
+              <select
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                className="auth-field !py-1.5 text-sm text-[var(--paper)]"
+              >
+                <option value="">绪签不限</option>
+                {tagOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <DatePickerField
             name="archivedFrom"
             label="归档起（含）"
@@ -306,6 +336,7 @@ export function ArchiveBatchPanel({
               setKept("");
               setFrom("");
               setTo("");
+              setTag("");
               setSelected(new Set());
               router.push(basePath);
             }}
@@ -437,6 +468,7 @@ export function ArchiveBatchPanel({
               kept: filters.kept,
               from: filters.from,
               to: filters.to,
+              tag: filters.tag,
               page: Math.max(1, page - 1),
             })}
             className={`ui-btn-ghost ui-btn-sm ${page <= 1 ? "pointer-events-none opacity-40" : ""}`}
@@ -451,6 +483,7 @@ export function ArchiveBatchPanel({
               kept: filters.kept,
               from: filters.from,
               to: filters.to,
+              tag: filters.tag,
               page: Math.min(totalPages, page + 1),
             })}
             className={`ui-btn-ghost ui-btn-sm ${page >= totalPages ? "pointer-events-none opacity-40" : ""}`}

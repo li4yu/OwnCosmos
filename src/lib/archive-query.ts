@@ -49,6 +49,8 @@ export type ArchiveListSearch = {
   kept?: string;
   from?: string;
   to?: string;
+  /** Phase 13: 绪签 id */
+  tag?: string;
   page?: string;
 };
 
@@ -108,6 +110,7 @@ export function parseArchiveListSearch(
   const keptRaw = (sp.kept ?? "").trim();
   const fromRaw = (sp.from ?? "").trim();
   const toRaw = (sp.to ?? "").trim();
+  const tagRaw = (sp.tag ?? "").trim();
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
   const rangeError = archiveDateRangeError(fromRaw, toRaw);
   const fromBound = dayBoundsFromInput(fromRaw);
@@ -125,6 +128,8 @@ export function parseArchiveListSearch(
     inKnowledge,
     fromInput: fromRaw,
     toInput: toRaw,
+    tagInput: tagRaw,
+    tagId: tagRaw || undefined,
     dateRangeError: rangeError,
     /** 起止颠倒时不应用日期条件，避免误筛出空集 */
     archivedFrom: rangeError ? undefined : fromBound.start,
@@ -145,6 +150,7 @@ export function buildArchiveQueryHref(
     kept?: string;
     from?: string;
     to?: string;
+    tag?: string;
     page?: number;
   },
 ) {
@@ -154,6 +160,7 @@ export function buildArchiveQueryHref(
   if (params.kept?.trim()) sp.set("kept", params.kept.trim());
   if (params.from?.trim()) sp.set("from", params.from.trim());
   if (params.to?.trim()) sp.set("to", params.to.trim());
+  if (params.tag?.trim()) sp.set("tag", params.tag.trim());
   if (params.page && params.page > 1) sp.set("page", String(params.page));
   const qs = sp.toString();
   return qs ? `${basePath}?${qs}` : basePath;

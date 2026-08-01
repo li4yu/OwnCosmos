@@ -12,6 +12,8 @@ import {
   type PlanActionState,
 } from "@/app/app/future/actions";
 import { PlanTaskPanel, type PlanTaskItem } from "@/components/plans/plan-task-panel";
+import { MoodPicker } from "@/components/tags/mood-picker";
+import { TagField } from "@/components/tags/tag-field";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
@@ -55,6 +57,8 @@ type SourceLink = {
   archived: boolean;
 };
 
+type TagOption = { id: string; name: string; active?: boolean };
+
 type PlanEditorProps =
   | {
       mode: "create";
@@ -63,6 +67,7 @@ type PlanEditorProps =
       initialBody?: string;
       sourceEssayId?: string | null;
       listHref?: string;
+      allTags?: TagOption[];
     }
   | {
       mode: "edit";
@@ -75,6 +80,9 @@ type PlanEditorProps =
       initialKind: PlanKind;
       initialCycleUnit?: string | null;
       initialCycleEveryDays?: number | null;
+      initialMood?: string | null;
+      initialTagIds?: string[];
+      allTags?: TagOption[];
       capsuleLocked?: boolean;
       sourceLink?: SourceLink | null;
       tasks?: PlanTaskItem[];
@@ -129,6 +137,13 @@ export function PlanEditor(props: PlanEditorProps) {
   const [body, setBody] = useState(
     isEdit ? props.initialBody : (props.initialBody ?? ""),
   );
+  const [mood, setMood] = useState(
+    isEdit ? (props.initialMood ?? "") : "",
+  );
+  const [tagIds, setTagIds] = useState<string[]>(
+    isEdit ? (props.initialTagIds ?? []) : [],
+  );
+  const [allTags, setAllTags] = useState<TagOption[]>(props.allTags ?? []);
   const [dueAt, setDueAt] = useState(() => {
     if (isEdit) {
       return props.initialDueAt ? formatDueDateInput(props.initialDueAt) : "";
@@ -181,6 +196,10 @@ export function PlanEditor(props: PlanEditorProps) {
         ? "本期结束"
         : "截止日期";
   const periodDoneToday = isEdit ? Boolean(props.periodDoneToday) : false;
+
+  useEffect(() => {
+    setAllTags(props.allTags ?? []);
+  }, [props.allTags]);
 
   useEffect(() => {
     if (props.mode !== "edit") return;
@@ -620,6 +639,27 @@ export function PlanEditor(props: PlanEditorProps) {
             />
           </label>
         )}
+
+        {!capsuleLocked ? (
+          <>
+            <MoodPicker
+              value={mood}
+              onChange={(next) => {
+                setMood(next);
+                markDirty();
+              }}
+            />
+            <TagField
+              allTags={allTags}
+              selectedIds={tagIds}
+              onChange={(ids) => {
+                setTagIds(ids);
+                markDirty();
+              }}
+              onTagsMutated={() => router.refresh()}
+            />
+          </>
+        ) : null}
 
       </form>
 

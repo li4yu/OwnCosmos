@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { requireSession } from "@/lib/session";
 import { getActiveEssay } from "@/services/essays";
 import { getActivePlan } from "@/services/plans";
+import { listActiveTags, listEssayTagIds } from "@/services/tags";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -16,6 +17,11 @@ export default async function EditEssayPage({ params, searchParams }: Props) {
   const session = await requireSession();
   const item = await getActiveEssay(session.user.id, id);
   if (!item) notFound();
+
+  const [tags, tagIds] = await Promise.all([
+    listActiveTags(session.user.id),
+    listEssayTagIds(session.user.id, id),
+  ]);
 
   let sourcePlanLink: { title: string; href: string } | null = null;
   if (item.sourcePlanId) {
@@ -48,6 +54,13 @@ export default async function EditEssayPage({ params, searchParams }: Props) {
           essayId={item.id}
           initialTitle={item.title}
           initialBody={item.body}
+          initialMood={item.mood}
+          initialTagIds={tagIds}
+          allTags={tags.map((t) => ({
+            id: t.id,
+            name: t.name,
+            active: t.active,
+          }))}
           justCreated={saved === "1"}
           sourcePlanLink={sourcePlanLink}
         />

@@ -3,13 +3,14 @@ import { PlanEditor } from "@/components/plans/plan-editor";
 import { PageHeader } from "@/components/shell/page-header";
 import { isPlanKind, type PlanKind } from "@/lib/plan-kinds";
 import { requireSession } from "@/lib/session";
+import { listActiveTags } from "@/services/tags";
 
 type Props = {
   searchParams: Promise<{ kind?: string }>;
 };
 
 export default async function NewPlanPage({ searchParams }: Props) {
-  await requireSession();
+  const session = await requireSession();
   const { kind: raw } = await searchParams;
   if (raw === "capsule") {
     redirect("/app/future/capsule?compose=1");
@@ -21,18 +22,32 @@ export default async function NewPlanPage({ searchParams }: Props) {
   } else if (raw && isPlanKind(raw) && raw !== "capsule" && raw !== "stage") {
     defaultKind = raw;
   }
+  const tags = await listActiveTags(session.user.id);
+  const isCycle = defaultKind === "cycle";
 
   return (
-    <main>
+    <main className="flex flex-col gap-3">
       <PageHeader
-        title="新建计划"
-        backHref="/app/future/plans"
-        backLabel="返回规划"
+        title={isCycle ? "新建轮期" : "新建计划"}
+        backHref={isCycle ? "/app/future/cycles" : "/app/future/plans"}
+        backLabel={isCycle ? "返回轮期" : "返回规划"}
         guardLeave
-        description="单次 / 愿景：标题、日期、临期配与描述"
+        description={
+          isCycle
+            ? "周期单位、子任务与临期配"
+            : "单次 / 愿景：标题、日期、临期配与描述"
+        }
       />
-      <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
-        <PlanEditor mode="create" defaultKind={defaultKind} />
+      <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <PlanEditor
+          mode="create"
+          defaultKind={defaultKind}
+          allTags={tags.map((t) => ({
+            id: t.id,
+            name: t.name,
+            active: t.active,
+          }))}
+        />
       </div>
     </main>
   );

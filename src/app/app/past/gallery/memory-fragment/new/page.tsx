@@ -1,11 +1,20 @@
 import { FragmentEditor } from "@/components/archive/fragment-editor";
+import { PageHeader } from "@/components/shell/page-header";
 import { requireSession } from "@/lib/session";
 
 export default async function NewMemoryFragmentPage() {
   await requireSession();
   return (
-    <main>
-      <FragmentEditor mode="create" />
+    <main className="flex flex-col gap-3">
+      <PageHeader
+        title="拾取记忆碎片"
+        backHref="/app/past/gallery/memory-fragment"
+        backLabel="返回记忆碎片"
+        description="上传照片或写下文字回忆，收进拾忆馆藏"
+      />
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <FragmentEditor mode="create" />
+      </section>
     </main>
   );
 }

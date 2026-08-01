@@ -112,13 +112,13 @@ export function ProfileForm({
   const shown = preview || (!clearImage && image) || null;
 
   return (
-    <form onSubmit={onSubmit} className="flex w-full max-w-md flex-col gap-4">
-      <p className="text-sm text-[var(--mist)]">
+    <form onSubmit={onSubmit} className="flex w-full max-w-md flex-col gap-1.5">
+      <p className="text-xs text-[var(--mist)]">
         邮箱（只读）
-        <span className="mt-1 block text-[var(--paper)]">{email}</span>
+        <span className="mt-0.5 block text-sm text-[var(--paper)]">{email}</span>
       </p>
 
-      <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
+      <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
         昵称
         <input
           type="text"
@@ -126,28 +126,28 @@ export function ProfileForm({
           maxLength={40}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="auth-field"
+          className="auth-field !py-1.5 text-sm"
           autoComplete="nickname"
         />
       </label>
 
-      <div className="flex flex-col gap-2">
-        <span className="text-sm text-[var(--mist)]">头像</span>
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-1">
+        <span className="text-xs text-[var(--mist)]">头像</span>
+        <div className="flex items-center gap-3">
           {shown ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={shown}
               alt="头像预览"
-              className="h-16 w-16 rounded-full border border-[var(--line)] object-cover"
+              className="h-14 w-14 rounded-full border border-[var(--line)] object-cover"
             />
           ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--field-bg)] font-mono text-lg text-[var(--paper)]">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--field-bg)] font-mono text-base text-[var(--paper)]">
               {displayInitial(name)}
             </div>
           )}
-          <div className="flex flex-col gap-2">
-            <label className="ui-btn-ghost ui-btn-sm cursor-pointer">
+          <div className="flex flex-col gap-1">
+            <label className="ui-btn-ghost ui-btn-sm w-fit cursor-pointer">
               选择图片
               <input
                 ref={fileRef}
@@ -160,7 +160,7 @@ export function ProfileForm({
             {(shown || pendingFile) && (
               <button
                 type="button"
-                className="text-left text-sm text-[var(--mist)] hover:text-[var(--amber)]"
+                className="text-left text-xs text-[var(--mist)] hover:text-[var(--amber)]"
                 onClick={() => {
                   if (preview) URL.revokeObjectURL(preview);
                   setPreview(null);
@@ -172,14 +172,14 @@ export function ProfileForm({
                 清除头像
               </button>
             )}
-            <p className="text-xs text-[var(--mist)]/80">
-              未上传时显示昵称首字母。JPG / PNG / WebP / GIF，最大 2MB
+            <p className="text-[10px] text-[var(--mist)]/80">
+              未上传显示昵称首字母 · JPG/PNG/WebP/GIF · 最大 2MB
             </p>
           </div>
         </div>
       </div>
 
-      <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
+      <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
         简介 / 签名（可选）
         <textarea
           value={bio}
@@ -187,40 +187,44 @@ export function ProfileForm({
           maxLength={200}
           rows={3}
           placeholder="一句话介绍自己"
-          className="auth-field resize-y"
+          className="auth-field resize-y !py-1.5 text-sm"
         />
       </label>
 
       {error ? (
-        <p className="text-sm text-[#b54a4a]" role="alert">
+        <p className="text-xs text-[#b54a4a]" role="alert">
           {error}
         </p>
       ) : null}
 
       {message ? (
-        <div className="flex flex-col gap-3 rounded-lg border border-[var(--line)] bg-[var(--field-bg)] p-4">
-          <p className="text-sm text-[var(--teal)]" role="status">
+        <div className="flex flex-col gap-1.5 rounded-md border border-[var(--line)] bg-[var(--field-bg)] p-2.5">
+          <p className="text-xs text-[var(--teal)]" role="status">
             {message}
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
               onClick={() => router.push("/app")}
-              className="ui-btn-primary !w-auto px-4 py-2 text-xs"
+              className="ui-btn-primary ui-btn-sm"
             >
               返回首页
             </button>
             <button
               type="button"
               onClick={() => setMessage(null)}
-              className="ui-btn-ghost"
+              className="ui-btn-ghost ui-btn-sm"
             >
               继续编辑
             </button>
           </div>
         </div>
       ) : (
-        <button type="submit" disabled={pending} className="auth-submit">
+        <button
+          type="submit"
+          disabled={pending}
+          className="ui-btn-primary ui-btn-sm w-fit"
+        >
           {pending ? "保存中…" : "保存资料"}
         </button>
       )}

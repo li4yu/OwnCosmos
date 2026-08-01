@@ -14,8 +14,6 @@ import {
   updateFragmentAction,
   type PastActionState,
 } from "@/app/app/past/actions";
-import { PoeticName } from "@/components/ui/poetic-name";
-
 type FragmentEditorProps =
   | { mode: "create" }
   | {
@@ -123,19 +121,7 @@ export function FragmentEditor(props: FragmentEditorProps) {
   const busy = actionPending || navPending || uploading;
 
   return (
-    <form onSubmit={onSubmit} className="flex max-w-xl flex-col gap-2.5">
-      <div>
-        <h2 className="text-sm tracking-[0.1em] text-[var(--paper)]">
-          <PoeticName
-            name={isEdit ? "编辑记忆碎片" : "拾取记忆碎片"}
-            tip="上传照片或写下文字回忆，收进拾忆馆藏"
-          />
-        </h2>
-        <p className="mt-0.5 text-xs text-[var(--mist)]">
-          标题、文字或图片至少填一项；图片永不纳入知识库。
-        </p>
-      </div>
-
+    <form onSubmit={onSubmit} className="flex max-w-xl flex-col gap-1.5">
       <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
         标题（可选）
         <input

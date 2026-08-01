@@ -19,6 +19,8 @@ export default async function FutureDailyPage() {
     <main className="flex flex-col gap-3">
       <PageHeader
         title="日课"
+        backHref="/app/future"
+        backLabel="返回来日途"
         description={
           <>
             <PoeticName name="日课" tip="每日习惯打卡，可附一句心得" />

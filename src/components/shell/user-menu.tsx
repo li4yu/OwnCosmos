@@ -92,16 +92,12 @@ export function UserMenu({ name, image, email }: UserMenuProps) {
           <MenuLink href="/app/settings" onNavigate={() => setOpen(false)}>
             设置
           </MenuLink>
-          <button
-            type="button"
-            role="menuitem"
-            disabled
-            className="flex w-full px-3 py-2 text-left text-sm text-[var(--mist)]/50"
-            title="后续完善"
-          >
-            其他功能
-            <span className="ml-auto font-mono text-[10px]">稍后</span>
-          </button>
+          <MenuLink href="/app/search" onNavigate={() => setOpen(false)}>
+            全局检索
+          </MenuLink>
+          <MenuLink href="/app/materials" onNavigate={() => setOpen(false)}>
+            素材匣
+          </MenuLink>
           <div className="my-1 border-t border-[var(--line)]" />
           <button
             type="button"

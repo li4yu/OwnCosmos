@@ -14,6 +14,8 @@ type EssayListItemProps = {
   title: string;
   body: string;
   updatedLabel: string;
+  moodLabel?: string;
+  tagNames?: string[];
 };
 
 export function EssayListItem({
@@ -21,6 +23,8 @@ export function EssayListItem({
   title,
   body,
   updatedLabel,
+  moodLabel,
+  tagNames,
 }: EssayListItemProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -59,12 +63,20 @@ export function EssayListItem({
       <div className="flex items-start gap-3">
         <Link href={`/app/present/essays/${id}`} className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="text-base text-[var(--paper)]">{title}</h3>
+            <h3 className="text-sm text-[var(--paper)]">{title}</h3>
             <time className="shrink-0 font-mono text-[10px] tracking-wide text-[var(--mist)]">
               {updatedLabel}
             </time>
           </div>
-          <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--mist)]">
+          {moodLabel || (tagNames && tagNames.length > 0) ? (
+            <p className="mt-0.5 flex flex-wrap gap-x-2 font-mono text-[10px] text-[var(--teal)]">
+              {moodLabel ? <span>{moodLabel}</span> : null}
+              {tagNames?.map((name) => (
+                <span key={name}>#{name}</span>
+              ))}
+            </p>
+          ) : null}
+          <p className="mt-1 line-clamp-2 text-xs text-[var(--mist)]">
             {body.trim() || "（无正文）"}
           </p>
         </Link>

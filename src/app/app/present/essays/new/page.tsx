@@ -1,9 +1,11 @@
 import { EssayEditor } from "@/components/essays/essay-editor";
 import { PageHeader } from "@/components/shell/page-header";
 import { requireSession } from "@/lib/session";
+import { listActiveTags } from "@/services/tags";
 
 export default async function NewEssayPage() {
-  await requireSession();
+  const session = await requireSession();
+  const tags = await listActiveTags(session.user.id);
 
   return (
     <main>
@@ -15,7 +17,10 @@ export default async function NewEssayPage() {
         description="手动保存；未保存离开会弹出确认小窗"
       />
       <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
-        <EssayEditor mode="create" />
+        <EssayEditor
+          mode="create"
+          allTags={tags.map((t) => ({ id: t.id, name: t.name, active: t.active }))}
+        />
       </div>
     </main>
   );

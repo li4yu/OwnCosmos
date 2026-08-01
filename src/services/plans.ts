@@ -1,5 +1,20 @@
 import { randomBytes } from "node:crypto";
-import { and, asc, desc, eq, inArray, isNotNull, isNull, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   ARCHIVE_REASON_PLAN_COMPLETE,
@@ -36,6 +51,8 @@ import {
   type CycleUnit,
   type PlanKind,
 } from "@/lib/plan-kinds";
+import { parseMoodKey, type MoodKey } from "@/lib/moods";
+import { PLAN_PAGE_SIZE } from "@/lib/plan-query";
 import { clampRemindDays, DEFAULT_REMIND_DAYS } from "@/lib/plan-remind";
 
 export {
@@ -66,6 +83,7 @@ export type CreatePlanInput = {
   cycleEveryDays?: number | null;
   seriesId?: string | null;
   parentPlanId?: string | null;
+  mood?: string | null;
 };
 
 function resolveCycleEveryDays(
@@ -114,6 +132,167 @@ export async function listOpenPlans(
 
 export async function listOpenPlanningPlans(userId: string) {
   return listOpenPlans(userId, PLANNING_KINDS);
+}
+
+function escapeIlike(raw: string) {
+  return raw.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}
+
+export type PlanQueryOpts = {
+  titleQ?: string;
+  tagId?: string;
+  mood?: MoodKey;
+  kind?: PlanKind;
+  kinds?: readonly PlanKind[];
+  /** 按 due_at；无截止的愿景在筛「有截止起止」时会被排除 */
+  dueFrom?: Date;
+  dueTo?: Date;
+  page?: number;
+  pageSize?: number;
+};
+
+function buildPlanFilterConditions(
+  userId: string,
+  opts: PlanQueryOpts,
+  base: SQL[],
+): SQL | undefined {
+  const conditions: SQL[] = [...base];
+  const kinds =
+    opts.kind != null
+      ? [opts.kind]
+      : opts.kinds && opts.kinds.length > 0
+        ? [...opts.kinds]
+        : null;
+  if (kinds) conditions.push(inArray(plan.kind, kinds));
+
+  const q = opts.titleQ?.trim();
+  if (q) {
+    const pattern = `%${escapeIlike(q)}%`;
+    conditions.push(
+      or(ilike(plan.title, pattern), ilike(plan.body, pattern))!,
+    );
+  }
+  if (opts.mood) conditions.push(eq(plan.mood, opts.mood));
+  if (opts.dueFrom || opts.dueTo) {
+    conditions.push(isNotNull(plan.dueAt));
+    if (opts.dueFrom) conditions.push(gte(plan.dueAt, opts.dueFrom));
+    if (opts.dueTo) conditions.push(lte(plan.dueAt, opts.dueTo));
+  }
+  if (opts.tagId?.trim()) {
+    const tagId = opts.tagId.trim();
+    conditions.push(
+      sql`exists (
+        select 1 from plan_tag pt
+        where pt.plan_id = ${plan.id}
+          and pt.user_id = ${userId}
+          and pt.tag_id = ${tagId}
+      )`,
+    );
+  }
+  return and(...conditions);
+}
+
+/** 规划页：未完成（open + 未归档）分页 */
+export async function queryOpenPlanningPlans(
+  userId: string,
+  opts: PlanQueryOpts = {},
+) {
+  const pageSize = Math.min(
+    10,
+    Math.max(1, Math.floor(opts.pageSize ?? PLAN_PAGE_SIZE)),
+  );
+  const page = Math.max(1, Math.floor(opts.page ?? 1));
+  const where = buildPlanFilterConditions(userId, opts, [
+    eq(plan.userId, userId),
+    isNull(plan.archivedAt),
+    eq(plan.status, PLAN_STATUS_OPEN),
+  ]);
+
+  const [totalRow] = await getDb()
+    .select({ n: count() })
+    .from(plan)
+    .where(where);
+  const total = totalRow?.n ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(page, totalPages);
+
+  const rows = await getDb()
+    .select()
+    .from(plan)
+    .where(where)
+    .orderBy(asc(plan.dueAt), asc(plan.createdAt))
+    .limit(pageSize)
+    .offset((safePage - 1) * pageSize);
+
+  return {
+    items: rows.map((row) => redactIfLocked(row)),
+    total,
+    page: safePage,
+    pageSize,
+    totalPages,
+  };
+}
+
+/** 规划页：已完成分页（附 archiveId） */
+export async function queryCompletedPlanningPlans(
+  userId: string,
+  opts: PlanQueryOpts = {},
+) {
+  const pageSize = Math.min(
+    10,
+    Math.max(1, Math.floor(opts.pageSize ?? PLAN_PAGE_SIZE)),
+  );
+  const page = Math.max(1, Math.floor(opts.page ?? 1));
+  const where = buildPlanFilterConditions(userId, opts, [
+    eq(plan.userId, userId),
+    or(isNotNull(plan.archivedAt), eq(plan.status, PLAN_STATUS_DONE))!,
+  ]);
+
+  // 先取去重后的 plan id 再分页较稳妥；量级可控时用窗口简化：
+  // 查全部匹配 id 再切片（规划页通常不多）。若担心性能可再改子查询。
+  const matched = await getDb()
+    .select({
+      plan,
+      archiveId: archiveItem.id,
+    })
+    .from(plan)
+    .leftJoin(
+      archiveItem,
+      and(
+        eq(archiveItem.sourcePlanId, plan.id),
+        eq(archiveItem.userId, userId),
+        eq(archiveItem.type, ARCHIVE_TYPE_PLAN_ARCHIVE),
+      ),
+    )
+    .where(where)
+    .orderBy(desc(plan.archivedAt), desc(plan.updatedAt));
+
+  const byPlanId = new Map<
+    string,
+    PlanRecord & { archiveId: string | null }
+  >();
+  for (const r of matched) {
+    const next = {
+      ...redactIfLocked(r.plan),
+      archiveId: r.archiveId ?? null,
+    };
+    const prev = byPlanId.get(next.id);
+    if (!prev) {
+      byPlanId.set(next.id, next);
+      continue;
+    }
+    if (!prev.archiveId && next.archiveId) byPlanId.set(next.id, next);
+  }
+  const all = [...byPlanId.values()];
+  const total = all.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const items = all.slice(
+    (safePage - 1) * pageSize,
+    safePage * pageSize,
+  );
+
+  return { items, total, page: safePage, pageSize, totalPages };
 }
 
 export async function listOpenCyclePlans(userId: string) {
@@ -381,6 +560,7 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
     cycleEveryDays,
     seriesId,
     parentPlanId: input.parentPlanId ?? null,
+    mood: parseMoodKey(input.mood),
     createdAt: now,
     updatedAt: now,
   });
@@ -425,6 +605,7 @@ export async function updatePlan(
     remindDays: number;
     cycleUnit?: CycleUnit | null;
     cycleEveryDays?: number | null;
+    mood?: string | null;
   },
 ) {
   const existing = await getActivePlan(userId, planId);
@@ -448,6 +629,9 @@ export async function updatePlan(
           : existing.remindDays,
     updatedAt: now,
   };
+  if (input.mood !== undefined) {
+    patch.mood = parseMoodKey(input.mood);
+  }
   if (
     existing.kind === PLAN_KIND_CYCLE &&
     input.cycleUnit &&
@@ -505,7 +689,10 @@ async function insertPlanArchive(
     sourceUpdatedAt: row.updatedAt,
     inKnowledge: true,
     keptAt: archivedAt,
+    mood: row.mood,
   });
+  const { copyPlanTagsToArchive } = await import("@/services/tags");
+  await copyPlanTagsToArchive(row.userId, row.id, id);
   return id;
 }
 
@@ -627,7 +814,10 @@ export async function syncCycleArchiveTaskSnapshot(
     sourceUpdatedAt: now,
     inKnowledge: true,
     keptAt: now,
+    mood: row.mood,
   });
+  const { copyPlanTagsToArchive } = await import("@/services/tags");
+  await copyPlanTagsToArchive(userId, row.id, id);
   return id;
 }
 
@@ -718,7 +908,10 @@ async function upsertCycleSeriesArchive(
     sourceUpdatedAt: row.updatedAt,
     inKnowledge: true,
     keptAt: archivedAt,
+    mood: row.mood,
   });
+  const { copyPlanTagsToArchive } = await import("@/services/tags");
+  await copyPlanTagsToArchive(row.userId, row.id, id);
   return id;
 }
 

@@ -12,6 +12,7 @@ import {
   isNull,
   lt,
   lte,
+  sql,
   type SQL,
 } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -78,7 +79,10 @@ async function insertEssaySediment(
     inKnowledge: true,
     keptAt: archivedAt,
     updatedAt: archivedAt,
+    mood: row.mood,
   });
+  const { copyEssayTagsToArchive } = await import("@/services/tags");
+  await copyEssayTagsToArchive(row.userId, row.id, id);
   return id;
 }
 
@@ -173,6 +177,8 @@ export type ArchiveQueryOpts = {
   titleQ?: string;
   archivedFrom?: Date;
   archivedTo?: Date;
+  /** Phase 13: 按馆藏绪签筛选 */
+  tagId?: string;
   page?: number;
   pageSize?: number;
 };
@@ -205,6 +211,17 @@ function buildArchiveConditions(
   }
   if (opts.archivedTo) {
     conditions.push(lte(archiveItem.archivedAt, opts.archivedTo));
+  }
+  if (opts.tagId?.trim()) {
+    const tagId = opts.tagId.trim();
+    conditions.push(
+      sql`exists (
+        select 1 from archive_item_tag ait
+        where ait.archive_item_id = ${archiveItem.id}
+          and ait.user_id = ${userId}
+          and ait.tag_id = ${tagId}
+      )`,
+    );
   }
   return and(...conditions);
 }

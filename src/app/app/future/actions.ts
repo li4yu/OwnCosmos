@@ -43,6 +43,7 @@ import {
   updatePlan,
   type PlanStatus,
 } from "@/services/plans";
+import { setPlanTags } from "@/services/tags";
 
 export type PlanActionState = {
   error?: string;
@@ -92,6 +93,11 @@ function readPlanFields(formData: FormData) {
   const cycleUnit = readCycleUnit(formData);
   const cycleEveryDaysRaw = String(formData.get("cycleEveryDays") ?? "").trim();
   const sourceEssayId = String(formData.get("sourceEssayId") ?? "").trim() || null;
+  const mood = String(formData.get("mood") ?? "");
+  const tagIds = String(formData.get("tagIds") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
   return {
     title,
     body,
@@ -102,6 +108,8 @@ function readPlanFields(formData: FormData) {
     cycleUnit,
     cycleEveryDaysRaw,
     sourceEssayId,
+    mood,
+    tagIds,
   };
 }
 
@@ -167,7 +175,10 @@ export async function createPlanAction(
     cycleUnit: fields.cycleUnit,
     cycleEveryDays: clampCycleEveryDays(Number(fields.cycleEveryDaysRaw)),
     sourceEssayId: fields.sourceEssayId,
+    mood: fields.mood,
   });
+  const tagResult = await setPlanTags(session.user.id, id, fields.tagIds);
+  if ("error" in tagResult) return { error: tagResult.error };
   revalidatePlans(id);
   return { createdId: id };
 }
@@ -188,10 +199,13 @@ export async function updatePlanAction(
     remindDays: fields.remindRaw,
     cycleUnit: fields.cycleUnit,
     cycleEveryDays: clampCycleEveryDays(Number(fields.cycleEveryDaysRaw)),
+    mood: fields.mood,
   });
   if (!updated) {
     return { error: "计划不存在、已归档，或时间胶囊封存后不可修改" };
   }
+  const tagResult = await setPlanTags(session.user.id, planId, fields.tagIds);
+  if ("error" in tagResult) return { error: tagResult.error };
   revalidatePlans(planId);
   return {};
 }

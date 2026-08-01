@@ -14,6 +14,7 @@ import {
   resolvePlanSourceLink,
   seriesHasArchivedPeriodOnDate,
 } from "@/services/plans";
+import { listActiveTags, listPlanTagIds } from "@/services/tags";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -35,7 +36,11 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
     session.user.id,
     item.sourceEssayId,
   );
-  const tasks = await listPlanTasks(session.user.id, item.id);
+  const [tasks, tags, tagIds] = await Promise.all([
+    listPlanTasks(session.user.id, item.id),
+    listActiveTags(session.user.id),
+    listPlanTagIds(session.user.id, item.id),
+  ]);
   const todayKey = localTaskCheckinDate();
   const periodDoneToday =
     kind === PLAN_KIND_CYCLE
@@ -69,6 +74,13 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
           initialKind={kind}
           initialCycleUnit={item.cycleUnit}
           initialCycleEveryDays={item.cycleEveryDays}
+          initialMood={item.mood}
+          initialTagIds={tagIds}
+          allTags={tags.map((t) => ({
+            id: t.id,
+            name: t.name,
+            active: t.active,
+          }))}
           sourceLink={sourceLink}
           periodDoneToday={periodDoneToday}
           tasks={tasks.map((t) => ({

@@ -16,29 +16,43 @@ export default async function SettingsPage() {
       <PageHeader
         title="设置"
         eyebrow="SETTINGS"
+        description="账号偏好；主题与流思笺归档节奏"
         backHref="/app"
         backLabel="返回首页"
       />
 
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
-        <h2 className="mb-4 text-lg tracking-[0.12em] text-[var(--paper)]">外观</h2>
-        <AppearanceForm initialTheme={user.theme} />
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+          外观
+        </p>
+        <div className="mt-1.5">
+          <AppearanceForm initialTheme={user.theme} />
+        </div>
       </section>
 
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
-        <h2 className="mb-4 text-lg tracking-[0.12em] text-[var(--paper)]">
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+          流思笺 · 归档
+        </p>
+        <p className="mt-0.5 text-xs text-[var(--mist)]">
           <PoeticName
-            name="流思笺"
-            tip="快速记下当下灵感与草稿，未归档前可随时改"
+            name="逾时沉淀"
+            tip="久未改动的随笔会沉淀进昔时往；也可提前归档；小时数可在此修改"
           />
-          · 归档
-        </h2>
-        <ArchivePreferenceForm initialIdleHours={user.essayIdleHours} />
+          的自动小时数
+        </p>
+        <div className="mt-1.5">
+          <ArchivePreferenceForm initialIdleHours={user.essayIdleHours} />
+        </div>
       </section>
 
-      <section className="rounded-md border border-dashed border-[var(--line)] p-3">
-        <h2 className="text-lg tracking-[0.12em] text-[var(--mist)]">其他设置</h2>
-        <p className="mt-2 text-sm text-[var(--mist)]/80">通知、数据导出等后续完善。</p>
+      <section className="rounded-md border border-dashed border-[var(--line)] px-2.5 py-3">
+        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--mist)]">
+          其他设置
+        </p>
+        <p className="mt-1 text-xs text-[var(--mist)]/80">
+          通知、数据导出等后续完善。
+        </p>
       </section>
     </main>
   );

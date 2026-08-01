@@ -13,11 +13,12 @@ export default async function ProfilePage() {
       <PageHeader
         title="编辑资料"
         eyebrow="PROFILE"
+        description="昵称、头像与简介；邮箱只读"
         backHref="/app"
         backLabel="返回首页"
       />
 
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
         <ProfileForm
           email={user.email}
           initialName={user.name}

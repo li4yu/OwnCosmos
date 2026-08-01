@@ -40,11 +40,11 @@ export function AppearanceForm({ initialTheme }: AppearanceFormProps) {
   }
 
   return (
-    <div className="flex max-w-md flex-col gap-4">
-      <p className="text-sm text-[var(--mist)]">
+    <div className="flex max-w-md flex-col gap-1.5">
+      <p className="text-xs text-[var(--mist)]">
         登录后主题以账号设置为准。未登录访客仍可用页头临时切换（不入库）。
       </p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1.5">
         {(
           [
             { id: "night", label: "深空夜色" },
@@ -56,7 +56,7 @@ export function AppearanceForm({ initialTheme }: AppearanceFormProps) {
             type="button"
             disabled={pending}
             onClick={() => selectTheme(opt.id)}
-            className={`rounded-md border px-3 py-3 text-sm tracking-[0.08em] transition disabled:opacity-50 ${
+            className={`rounded-md border px-3 py-2 text-sm tracking-[0.08em] transition disabled:opacity-50 ${
               theme === opt.id
                 ? "border-[var(--amber)] bg-[var(--amber)] text-[var(--on-amber)]"
                 : "border-[var(--line)] text-[var(--mist)] hover:border-[var(--amber)]"
@@ -67,11 +67,13 @@ export function AppearanceForm({ initialTheme }: AppearanceFormProps) {
         ))}
       </div>
       {error ? (
-        <p className="text-sm text-[#b54a4a]" role="alert">
+        <p className="text-xs text-[#b54a4a]" role="alert">
           {error}
         </p>
       ) : null}
-      {message ? <p className="text-sm text-[var(--teal)]">{message}</p> : null}
+      {message ? (
+        <p className="text-xs text-[var(--teal)]">{message}</p>
+      ) : null}
     </div>
   );
 }

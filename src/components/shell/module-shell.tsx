@@ -84,14 +84,24 @@ export function SubfeaturePlaceholder({
   if (!mod || !sub) return null;
 
   return (
-    <section className="rounded-md border border-dashed border-[var(--line)] bg-[var(--panel)] px-4 py-5 text-center">
-      <h2 className="text-sm tracking-[0.1em] text-[var(--paper)]">
-        <PoeticName name={sub.name} tip={sub.tip} />
-      </h2>
-      <p className="mt-1.5 text-xs leading-5 text-[var(--mist)]">{sub.tip}</p>
-      <p className="mt-2 font-mono text-[10px] tracking-wide text-[var(--mist)]">
-        占位页 · 归属「{mod.name}」· 后续按阶段详细开发
-      </p>
-    </section>
+    <div className="flex flex-col gap-3">
+      <div>
+        <Link
+          href={mod.href}
+          className="mb-1 inline-flex items-center gap-1 rounded border border-[var(--line)] px-2 py-0.5 text-[11px] tracking-[0.06em] text-[var(--mist)] transition hover:border-[var(--amber)] hover:text-[var(--amber)]"
+        >
+          ← 返回{mod.name}
+        </Link>
+        <h2 className="text-sm tracking-[0.1em] text-[var(--paper)]">
+          <PoeticName name={sub.name} tip={sub.tip} />
+        </h2>
+        <p className="mt-0.5 text-xs leading-5 text-[var(--mist)]">{sub.tip}</p>
+      </div>
+      <section className="rounded-md border border-dashed border-[var(--line)] bg-[var(--panel)] px-3 py-4 text-center">
+        <p className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
+          占位页 · 归属「{mod.name}」· 后续按阶段详细开发
+        </p>
+      </section>
+    </div>
   );
 }

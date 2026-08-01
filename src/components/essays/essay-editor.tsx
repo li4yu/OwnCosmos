@@ -11,6 +11,9 @@ import {
   updateEssayAction,
   type EssayActionState,
 } from "@/app/app/present/actions";
+import { BorrowMemoryPanel } from "@/components/essays/borrow-memory-panel";
+import { MoodPicker } from "@/components/tags/mood-picker";
+import { TagField, type TagOption } from "@/components/tags/tag-field";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
 import { PoeticName } from "@/components/ui/poetic-name";
@@ -18,12 +21,16 @@ import { PoeticName } from "@/components/ui/poetic-name";
 type EssayEditorProps =
   | {
       mode: "create";
+      allTags?: TagOption[];
     }
   | {
       mode: "edit";
       essayId: string;
       initialTitle: string;
       initialBody: string;
+      initialMood?: string | null;
+      initialTagIds?: string[];
+      allTags?: TagOption[];
       /** 刚从「创建并保存」跳转过来 */
       justCreated?: boolean;
       /** 缘想溯源：来日途计划 */
@@ -48,6 +55,13 @@ export function EssayEditor(props: EssayEditorProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const [title, setTitle] = useState(isEdit ? props.initialTitle : "");
   const [body, setBody] = useState(isEdit ? props.initialBody : "");
+  const [mood, setMood] = useState(
+    isEdit ? (props.initialMood ?? "") : "",
+  );
+  const [tagIds, setTagIds] = useState<string[]>(
+    isEdit ? (props.initialTagIds ?? []) : [],
+  );
+  const [allTags, setAllTags] = useState<TagOption[]>(props.allTags ?? []);
   const [dirty, setDirty] = useState(false);
   const [savedFlash, setSavedFlash] = useState(
     () => isEdit && Boolean(props.justCreated),
@@ -70,6 +84,10 @@ export function EssayEditor(props: EssayEditorProps) {
       router.replace(`/app/present/essays/${props.essayId}`, { scroll: false });
     }
   }, [props, router]);
+
+  useEffect(() => {
+    setAllTags(props.allTags ?? []);
+  }, [props.allTags]);
 
   useEffect(() => {
     if (pending) {
@@ -224,6 +242,34 @@ export function EssayEditor(props: EssayEditorProps) {
             placeholder="写下此刻……"
           />
         </label>
+
+        <MoodPicker
+          value={mood}
+          onChange={(next) => {
+            setMood(next);
+            markDirty();
+          }}
+        />
+
+        <TagField
+          allTags={allTags}
+          selectedIds={tagIds}
+          onChange={(ids) => {
+            setTagIds(ids);
+            markDirty();
+          }}
+          onTagsMutated={() => router.refresh()}
+        />
+
+        <BorrowMemoryPanel
+          onInsert={(text) => {
+            setBody((prev) => {
+              const sep = prev.trim() ? "\n\n" : "";
+              return `${prev}${sep}${text}`;
+            });
+            markDirty();
+          }}
+        />
 
         {state.error ? (
           <p className="text-sm text-[var(--danger)]" role="alert">

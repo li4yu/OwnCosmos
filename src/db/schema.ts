@@ -5,6 +5,7 @@ import {
   integer,
   type AnyPgColumn,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -20,6 +21,7 @@ import {
  * Phase 10: plan 丰满 + plan_task / daily_habit / daily_checkin.
  * Phase 11: essay.source_plan_id（缘想）；临期延期/完成（不做关卡）。
  * Phase 12: archive_item 藏忆 / 记忆碎片图文；抹忆硬删流入类。
+ * Phase 13: 绪签 / 心情 / 素材匣（不做 plan_ref）。
  */
 
 export const user = pgTable("user", {
@@ -100,11 +102,14 @@ export const essay = pgTable(
       (): AnyPgColumn => plan.id,
       { onDelete: "set null" },
     ),
+    /** Phase 13: 固定心情 key（见 src/lib/moods.ts）；未选为 null */
+    mood: text("mood"),
   },
   (t) => [
     index("essay_user_archived_idx").on(t.userId, t.archivedAt),
     index("essay_user_updated_idx").on(t.userId, t.updatedAt),
     index("essay_user_source_plan_idx").on(t.userId, t.sourcePlanId),
+    index("essay_user_mood_idx").on(t.userId, t.mood),
   ],
 );
 
@@ -196,6 +201,8 @@ export const archiveItem = pgTable(
     imageKey: text("image_key"),
     /** Phase 12: 碎片可编辑 */
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    /** Phase 13: 归档时从随笔/计划快照的心情 key */
+    mood: text("mood"),
   },
   (t) => [
     index("archive_item_user_archived_idx").on(t.userId, t.archivedAt),
@@ -206,6 +213,7 @@ export const archiveItem = pgTable(
       t.type,
       t.archivedAt,
     ),
+    index("archive_item_user_mood_idx").on(t.userId, t.mood),
     uniqueIndex("archive_item_user_series_uidx").on(t.userId, t.sourceSeriesId),
     uniqueIndex("archive_item_user_habit_uidx").on(t.userId, t.sourceHabitId),
   ],
@@ -265,6 +273,8 @@ export const plan = pgTable(
     ),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    /** Phase 13: 固定心情 key（见 src/lib/moods.ts） */
+    mood: text("mood"),
   },
   (t) => [
     index("plan_user_archived_idx").on(t.userId, t.archivedAt),
@@ -273,7 +283,122 @@ export const plan = pgTable(
     index("plan_user_source_essay_idx").on(t.userId, t.sourceEssayId),
     index("plan_user_kind_idx").on(t.userId, t.kind),
     index("plan_user_series_idx").on(t.userId, t.seriesId),
+    index("plan_user_mood_idx").on(t.userId, t.mood),
   ],
+);
+
+/** Phase 13: 绪签字典（软停用，不硬删） */
+export const tag = pgTable(
+  "tag",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("tag_user_name_uidx").on(t.userId, t.name),
+    index("tag_user_active_idx").on(t.userId, t.active),
+  ],
+);
+
+/** Phase 13: 流动随笔 ↔ 绪签 */
+export const essayTag = pgTable(
+  "essay_tag",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    essayId: text("essay_id")
+      .notNull()
+      .references(() => essay.id, { onDelete: "cascade" }),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => tag.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.essayId, t.tagId] }),
+    index("essay_tag_user_tag_idx").on(t.userId, t.tagId),
+  ],
+);
+
+/** Phase 13: 规划 ↔ 绪签 */
+export const planTag = pgTable(
+  "plan_tag",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    planId: text("plan_id")
+      .notNull()
+      .references(() => plan.id, { onDelete: "cascade" }),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => tag.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.planId, t.tagId] }),
+    index("plan_tag_user_tag_idx").on(t.userId, t.tagId),
+  ],
+);
+
+/** Phase 13: 馆藏 ↔ 绪签（归档时写入，含签名快照） */
+export const archiveItemTag = pgTable(
+  "archive_item_tag",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    archiveItemId: text("archive_item_id")
+      .notNull()
+      .references(() => archiveItem.id, { onDelete: "cascade" }),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => tag.id, { onDelete: "cascade" }),
+    nameSnapshot: text("name_snapshot").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.archiveItemId, t.tagId] }),
+    index("archive_item_tag_user_tag_idx").on(t.userId, t.tagId),
+    index("archive_item_tag_user_name_idx").on(t.userId, t.nameSnapshot),
+  ],
+);
+
+/** Phase 13: 素材匣（正文副本；源删除不删副本） */
+export const MATERIAL_SOURCE_ESSAY = "essay" as const;
+export const MATERIAL_SOURCE_ARCHIVE = "archive_item" as const;
+export const MATERIAL_SOURCE_PLAN = "plan" as const;
+export const MATERIAL_SOURCE_MANUAL = "manual" as const;
+
+export const material = pgTable(
+  "material",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    title: text("title").notNull().default(""),
+    /** essay | archive_item | plan | manual */
+    sourceKind: text("source_kind").notNull(),
+    sourceEssayId: text("source_essay_id").references(() => essay.id, {
+      onDelete: "set null",
+    }),
+    sourceArchiveItemId: text("source_archive_item_id").references(
+      () => archiveItem.id,
+      { onDelete: "set null" },
+    ),
+    sourcePlanId: text("source_plan_id").references(() => plan.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("material_user_created_idx").on(t.userId, t.createdAt)],
 );
 
 /** Phase 10: 规划子任务 */
@@ -417,9 +542,10 @@ export const essayRelations = relations(essay, ({ one, many }) => ({
     references: [plan.id],
     relationName: "essay_from_plan",
   }),
+  essayTags: many(essayTag),
 }));
 
-export const archiveItemRelations = relations(archiveItem, ({ one }) => ({
+export const archiveItemRelations = relations(archiveItem, ({ one, many }) => ({
   user: one(user, {
     fields: [archiveItem.userId],
     references: [user.id],
@@ -440,6 +566,7 @@ export const archiveItemRelations = relations(archiveItem, ({ one }) => ({
     fields: [archiveItem.sourceHabitId],
     references: [dailyHabit.id],
   }),
+  archiveItemTags: many(archiveItemTag),
 }));
 
 export const planRelations = relations(plan, ({ one, many }) => ({
@@ -460,6 +587,81 @@ export const planRelations = relations(plan, ({ one, many }) => ({
   childPlans: many(plan, { relationName: "plan_parent" }),
   archiveItems: many(archiveItem),
   tasks: many(planTask),
+  planTags: many(planTag),
+}));
+
+export const tagRelations = relations(tag, ({ one, many }) => ({
+  user: one(user, {
+    fields: [tag.userId],
+    references: [user.id],
+  }),
+  essayTags: many(essayTag),
+  planTags: many(planTag),
+  archiveItemTags: many(archiveItemTag),
+}));
+
+export const essayTagRelations = relations(essayTag, ({ one }) => ({
+  user: one(user, {
+    fields: [essayTag.userId],
+    references: [user.id],
+  }),
+  essay: one(essay, {
+    fields: [essayTag.essayId],
+    references: [essay.id],
+  }),
+  tag: one(tag, {
+    fields: [essayTag.tagId],
+    references: [tag.id],
+  }),
+}));
+
+export const planTagRelations = relations(planTag, ({ one }) => ({
+  user: one(user, {
+    fields: [planTag.userId],
+    references: [user.id],
+  }),
+  plan: one(plan, {
+    fields: [planTag.planId],
+    references: [plan.id],
+  }),
+  tag: one(tag, {
+    fields: [planTag.tagId],
+    references: [tag.id],
+  }),
+}));
+
+export const archiveItemTagRelations = relations(archiveItemTag, ({ one }) => ({
+  user: one(user, {
+    fields: [archiveItemTag.userId],
+    references: [user.id],
+  }),
+  archiveItem: one(archiveItem, {
+    fields: [archiveItemTag.archiveItemId],
+    references: [archiveItem.id],
+  }),
+  tag: one(tag, {
+    fields: [archiveItemTag.tagId],
+    references: [tag.id],
+  }),
+}));
+
+export const materialRelations = relations(material, ({ one }) => ({
+  user: one(user, {
+    fields: [material.userId],
+    references: [user.id],
+  }),
+  sourceEssay: one(essay, {
+    fields: [material.sourceEssayId],
+    references: [essay.id],
+  }),
+  sourceArchiveItem: one(archiveItem, {
+    fields: [material.sourceArchiveItemId],
+    references: [archiveItem.id],
+  }),
+  sourcePlan: one(plan, {
+    fields: [material.sourcePlanId],
+    references: [plan.id],
+  }),
 }));
 
 export const planTaskRelations = relations(planTask, ({ one }) => ({
