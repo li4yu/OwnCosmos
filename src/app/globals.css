@@ -853,7 +853,8 @@ button,
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% + 0.35rem);
+  bottom: calc(100% + 0.35rem);
+  top: auto;
   max-height: min(14rem, 42vh);
   overflow-x: hidden;
   overflow-y: auto;
@@ -862,7 +863,7 @@ button,
   background: color-mix(in srgb, var(--panel) 94%, #070b14);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--amber) 12%, transparent),
-    0 18px 40px rgba(0, 0, 0, 0.45);
+    0 -14px 36px rgba(0, 0, 0, 0.45);
   padding: 0.35rem;
 }
 .focus-bind__group {
