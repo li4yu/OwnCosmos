@@ -96,6 +96,11 @@ export function EssayEditor(props: EssayEditorProps) {
     if (props.mode !== "edit") return;
     emitEssayDirty(false);
     if (props.justCreated) {
+      setSavedFlash(true);
+      setNotice({
+        title: "已创建",
+        message: "随笔已保存，可继续编辑或返回列表。",
+      });
       router.replace(`/app/present/essays/${props.essayId}`, { scroll: false });
     }
   }, [props, router]);
@@ -111,7 +116,13 @@ export function EssayEditor(props: EssayEditorProps) {
     }
     if (!wasPending) return;
     setWasPending(false);
-    if (state.error) return;
+    if (state.error) {
+      setNotice({
+        title: "无法保存",
+        message: state.error,
+      });
+      return;
+    }
 
     setDirty(false);
     emitEssayDirty(false);
@@ -121,7 +132,13 @@ export function EssayEditor(props: EssayEditorProps) {
       router.refresh();
       return;
     }
-    if (isEdit) setSavedFlash(true);
+    if (isEdit) {
+      setSavedFlash(true);
+      setNotice({
+        title: "已保存",
+        message: "修改已写入。",
+      });
+    }
   }, [pending, wasPending, state.error, state.createdId, isEdit, router]);
 
   useEffect(() => {

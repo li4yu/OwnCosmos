@@ -1,8 +1,12 @@
 import { createAuthClient } from "better-auth/react";
-import { inferAdditionalFields } from "better-auth/client/plugins";
+import {
+  emailOTPClient,
+  inferAdditionalFields,
+} from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
   plugins: [
+    emailOTPClient(),
     inferAdditionalFields({
       user: {
         theme: { type: "string", required: true },

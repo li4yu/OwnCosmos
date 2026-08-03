@@ -84,7 +84,7 @@ export async function ArchiveDetailView({
         </div>
       </div>
 
-      <article className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
+      <article className="oc-sheet oc-sheet--ruled">
         <p className="font-mono text-[9px] tracking-[0.18em] text-[var(--teal)]">
           {archiveTypeLabel(item.type)}
           {item.inKnowledge ? " · 已藏忆" : ""}
@@ -270,28 +270,21 @@ export async function ArchiveDetailView({
 
       {isTopic ? (
         <section className="flex flex-col gap-2">
-          <h2 className="text-sm tracking-[0.08em] text-[var(--paper)]">
-            夹内随笔
-          </h2>
+          <h2 className="oc-section-label">夹内随笔</h2>
           {topicEssays.length === 0 ? (
-            <p className="rounded-md border border-dashed border-[var(--line)] px-3 py-4 text-sm text-[var(--mist)]">
-              没有夹内篇快照。
-            </p>
+            <p className="oc-empty">没有夹内篇快照。</p>
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="oc-scroll">
               {topicEssays.map((entry, index) => (
-                <li
-                  key={entry.id}
-                  className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2.5"
-                >
+                <li key={entry.id}>
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h3 className="text-sm text-[var(--paper)]">
+                    <h3 className="oc-scroll__title text-[1rem]">
                       <span className="mr-1.5 font-mono text-[10px] text-[var(--mist)]">
                         {index + 1}.
                       </span>
                       {entry.title}
                     </h3>
-                    <time className="font-mono text-[10px] text-[var(--mist)]">
+                    <time className="oc-scroll__meta">
                       {formatWhen(entry.sourceUpdatedAt)}
                     </time>
                   </div>
@@ -300,7 +293,7 @@ export async function ArchiveDetailView({
                       {moodDisplay(entry.mood)}
                     </p>
                   ) : null}
-                  <p className="mt-1.5 whitespace-pre-wrap text-sm leading-7 text-[var(--mist)]">
+                  <p className="oc-scroll__body whitespace-pre-wrap">
                     {entry.body.trim() || "（无正文）"}
                   </p>
                 </li>

@@ -38,20 +38,15 @@ export default async function EssaysHubPage() {
         }
       />
 
-      <ul className="flex flex-col gap-1">
+      <ul className="oc-hub">
         {entries.map((entry) => (
           <li key={entry.href}>
-            <Link
-              href={entry.href}
-              className="ui-hover-card flex items-center justify-between gap-2 rounded-md border border-[var(--line)] bg-[var(--panel)] px-2.5 py-2"
-            >
+            <Link href={entry.href}>
               <div className="min-w-0">
-                <h2 className="text-sm tracking-[0.08em] text-[var(--paper)]">
+                <h2 className="oc-scroll__title text-[1rem]">
                   <PoeticName name={entry.name} tip={entry.tip} />
                 </h2>
-                <p className="mt-0.5 line-clamp-1 text-xs text-[var(--mist)]">
-                  {entry.tip}
-                </p>
+                <p className="oc-scroll__body line-clamp-1">{entry.tip}</p>
               </div>
               <span className="shrink-0 text-xs tracking-[0.08em] text-[var(--amber)]">
                 {entry.cta}

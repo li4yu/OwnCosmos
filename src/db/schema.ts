@@ -25,6 +25,7 @@ import {
  * Phase 14: 凝时逆漏 / 绑计划 / 唤起随笔溯源。
  * Phase 15: 往迹廊 / 心绪鉴 / 通知偏好（复用 archive_item.mood）。
  * Phase 16: 凝时勿扰 / 逆漏默认时长；桌面通知 + Cron 归档；专题随笔。
+ * Phase 17: 邮箱验证 / 重置改密 / 注销（复用 email_verified + verification）。
  */
 
 /** Phase 16: 逆漏默认时长（25 分钟） */

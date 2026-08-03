@@ -62,28 +62,26 @@ export function EssayListItem({
   }
 
   return (
-    <li className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-2.5 py-2 transition hover:border-[var(--amber)]">
+    <li>
       <div className="flex items-start gap-3">
         <Link href={`/app/present/essays/${id}`} className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="text-sm text-[var(--paper)]">{title}</h3>
-            <time className="shrink-0 font-mono text-[10px] tracking-wide text-[var(--mist)]">
-              {updatedLabel}
-            </time>
+            <h3 className="oc-scroll__title">{title}</h3>
+            <time className="oc-scroll__meta">{updatedLabel}</time>
           </div>
           {moodLabel || (tagNames && tagNames.length > 0) ? (
-            <p className="mt-0.5 flex flex-wrap gap-x-2 font-mono text-[10px] text-[var(--teal)]">
+            <p className="mt-0.5 flex flex-wrap gap-x-2 font-mono text-[11px] text-[var(--teal)]">
               {moodLabel ? <span>{moodLabel}</span> : null}
               {tagNames?.map((name) => (
                 <span key={name}>#{name}</span>
               ))}
             </p>
           ) : null}
-          <p className="mt-1 line-clamp-2 text-xs text-[var(--mist)]">
+          <p className="oc-scroll__body line-clamp-2">
             {body.trim() || "（无正文）"}
           </p>
         </Link>
-        <div className="flex shrink-0 flex-col gap-1.5">
+        <div className="oc-scroll__actions flex-col">
           <Link
             href={`/app/present/essays/${id}`}
             className="ui-btn-ghost ui-btn-sm"

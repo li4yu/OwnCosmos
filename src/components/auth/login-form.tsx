@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { PasswordField } from "@/components/auth/password-field";
+import { authErrorMessage } from "@/lib/auth-errors";
 
 type LoginFormProps = {
   nextPath?: string;
@@ -26,13 +28,15 @@ export function LoginForm({ nextPath = "/app", onSwitchRegister }: LoginFormProp
         password,
       });
       if (signInError) {
-        setError(signInError.message || "登录失败，请检查邮箱或密码");
+        setError(authErrorMessage(signInError, "登录失败，请检查邮箱或密码"));
         return;
       }
       router.push(nextPath.startsWith("/") ? nextPath : "/app");
       router.refresh();
-    } catch {
-      setError("登录失败，请检查网络或稍后重试");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "登录失败，请检查网络或稍后重试",
+      );
     } finally {
       setPending(false);
     }
@@ -51,26 +55,30 @@ export function LoginForm({ nextPath = "/app", onSwitchRegister }: LoginFormProp
           autoComplete="email"
         />
       </label>
-      <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
-        密码
-        <input
-          type="password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="auth-field"
-          autoComplete="current-password"
-        />
-      </label>
+      <PasswordField
+        label="密码"
+        value={password}
+        onChange={setPassword}
+        autoComplete="current-password"
+        required
+        minLength={8}
+      />
       {error ? (
-        <p className="text-sm text-[#b54a4a]" role="alert">
+        <p className="text-sm text-[var(--danger)]" role="alert">
           {error}
         </p>
       ) : null}
       <button type="submit" disabled={pending} className="auth-submit mt-1">
         {pending ? "登录中…" : "登录"}
       </button>
+      <p className="text-center text-sm text-[var(--mist)]">
+        <a
+          href="/forgot-password"
+          className="text-[var(--amber)] underline-offset-4 hover:underline"
+        >
+          忘记密码 / 验证码登录
+        </a>
+      </p>
       {onSwitchRegister ? (
         <p className="text-center text-sm text-[var(--mist)]">
           还没有账号？{" "}

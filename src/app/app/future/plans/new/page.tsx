@@ -3,14 +3,13 @@ import { PlanEditor } from "@/components/plans/plan-editor";
 import { PageHeader } from "@/components/shell/page-header";
 import { isPlanKind, type PlanKind } from "@/lib/plan-kinds";
 import { requireSession } from "@/lib/session";
-import { listActiveTags } from "@/services/tags";
 
 type Props = {
   searchParams: Promise<{ kind?: string }>;
 };
 
 export default async function NewPlanPage({ searchParams }: Props) {
-  const session = await requireSession();
+  await requireSession();
   const { kind: raw } = await searchParams;
   if (raw === "capsule") {
     redirect("/app/future/capsule?compose=1");
@@ -22,7 +21,6 @@ export default async function NewPlanPage({ searchParams }: Props) {
   } else if (raw && isPlanKind(raw) && raw !== "capsule" && raw !== "stage") {
     defaultKind = raw;
   }
-  const tags = await listActiveTags(session.user.id);
   const isCycle = defaultKind === "cycle";
 
   return (
@@ -34,20 +32,12 @@ export default async function NewPlanPage({ searchParams }: Props) {
         guardLeave
         description={
           isCycle
-            ? "周期单位、子任务与临期配"
+            ? "周期单位、子任务与本期结束日"
             : "单次 / 愿景：标题、日期、临期配与描述"
         }
       />
-      <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <PlanEditor
-          mode="create"
-          defaultKind={defaultKind}
-          allTags={tags.map((t) => ({
-            id: t.id,
-            name: t.name,
-            active: t.active,
-          }))}
-        />
+      <div className="oc-sheet">
+        <PlanEditor mode="create" defaultKind={defaultKind} />
       </div>
     </main>
   );

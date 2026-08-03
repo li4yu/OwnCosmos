@@ -91,12 +91,36 @@ export function EssayListPanel({
 
   return (
     <div className="flex flex-col gap-2">
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          查询
-        </p>
-        <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+      <section className="oc-filter" aria-label="筛选随笔">
+        <div className="oc-filter__head">
+          <p className="oc-filter__eyebrow">筛选</p>
+          <div className="oc-filter__actions">
+            <button
+              type="button"
+              className="ui-btn-primary ui-btn-sm"
+              onClick={() => applyFilters(1)}
+            >
+              查询
+            </button>
+            <button
+              type="button"
+              className="ui-btn-ghost ui-btn-sm"
+              onClick={() => {
+                setQ("");
+                setTag("");
+                setMood("");
+                setFrom("");
+                setTo("");
+                setError(null);
+                router.push(basePath);
+              }}
+            >
+              清空
+            </button>
+          </div>
+        </div>
+        <div className="oc-filter__grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <label className="oc-filter__field">
             标题 / 正文
             <input
               value={q}
@@ -109,7 +133,7 @@ export function EssayListPanel({
             />
           </label>
           {tagOptions.length > 0 ? (
-            <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+            <label className="oc-filter__field">
               绪签
               <select
                 value={tag}
@@ -125,7 +149,7 @@ export function EssayListPanel({
               </select>
             </label>
           ) : null}
-          <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+          <label className="oc-filter__field">
             心情
             <select
               value={mood}
@@ -166,42 +190,14 @@ export function EssayListPanel({
           />
         </div>
         {rangeErr || error ? (
-          <p className="mt-1.5 text-xs text-[var(--danger, #c45)]">
-            {error || rangeErr}
-          </p>
+          <p className="oc-filter__hint">{error || rangeErr}</p>
         ) : null}
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            className="ui-btn-primary ui-btn-sm"
-            onClick={() => applyFilters(1)}
-          >
-            查询
-          </button>
-          <button
-            type="button"
-            className="ui-btn-ghost ui-btn-sm"
-            onClick={() => {
-              setQ("");
-              setTag("");
-              setMood("");
-              setFrom("");
-              setTo("");
-              setError(null);
-              router.push(basePath);
-            }}
-          >
-            清空条件
-          </button>
-        </div>
       </section>
 
       {items.length === 0 ? (
-        <section className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
-          {emptyHint}
-        </section>
+        <section className="oc-empty">{emptyHint}</section>
       ) : (
-        <ul className="flex flex-col gap-1.5">
+        <ul className="oc-scroll">
           {items.map((item) => (
             <EssayListItem
               key={item.id}

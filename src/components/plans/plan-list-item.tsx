@@ -79,12 +79,12 @@ export function PlanListItem({
   }
 
   return (
-    <li className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-2.5 py-2 transition hover:border-[var(--amber)]">
+    <li>
       <div className="flex items-start gap-3">
         <Link href={`/app/future/plans/${id}`} className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <h3 className="text-base text-[var(--paper)]">{title}</h3>
-            <div className="flex shrink-0 flex-col items-end gap-1 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+            <h3 className="oc-scroll__title">{title}</h3>
+            <div className="oc-scroll__meta">
               {kindLabel ? <span>{kindLabel}</span> : null}
               {dueLabel ? <time>{duePrefix} {dueLabel}</time> : <span>无截止</span>}
               {locked ? (
@@ -98,13 +98,13 @@ export function PlanListItem({
               )}
             </div>
           </div>
-          <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--mist)]">
+          <p className="oc-scroll__body line-clamp-2">
             {locked
               ? "内容将在解锁日揭晓"
               : body.trim() || "（无描述）"}
           </p>
         </Link>
-        <div className="flex shrink-0 flex-col gap-1.5">
+        <div className="oc-scroll__actions flex-col">
           <Link href={`/app/future/plans/${id}`} className="ui-btn-ghost ui-btn-sm">
             {locked ? "查看" : "编辑"}
           </Link>
@@ -208,25 +208,25 @@ export function PlanCompletedListItem({
     : "/app/past/gallery/plan-archive";
 
   return (
-    <li className="rounded-md border border-[var(--line)] bg-[var(--panel)]/70 px-2.5 py-2">
+    <li>
       <div className="flex items-start gap-3">
         <Link href={href} className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <h3 className="text-base text-[var(--paper)] opacity-80 line-through decoration-[var(--mist)]">
+            <h3 className="oc-scroll__title opacity-80 line-through decoration-[var(--mist)]">
               {title}
             </h3>
-            <div className="flex shrink-0 flex-col items-end gap-1 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+            <div className="oc-scroll__meta">
               {kindLabel ? <span>{kindLabel}</span> : null}
               {dueLabel ? <time>截止 {dueLabel}</time> : <span>无截止</span>}
               {archivedLabel ? <time>归档 {archivedLabel}</time> : null}
               <span className="text-[var(--teal)]">已完成</span>
             </div>
           </div>
-          <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--mist)]">
+          <p className="oc-scroll__body line-clamp-2">
             {body.trim() || "（无描述）"}
           </p>
         </Link>
-        <div className="flex shrink-0 flex-col gap-1.5">
+        <div className="oc-scroll__actions flex-col">
           <Link href={href} className="ui-btn-ghost ui-btn-sm text-[var(--teal)]">
             看馆藏
           </Link>

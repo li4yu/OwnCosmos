@@ -11,13 +11,10 @@ import {
   queryCompletedPlanningPlans,
   queryOpenPlanningPlans,
 } from "@/services/plans";
-import { listActiveTags, mapPlanTagNames } from "@/services/tags";
 
 type Props = {
   searchParams: Promise<{
     q?: string;
-    tag?: string;
-    mood?: string;
     kind?: string;
     from?: string;
     to?: string;
@@ -35,8 +32,6 @@ export default async function FuturePlansPage({ searchParams }: Props) {
 
   const filterOpts = {
     titleQ: parsed.titleQ,
-    tagId: parsed.tagId,
-    mood: parsed.mood,
     kind: parsed.kind,
     kinds: PLANNING_KINDS,
     dueFrom: parsed.dueFrom,
@@ -44,7 +39,7 @@ export default async function FuturePlansPage({ searchParams }: Props) {
     pageSize: parsed.pageSize,
   };
 
-  const [open, done, tags] = await Promise.all([
+  const [open, done] = await Promise.all([
     queryOpenPlanningPlans(session.user.id, {
       ...filterOpts,
       page: parsed.page,
@@ -53,12 +48,6 @@ export default async function FuturePlansPage({ searchParams }: Props) {
       ...filterOpts,
       page: parsed.cpage,
     }),
-    listActiveTags(session.user.id),
-  ]);
-
-  const tagMap = await mapPlanTagNames(session.user.id, [
-    ...open.items.map((i) => i.id),
-    ...done.items.map((i) => i.id),
   ]);
 
   return (
@@ -94,8 +83,6 @@ export default async function FuturePlansPage({ searchParams }: Props) {
             body: item.body,
             dueLabel: item.dueAt ? formatDueDateInput(item.dueAt) : null,
             kindLabel: planKindLabel(item.kind),
-            mood: item.mood,
-            tagNames: tagMap.get(item.id) ?? [],
           })),
           total: open.total,
           page: open.page,
@@ -112,8 +99,6 @@ export default async function FuturePlansPage({ searchParams }: Props) {
               : null,
             archiveId: item.archiveId,
             kindLabel: planKindLabel(item.kind),
-            mood: item.mood,
-            tagNames: tagMap.get(item.id) ?? [],
           })),
           total: done.total,
           page: done.page,
@@ -122,13 +107,10 @@ export default async function FuturePlansPage({ searchParams }: Props) {
         pageSize={parsed.pageSize}
         filters={{
           q: parsed.titleQ ?? "",
-          tag: parsed.tagInput,
-          mood: parsed.moodInput,
           kind: parsed.kindInput,
           from: parsed.fromInput,
           to: parsed.toInput,
         }}
-        tagOptions={tags.map((t) => ({ value: t.id, label: t.name }))}
       />
     </main>
   );

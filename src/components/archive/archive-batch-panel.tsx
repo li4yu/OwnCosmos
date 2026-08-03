@@ -227,18 +227,43 @@ export function ArchiveBatchPanel({
 
   return (
     <div className="flex flex-col gap-2">
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          查询
-        </p>
+      <section className="oc-filter" aria-label="筛选馆藏">
+        <div className="oc-filter__head">
+          <p className="oc-filter__eyebrow">筛选</p>
+          <div className="oc-filter__actions">
+            <button
+              type="button"
+              className="ui-btn-primary ui-btn-sm"
+              onClick={() => applyFilters(1)}
+            >
+              查询
+            </button>
+            <button
+              type="button"
+              className="ui-btn-ghost ui-btn-sm"
+              onClick={() => {
+                setQ("");
+                setType("");
+                setKept("");
+                setFrom("");
+                setTo("");
+                setTag("");
+                setSelected(new Set());
+                router.push(basePath);
+              }}
+            >
+              清空
+            </button>
+          </div>
+        </div>
         <div
-          className={`mt-1.5 grid gap-1.5 sm:grid-cols-2 ${
+          className={`oc-filter__grid sm:grid-cols-2 ${
             typeOptions
               ? "lg:grid-cols-3 xl:grid-cols-6"
               : "lg:grid-cols-3 xl:grid-cols-5"
           }`}
         >
-          <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+          <label className="oc-filter__field">
             标题模糊
             <input
               value={q}
@@ -251,7 +276,7 @@ export function ArchiveBatchPanel({
             />
           </label>
           {typeOptions ? (
-            <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+            <label className="oc-filter__field">
               类型
               <select
                 value={type}
@@ -266,7 +291,7 @@ export function ArchiveBatchPanel({
               </select>
             </label>
           ) : null}
-          <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+          <label className="oc-filter__field">
             是否藏忆
             <select
               value={kept}
@@ -281,7 +306,7 @@ export function ArchiveBatchPanel({
             </select>
           </label>
           {tagOptions && tagOptions.length > 0 ? (
-            <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+            <label className="oc-filter__field">
               绪签
               <select
                 value={tag}
@@ -323,33 +348,8 @@ export function ArchiveBatchPanel({
           />
         </div>
         {rangeErr ? (
-          <p className="mt-1.5 text-xs text-[var(--danger, #c45)]">{rangeErr}</p>
+          <p className="oc-filter__hint">{rangeErr}</p>
         ) : null}
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            className="ui-btn-primary ui-btn-sm"
-            onClick={() => applyFilters(1)}
-          >
-            查询
-          </button>
-          <button
-            type="button"
-            className="ui-btn-ghost ui-btn-sm"
-            onClick={() => {
-              setQ("");
-              setType("");
-              setKept("");
-              setFrom("");
-              setTo("");
-              setTag("");
-              setSelected(new Set());
-              router.push(basePath);
-            }}
-          >
-            清空条件
-          </button>
-        </div>
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -410,19 +410,14 @@ export function ArchiveBatchPanel({
       ) : null}
 
       {items.length === 0 ? (
-        <section className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
-          {emptyHint}
-        </section>
+        <section className="oc-empty">{emptyHint}</section>
       ) : (
-        <ul className="flex flex-col gap-1.5">
+        <ul className="oc-scroll">
           {items.map((item) => (
-            <li
-              key={item.id}
-              className="flex gap-2 rounded-md border border-[var(--line)] bg-[var(--panel)] px-2 py-1.5"
-            >
+            <li key={item.id} className="flex gap-3">
               <input
                 type="checkbox"
-                className="mt-1"
+                className="mt-1.5"
                 checked={selected.has(item.id)}
                 onChange={() => toggle(item.id)}
                 aria-label={`选择 ${item.title}`}
@@ -432,12 +427,12 @@ export function ArchiveBatchPanel({
                 className="min-w-0 flex-1"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <h3 className="text-sm text-[var(--paper)]">{item.title}</h3>
-                  <time className="shrink-0 font-mono text-[10px] text-[var(--mist)]">
+                  <h3 className="oc-scroll__title text-[1rem]">{item.title}</h3>
+                  <time className="oc-scroll__meta">
                     {formatWhen(item.archivedAt)}
                   </time>
                 </div>
-                <p className="mt-0.5 flex flex-wrap gap-x-2.5 font-mono text-[10px] text-[var(--teal)]">
+                <p className="mt-0.5 flex flex-wrap gap-x-2.5 font-mono text-[11px] text-[var(--teal)]">
                   {showTypeChip ? (
                     <span>{archiveTypeLabel(item.type)}</span>
                   ) : null}
@@ -452,10 +447,10 @@ export function ArchiveBatchPanel({
                   <img
                     src={item.imageUrl}
                     alt=""
-                    className="mt-1.5 max-h-20 rounded border border-[var(--line)] object-cover"
+                    className="mt-2 max-h-24 rounded-sm object-cover opacity-90"
                   />
                 ) : null}
-                <p className="mt-0.5 line-clamp-2 text-xs text-[var(--mist)]">
+                <p className="oc-scroll__body line-clamp-2">
                   {item.type === ARCHIVE_TYPE_ESSAY_TOPIC
                     ? item.body.trim() ||
                       `专题夹 · ${item.cycleCount ?? 0} 篇随笔`

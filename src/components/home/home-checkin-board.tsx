@@ -63,7 +63,7 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
           <Link href="/app/future/cycles" className="home-v1__daily-link">
             轮期
           </Link>
-          <span className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
+          <span className="font-mono text-xs tracking-wide text-[var(--mist)]">
             {dailyTotal > 0
               ? `日课 ${dailyDone}/${dailyTotal}`
               : total > 0

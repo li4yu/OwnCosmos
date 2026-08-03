@@ -1,5 +1,10 @@
 import { AppearanceForm } from "@/components/settings/appearance-form";
 import { ArchivePreferenceForm } from "@/components/settings/archive-preference-form";
+import {
+  ChangePasswordForm,
+  DeleteAccountForm,
+} from "@/components/settings/account-security-forms";
+import { ExportChartsPanel } from "@/components/settings/export-charts-panel";
 import { ExportOpenContent } from "@/components/settings/export-open-content";
 import { FocusPreferenceForm } from "@/components/settings/focus-preference-form";
 import { NotifyPreferenceForm } from "@/components/settings/notify-preference-form";
@@ -25,7 +30,7 @@ export default async function SettingsPage() {
       <PageHeader
         title="设置"
         eyebrow="SETTINGS"
-        description="外观、归档、通知、凝时偏好与数据导出"
+        description="外观、归档、通知、凝时、账号与数据导出"
         backHref="/app"
         backLabel="返回首页"
       />
@@ -84,10 +89,43 @@ export default async function SettingsPage() {
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
         <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+          账号与安全
+        </p>
+        <p className="mt-0.5 text-xs text-[var(--mist)]">
+          已登录：{session.user.email}
+          {session.user.emailVerified ? " · 邮箱已验证" : " · 邮箱未验证"}
+        </p>
+        <div className="mt-2 flex flex-col gap-4">
+          <div>
+            <p className="mb-1.5 text-xs tracking-[0.06em] text-[var(--paper)]">
+              修改密码
+            </p>
+            <ChangePasswordForm />
+          </div>
+          <div className="border-t border-[var(--line)] pt-3">
+            <p className="mb-1.5 text-xs tracking-[0.06em] text-[var(--danger)]">
+              注销账号
+            </p>
+            <DeleteAccountForm />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
           数据导出
         </p>
         <div className="mt-1.5">
           <ExportOpenContent />
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+          图表导出
+        </p>
+        <div className="mt-1.5">
+          <ExportChartsPanel />
         </div>
       </section>
     </main>

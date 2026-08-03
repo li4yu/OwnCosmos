@@ -9,7 +9,12 @@ export function middleware(request: NextRequest) {
     home.searchParams.set("next", request.nextUrl.pathname);
     return NextResponse.redirect(home);
   }
-  return NextResponse.next();
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 }
 
 export const config = {

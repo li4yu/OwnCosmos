@@ -8,6 +8,8 @@ import {
   listUnlockReadyCapsules,
 } from "@/services/plans";
 import { listAnniversaryHits } from "@/services/review";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export default async function AppAreaLayout({
   children,
@@ -15,6 +17,21 @@ export default async function AppAreaLayout({
   children: React.ReactNode;
 }) {
   const session = await requireSession();
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const onVerifyPage = pathname.startsWith("/app/verify-email");
+
+  if (!session.user.emailVerified && !onVerifyPage) {
+    redirect("/app/verify-email");
+  }
+
+  if (!session.user.emailVerified && onVerifyPage) {
+    return (
+      <div className="atmosphere-wash min-h-screen">
+        <div className="app-shell-width mx-auto py-8 sm:py-10">{children}</div>
+      </div>
+    );
+  }
+
   const user = session.user as typeof session.user & {
     notifyEnabled?: boolean;
     notifyDueReminder?: boolean;

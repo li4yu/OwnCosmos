@@ -38,6 +38,24 @@ function childrenForSub(moduleId: string, sub: SubfeatureDef): NavChild[] {
       ready: s.ready,
     }));
   }
+  if (moduleId === "present" && sub.id === "essays") {
+    return [
+      {
+        id: "essay-daily",
+        href: "/app/present/essays/daily",
+        name: "每日随笔",
+        tip: "随手记下当下灵感；久未改动会自动沉淀进馆藏",
+        ready: true,
+      },
+      {
+        id: "essay-topics",
+        href: "/app/present/essays/topics",
+        name: "专题随笔",
+        tip: "按主题建夹写多篇；整专题归档进馆藏，单篇不可单独归档",
+        ready: true,
+      },
+    ];
+  }
   return [];
 }
 

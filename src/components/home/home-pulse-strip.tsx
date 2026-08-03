@@ -10,21 +10,21 @@ type HomePulseStripProps = {
   focusDays: HomeFocusDay[];
 };
 
-type PieSlice = {
+type MixSlice = {
   key: string;
   label: string;
   value: number;
-  className: string;
+  tone: "habit" | "cycle" | "focus";
 };
 
-/** 首页脉搏：打卡柱 + 凝时折线 + 构成饼图 */
+/** 首页脉搏：笺墨线形——细茎、墨迹折线、比例墨条（非仪表盘饼柱） */
 export function HomePulseStrip({
   checkinDays,
   focusDays,
 }: HomePulseStripProps) {
   const [checkinTip, setCheckinTip] = useState<string | null>(null);
   const [focusTip, setFocusTip] = useState<string | null>(null);
-  const [pieTip, setPieTip] = useState<string | null>(null);
+  const [mixTip, setMixTip] = useState<string | null>(null);
 
   const habitTotal = checkinDays.reduce((s, d) => s + d.habitCount, 0);
   const cycleTotal = checkinDays.reduce((s, d) => s + d.cycleCount, 0);
@@ -32,25 +32,10 @@ export function HomePulseStrip({
   const focusTotalMs = focusDays.reduce((s, d) => s + d.ms, 0);
   const focusTotalCount = focusDays.reduce((s, d) => s + d.count, 0);
 
-  const pieSlices: PieSlice[] = [
-    {
-      key: "habit",
-      label: "日课",
-      value: habitTotal,
-      className: "home-v1__pulse-pie--habit",
-    },
-    {
-      key: "cycle",
-      label: "轮期",
-      value: cycleTotal,
-      className: "home-v1__pulse-pie--cycle",
-    },
-    {
-      key: "focus",
-      label: "凝时",
-      value: focusTotalCount,
-      className: "home-v1__pulse-pie--focus",
-    },
+  const mixSlices: MixSlice[] = [
+    { key: "habit", label: "日课", value: habitTotal, tone: "habit" },
+    { key: "cycle", label: "轮期", value: cycleTotal, tone: "cycle" },
+    { key: "focus", label: "凝时", value: focusTotalCount, tone: "focus" },
   ];
 
   return (
@@ -60,12 +45,12 @@ export function HomePulseStrip({
           <p className="home-v1__pulse-label">近七日打卡</p>
           <Link
             href="/app/future/daily"
-            className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
+            className="ui-hover-link-accent font-mono text-xs text-[var(--amber)]"
           >
             日课 →
           </Link>
         </div>
-        <CheckinStemChart days={checkinDays} onTip={setCheckinTip} />
+        <CheckinInkChart days={checkinDays} onTip={setCheckinTip} />
         <p className="home-v1__pulse-foot">
           {checkinTip ?? (
             <>
@@ -88,39 +73,35 @@ export function HomePulseStrip({
           <p className="home-v1__pulse-label">近七日凝时</p>
           <Link
             href="/app/focus"
-            className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
+            className="ui-hover-link-accent font-mono text-xs text-[var(--amber)]"
           >
             凝时 →
           </Link>
         </div>
-        <FocusLineChart days={focusDays} onTip={setFocusTip} />
+        <FocusInkChart days={focusDays} onTip={setFocusTip} />
         <p className="home-v1__pulse-foot">
           {focusTip ??
             `合计 ${formatFocusDurationMs(focusTotalMs)} · ${focusTotalCount} 次`}
         </p>
       </div>
 
-      <div className="home-v1__pulse-block home-v1__pulse-block--pie">
+      <div className="home-v1__pulse-block home-v1__pulse-block--mix">
         <div className="home-v1__pulse-head">
           <p className="home-v1__pulse-label">近七日构成</p>
-          <span className="font-mono text-[9px] text-[var(--mist)]">次数</span>
+          <span className="font-mono text-xs text-[var(--mist)]">次数</span>
         </div>
-        <CompositionPie slices={pieSlices} onTip={setPieTip} />
+        <CompositionInkBar slices={mixSlices} onTip={setMixTip} />
         <p className="home-v1__pulse-foot">
-          {pieTip ?? (
+          {mixTip ?? (
             <>
-              <span className="home-v1__pulse-legend">
-                <i className="home-v1__pulse-swatch home-v1__pulse-swatch--habit" />
-                日课 {habitTotal}
-              </span>
-              <span className="home-v1__pulse-legend">
-                <i className="home-v1__pulse-swatch home-v1__pulse-swatch--cycle" />
-                轮期 {cycleTotal}
-              </span>
-              <span className="home-v1__pulse-legend">
-                <i className="home-v1__pulse-swatch home-v1__pulse-swatch--focus" />
-                凝时 {focusTotalCount}
-              </span>
+              {mixSlices.map((s) => (
+                <span key={s.key} className="home-v1__pulse-legend">
+                  <i
+                    className={`home-v1__pulse-swatch home-v1__pulse-swatch--${s.tone}`}
+                  />
+                  {s.label} {s.value}
+                </span>
+              ))}
             </>
           )}
         </p>
@@ -129,7 +110,7 @@ export function HomePulseStrip({
   );
 }
 
-function CheckinStemChart({
+function CheckinInkChart({
   days,
   onTip,
 }: {
@@ -138,14 +119,14 @@ function CheckinStemChart({
 }) {
   const max = Math.max(1, ...days.map((d) => d.habitCount + d.cycleCount));
   const w = 280;
-  const h = 96;
-  const padX = 14;
-  const padTop = 10;
-  const padBot = 18;
+  const h = 100;
+  const padX = 10;
+  const padTop = 8;
+  const padBot = 22;
   const innerW = w - padX * 2;
   const innerH = h - padTop - padBot;
   const n = Math.max(1, days.length - 1);
-  const barW = 10;
+  const gap = 3;
 
   return (
     <svg
@@ -165,7 +146,7 @@ function CheckinStemChart({
         const x = padX + (i / n) * innerW;
         const total = d.habitCount + d.cycleCount;
         const totalH =
-          total === 0 ? 0 : Math.max(8, (total / max) * (innerH - 2));
+          total === 0 ? 0 : Math.max(6, (total / max) * (innerH - 4));
         const habitH =
           total === 0 ? 0 : (d.habitCount / Math.max(total, 1)) * totalH;
         const cycleH = totalH - habitH;
@@ -180,46 +161,45 @@ function CheckinStemChart({
             onMouseLeave={() => onTip(null)}
           >
             <rect
-              x={x - 12}
+              x={x - 14}
               y={padTop}
-              width={24}
+              width={28}
               height={innerH + padBot}
               fill="transparent"
             />
             {total === 0 ? (
-              <circle
-                cx={x}
-                cy={baseY - 3}
-                r={2.5}
-                className="home-v1__pulse-dot-empty"
+              <line
+                x1={x - 3}
+                y1={baseY}
+                x2={x + 3}
+                y2={baseY}
+                className="home-v1__pulse-tick-empty"
               />
             ) : (
               <>
-                {cycleH > 0 ? (
-                  <rect
-                    x={x - barW / 2}
-                    y={baseY - totalH}
-                    width={barW}
-                    height={cycleH}
-                    rx={2}
-                    className="home-v1__pulse-stem-cycle"
+                {habitH > 0 ? (
+                  <line
+                    x1={x - gap}
+                    y1={baseY}
+                    x2={x - gap}
+                    y2={baseY - habitH}
+                    className="home-v1__pulse-ink home-v1__pulse-ink--habit"
                   />
                 ) : null}
-                {habitH > 0 ? (
-                  <rect
-                    x={x - barW / 2}
-                    y={baseY - habitH}
-                    width={barW}
-                    height={habitH}
-                    rx={2}
-                    className="home-v1__pulse-stem-habit"
+                {cycleH > 0 ? (
+                  <line
+                    x1={x + gap}
+                    y1={baseY}
+                    x2={x + gap}
+                    y2={baseY - cycleH}
+                    className="home-v1__pulse-ink home-v1__pulse-ink--cycle"
                   />
                 ) : null}
               </>
             )}
             <text
               x={x}
-              y={h - 3}
+              y={h - 4}
               textAnchor="middle"
               className="home-v1__pulse-svg-tick"
             >
@@ -232,7 +212,7 @@ function CheckinStemChart({
   );
 }
 
-function FocusLineChart({
+function FocusInkChart({
   days,
   onTip,
 }: {
@@ -241,10 +221,10 @@ function FocusLineChart({
 }) {
   const maxMs = Math.max(1, ...days.map((d) => d.ms));
   const w = 280;
-  const h = 96;
-  const padX = 14;
-  const padTop = 12;
-  const padBot = 18;
+  const h = 100;
+  const padX = 10;
+  const padTop = 10;
+  const padBot = 22;
   const innerW = w - padX * 2;
   const innerH = h - padTop - padBot;
   const n = Math.max(1, days.length - 1);
@@ -254,11 +234,13 @@ function FocusLineChart({
     const y =
       d.ms === 0
         ? padTop + innerH
-        : padTop + innerH - (d.ms / maxMs) * (innerH - 6);
+        : padTop + innerH - (d.ms / maxMs) * (innerH - 4);
     return { x, y, ...d };
   });
-  const line = points.map((p) => `${p.x},${p.y}`).join(" ");
-  const area = `${padX},${padTop + innerH} ${line} ${padX + innerW},${padTop + innerH}`;
+
+  const pathD = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+    .join(" ");
 
   return (
     <svg
@@ -274,8 +256,7 @@ function FocusLineChart({
         y2={padTop + innerH}
         className="home-v1__pulse-axis"
       />
-      <polygon points={area} className="home-v1__pulse-area" />
-      <polyline points={line} fill="none" className="home-v1__pulse-line" />
+      <path d={pathD} fill="none" className="home-v1__pulse-line" />
       {points.map((p) => (
         <g
           key={p.key}
@@ -286,17 +267,25 @@ function FocusLineChart({
           }
           onMouseLeave={() => onTip(null)}
         >
-          <circle
-            cx={p.x}
-            cy={p.y}
-            r={p.ms > 0 ? 4 : 2.5}
-            className={
-              p.ms > 0 ? "home-v1__pulse-node" : "home-v1__pulse-dot-empty"
-            }
-          />
+          {p.ms > 0 ? (
+            <circle
+              cx={p.x}
+              cy={p.y}
+              r={3.2}
+              className="home-v1__pulse-node"
+            />
+          ) : (
+            <line
+              x1={p.x - 3}
+              y1={p.y}
+              x2={p.x + 3}
+              y2={p.y}
+              className="home-v1__pulse-tick-empty"
+            />
+          )}
           <text
             x={p.x}
-            y={h - 3}
+            y={h - 4}
             textAnchor="middle"
             className="home-v1__pulse-svg-tick"
           >
@@ -308,114 +297,76 @@ function FocusLineChart({
   );
 }
 
-function CompositionPie({
+function CompositionInkBar({
   slices,
   onTip,
 }: {
-  slices: PieSlice[];
+  slices: MixSlice[];
   onTip: (t: string | null) => void;
 }) {
   const total = slices.reduce((s, x) => s + x.value, 0);
-  const size = 120;
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = 44;
-  const rInner = 24;
 
   if (total === 0) {
     return (
-      <div className="home-v1__pulse-pie-wrap">
-        <svg
-          viewBox={`0 0 ${size} ${size}`}
-          className="home-v1__pulse-pie"
-          role="img"
-          aria-label="近七日构成（暂无）"
-        >
-          <circle
-            cx={cx}
-            cy={cy}
-            r={r}
-            className="home-v1__pulse-pie-empty-ring"
-          />
-          <circle cx={cx} cy={cy} r={rInner} className="home-v1__pulse-pie-hole" />
-          <text
-            x={cx}
-            y={cy + 3}
-            textAnchor="middle"
-            className="home-v1__pulse-pie-center"
-          >
-            暂无
-          </text>
-        </svg>
+      <div className="home-v1__pulse-mix" aria-label="近七日构成（暂无）">
+        <div className="home-v1__pulse-mix-track home-v1__pulse-mix-track--empty" />
+        <p className="home-v1__pulse-mix-total">暂无</p>
       </div>
     );
   }
 
-  let angle = -Math.PI / 2;
-  const arcs = slices
-    .filter((s) => s.value > 0)
-    .map((s) => {
-      const sweep = (s.value / total) * Math.PI * 2;
-      const start = angle;
-      const end = angle + sweep;
-      angle = end;
-      return { ...s, start, end, pct: Math.round((s.value / total) * 100) };
-    });
-
   return (
-    <div className="home-v1__pulse-pie-wrap">
-      <svg
-        viewBox={`0 0 ${size} ${size}`}
-        className="home-v1__pulse-pie"
-        role="img"
-        aria-label="近七日日课、轮期与凝时次数构成"
-      >
-        {arcs.map((s) => {
-          const large = s.end - s.start > Math.PI ? 1 : 0;
-          const x1 = cx + r * Math.cos(s.start);
-          const y1 = cy + r * Math.sin(s.start);
-          const x2 = cx + r * Math.cos(s.end);
-          const y2 = cy + r * Math.sin(s.end);
-          const xi1 = cx + rInner * Math.cos(s.end);
-          const yi1 = cy + rInner * Math.sin(s.end);
-          const xi2 = cx + rInner * Math.cos(s.start);
-          const yi2 = cy + rInner * Math.sin(s.start);
-          const d = [
-            `M ${x1} ${y1}`,
-            `A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`,
-            `L ${xi1} ${yi1}`,
-            `A ${rInner} ${rInner} 0 ${large} 0 ${xi2} ${yi2}`,
-            "Z",
-          ].join(" ");
+    <div className="home-v1__pulse-mix" aria-label="近七日日课、轮期与凝时次数构成">
+      <p className="home-v1__pulse-mix-total">
+        <span className="home-v1__pulse-mix-num">{total}</span>
+        <span className="home-v1__pulse-mix-unit">次</span>
+      </p>
+      <div className="home-v1__pulse-mix-track" role="img">
+        {slices
+          .filter((s) => s.value > 0)
+          .map((s) => {
+            const pct = Math.round((s.value / total) * 100);
+            return (
+              <button
+                key={s.key}
+                type="button"
+                className={`home-v1__pulse-mix-seg home-v1__pulse-mix-seg--${s.tone}`}
+                style={{ flexGrow: s.value, flexBasis: 0 }}
+                onMouseEnter={() => onTip(`${s.label} ${s.value} 次 · ${pct}%`)}
+                onMouseLeave={() => onTip(null)}
+                aria-label={`${s.label} ${s.value} 次`}
+              />
+            );
+          })}
+      </div>
+      <ul className="home-v1__pulse-mix-rows">
+        {slices.map((s) => {
+          const pct = total > 0 ? Math.round((s.value / total) * 100) : 0;
           return (
-            <path
-              key={s.key}
-              d={d}
-              className={`home-v1__pulse-pie-slice ${s.className}`}
-              onMouseEnter={() =>
-                onTip(`${s.label} ${s.value} 次 · ${s.pct}%`)
-              }
-              onMouseLeave={() => onTip(null)}
-            />
+            <li key={s.key}>
+              <button
+                type="button"
+                className="home-v1__pulse-mix-row"
+                onMouseEnter={() =>
+                  onTip(`${s.label} ${s.value} 次 · ${pct}%`)
+                }
+                onMouseLeave={() => onTip(null)}
+              >
+                <span className="home-v1__pulse-mix-row-name">
+                  <i
+                    className={`home-v1__pulse-swatch home-v1__pulse-swatch--${s.tone}`}
+                  />
+                  {s.label}
+                </span>
+                <span className="home-v1__pulse-mix-row-val">
+                  {s.value}
+                  <em>{pct}%</em>
+                </span>
+              </button>
+            </li>
           );
         })}
-        <text
-          x={cx}
-          y={cy - 2}
-          textAnchor="middle"
-          className="home-v1__pulse-pie-center"
-        >
-          {total}
-        </text>
-        <text
-          x={cx}
-          y={cy + 11}
-          textAnchor="middle"
-          className="home-v1__pulse-pie-sub"
-        >
-          次
-        </text>
-      </svg>
+      </ul>
     </div>
   );
 }

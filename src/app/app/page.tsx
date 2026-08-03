@@ -71,24 +71,6 @@ export default async function AppHomePage() {
         </div>
       </section>
 
-      <div className="home-v1__split">
-        <section className="home-v1__due" aria-label="临期帖">
-          <DueReminderSection
-            items={summary.dueItems}
-            compact
-            emptyHint="暂无临期。设置截止日期与临期配后会出现在这里。"
-          />
-        </section>
-
-        <HomeCheckinBoard
-          items={summary.checkinItems}
-          dailyDone={summary.dailyDone}
-          dailyTotal={summary.dailyTotal}
-        />
-      </div>
-
-      <HomePulseStrip checkinDays={checkinDays} focusDays={focusDays} />
-
       <section className="home-v1__summary" aria-label="今日摘要">
         <div className="home-v1__summary-head">
           <h2>今日摘要</h2>
@@ -129,6 +111,24 @@ export default async function AppHomePage() {
           </li>
         </ul>
       </section>
+
+      <div className="home-v1__split">
+        <section className="home-v1__due" aria-label="临期帖">
+          <DueReminderSection
+            items={summary.dueItems}
+            compact
+            emptyHint="暂无临期。设置截止日期与临期配后会出现在这里。"
+          />
+        </section>
+
+        <HomeCheckinBoard
+          items={summary.checkinItems}
+          dailyDone={summary.dailyDone}
+          dailyTotal={summary.dailyTotal}
+        />
+      </div>
+
+      <HomePulseStrip checkinDays={checkinDays} focusDays={focusDays} />
 
       <section className="home-v1__jumps" aria-label="时序入口">
         <div className="home-v1__summary-head">

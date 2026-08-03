@@ -47,7 +47,7 @@ async function main() {
     const userId = existing[0].id;
     await db
       .update(user)
-      .set({ name, updatedAt: now })
+      .set({ name, emailVerified: true, updatedAt: now })
       .where(eq(user.id, userId));
 
     const accounts = await db.select().from(account).where(eq(account.userId, userId));

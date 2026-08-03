@@ -8,14 +8,11 @@ import {
 } from "@/components/plans/plan-list-item";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { ListPager } from "@/components/ui/list-pager";
-import { MOOD_OPTIONS, moodDisplay } from "@/lib/moods";
 import {
   PLAN_LIST_KIND_OPTIONS,
   PLAN_PAGE_SIZE,
   buildPlanQueryHref,
 } from "@/lib/plan-query";
-
-type TagOption = { value: string; label: string };
 
 type OpenItem = {
   id: string;
@@ -23,8 +20,6 @@ type OpenItem = {
   body: string;
   dueLabel: string | null;
   kindLabel: string;
-  mood?: string | null;
-  tagNames?: string[];
 };
 
 type DoneItem = OpenItem & {
@@ -34,8 +29,6 @@ type DoneItem = OpenItem & {
 
 type Filters = {
   q: string;
-  tag: string;
-  mood: string;
   kind: string;
   from: string;
   to: string;
@@ -57,7 +50,6 @@ type PlanListPanelProps = {
   };
   pageSize?: number;
   filters: Filters;
-  tagOptions: TagOption[];
 };
 
 export function PlanListPanel({
@@ -66,12 +58,9 @@ export function PlanListPanel({
   done,
   pageSize = PLAN_PAGE_SIZE,
   filters,
-  tagOptions,
 }: PlanListPanelProps) {
   const router = useRouter();
   const [q, setQ] = useState(filters.q);
-  const [tag, setTag] = useState(filters.tag);
-  const [mood, setMood] = useState(filters.mood);
   const [kind, setKind] = useState(filters.kind);
   const [from, setFrom] = useState(filters.from);
   const [to, setTo] = useState(filters.to);
@@ -89,8 +78,6 @@ export function PlanListPanel({
   ) {
     return buildPlanQueryHref(basePath, {
       q,
-      tag,
-      mood,
       kind,
       from,
       to,
@@ -111,12 +98,35 @@ export function PlanListPanel({
 
   return (
     <div className="flex flex-col gap-3">
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          查询
-        </p>
-        <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+      <section className="oc-filter" aria-label="筛选规划">
+        <div className="oc-filter__head">
+          <p className="oc-filter__eyebrow">筛选</p>
+          <div className="oc-filter__actions">
+            <button
+              type="button"
+              className="ui-btn-primary ui-btn-sm"
+              onClick={applyFilters}
+            >
+              查询
+            </button>
+            <button
+              type="button"
+              className="ui-btn-ghost ui-btn-sm"
+              onClick={() => {
+                setQ("");
+                setKind("");
+                setFrom("");
+                setTo("");
+                setError(null);
+                router.push(basePath);
+              }}
+            >
+              清空
+            </button>
+          </div>
+        </div>
+        <div className="oc-filter__grid sm:grid-cols-2 lg:grid-cols-4">
+          <label className="oc-filter__field">
             标题 / 描述
             <input
               value={q}
@@ -128,7 +138,7 @@ export function PlanListPanel({
               className="auth-field !py-1.5 text-sm text-[var(--paper)]"
             />
           </label>
-          <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+          <label className="oc-filter__field">
             类型
             <select
               value={kind}
@@ -138,38 +148,6 @@ export function PlanListPanel({
               {PLAN_LIST_KIND_OPTIONS.map((opt) => (
                 <option key={opt.value || "all"} value={opt.value}>
                   {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {tagOptions.length > 0 ? (
-            <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
-              绪签
-              <select
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                className="auth-field !py-1.5 text-sm text-[var(--paper)]"
-              >
-                <option value="">绪签不限</option>
-                {tagOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
-            心情
-            <select
-              value={mood}
-              onChange={(e) => setMood(e.target.value)}
-              className="auth-field !py-1.5 text-sm text-[var(--paper)]"
-            >
-              <option value="">心情不限</option>
-              {MOOD_OPTIONS.map((m) => (
-                <option key={m.key} value={m.key}>
-                  {m.emoji} {m.label}
                 </option>
               ))}
             </select>
@@ -200,50 +178,21 @@ export function PlanListPanel({
           />
         </div>
         {rangeErr || error ? (
-          <p className="mt-1.5 text-xs text-[var(--danger, #c45)]">
-            {error || rangeErr}
-          </p>
+          <p className="oc-filter__hint">{error || rangeErr}</p>
         ) : null}
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            className="ui-btn-primary ui-btn-sm"
-            onClick={applyFilters}
-          >
-            查询
-          </button>
-          <button
-            type="button"
-            className="ui-btn-ghost ui-btn-sm"
-            onClick={() => {
-              setQ("");
-              setTag("");
-              setMood("");
-              setKind("");
-              setFrom("");
-              setTo("");
-              setError(null);
-              router.push(basePath);
-            }}
-          >
-            清空条件
-          </button>
-        </div>
       </section>
 
-      <section className="flex flex-col gap-1.5">
-        <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
+      <section className="flex flex-col gap-3">
+        <h2 className="oc-section-label">
           未完成
-          <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
+          <span className="ml-2 font-mono text-[10px] text-[var(--mist)] font-normal tracking-normal normal-case">
             {open.total}
           </span>
         </h2>
         {open.items.length === 0 ? (
-          <div className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
-            暂无符合条件的未完成计划。
-          </div>
+          <div className="oc-empty">暂无符合条件的未完成计划。</div>
         ) : (
-          <ul className="flex flex-col gap-1.5">
+          <ul className="oc-scroll">
             {open.items.map((item) => (
               <PlanListItem
                 key={item.id}
@@ -251,15 +200,7 @@ export function PlanListPanel({
                 title={item.title}
                 body={item.body}
                 dueLabel={item.dueLabel}
-                kindLabel={
-                  [
-                    item.kindLabel,
-                    item.mood ? moodDisplay(item.mood) : "",
-                    ...(item.tagNames?.map((n) => `#${n}`) ?? []),
-                  ]
-                    .filter(Boolean)
-                    .join(" · ") || item.kindLabel
-                }
+                kindLabel={item.kindLabel}
               />
             ))}
           </ul>
@@ -283,19 +224,17 @@ export function PlanListPanel({
         />
       </section>
 
-      <section className="flex flex-col gap-1.5">
-        <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
+      <section className="flex flex-col gap-3">
+        <h2 className="oc-section-label">
           已完成
-          <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
+          <span className="ml-2 font-mono text-[10px] text-[var(--mist)] font-normal tracking-normal normal-case">
             {done.total}
           </span>
         </h2>
         {done.items.length === 0 ? (
-          <div className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
-            暂无符合条件的已完成计划。
-          </div>
+          <div className="oc-empty">暂无符合条件的已完成计划。</div>
         ) : (
-          <ul className="flex flex-col gap-1.5">
+          <ul className="oc-scroll">
             {done.items.map((item) => (
               <PlanCompletedListItem
                 key={item.id}
@@ -305,15 +244,7 @@ export function PlanListPanel({
                 dueLabel={item.dueLabel}
                 archivedLabel={item.archivedLabel}
                 archiveId={item.archiveId}
-                kindLabel={
-                  [
-                    item.kindLabel,
-                    item.mood ? moodDisplay(item.mood) : "",
-                    ...(item.tagNames?.map((n) => `#${n}`) ?? []),
-                  ]
-                    .filter(Boolean)
-                    .join(" · ") || item.kindLabel
-                }
+                kindLabel={item.kindLabel}
               />
             ))}
           </ul>

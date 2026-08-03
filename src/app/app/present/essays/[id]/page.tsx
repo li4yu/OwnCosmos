@@ -60,7 +60,7 @@ export default async function EditEssayPage({ params, searchParams }: Props) {
             : "可删除；未保存离开会弹出确认小窗"
         }
       />
-      <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
+      <div className="oc-sheet oc-sheet--ruled">
         <EssayEditor
           mode="edit"
           essayId={item.id}

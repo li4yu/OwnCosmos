@@ -26,7 +26,7 @@ export default async function NewTopicEssayPage({ params }: Props) {
         guardLeave
         description="写入本专题；单篇不可归档，请在专题列表或本夹顶栏「归档专题」"
       />
-      <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
+      <div className="oc-sheet oc-sheet--ruled">
         <EssayEditor
           mode="create"
           folderId={folderId}

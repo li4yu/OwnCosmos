@@ -45,8 +45,6 @@ import {
   updatePlan,
   type PlanStatus,
 } from "@/services/plans";
-import { setPlanTags } from "@/services/tags";
-
 export type PlanActionState = {
   error?: string;
   createdId?: string;
@@ -177,10 +175,21 @@ export async function createPlanAction(
     cycleUnit: fields.cycleUnit,
     cycleEveryDays: clampCycleEveryDays(Number(fields.cycleEveryDaysRaw)),
     sourceEssayId: fields.sourceEssayId,
-    mood: fields.mood,
+    mood: "",
   });
-  const tagResult = await setPlanTags(session.user.id, id, fields.tagIds);
-  if ("error" in tagResult) return { error: tagResult.error };
+
+  // 新建轮期时可顺带挂子任务（心情 / 绪签仅流思笺）
+  if (fields.kind === PLAN_KIND_CYCLE) {
+    const titles = formData
+      .getAll("taskTitle")
+      .map((v) => String(v).trim())
+      .filter(Boolean)
+      .slice(0, 40);
+    for (const title of titles) {
+      await createPlanTask(session.user.id, id, title);
+    }
+  }
+
   revalidatePlans(id);
   return { createdId: id };
 }
@@ -201,13 +210,12 @@ export async function updatePlanAction(
     remindDays: fields.remindRaw,
     cycleUnit: fields.cycleUnit,
     cycleEveryDays: clampCycleEveryDays(Number(fields.cycleEveryDaysRaw)),
-    mood: fields.mood,
+    // 不更新 mood：心情只出现在流思笺
   });
   if (!updated) {
     return { error: "计划不存在、已归档，或时间胶囊封存后不可修改" };
   }
-  const tagResult = await setPlanTags(session.user.id, planId, fields.tagIds);
-  if ("error" in tagResult) return { error: tagResult.error };
+  // 不改绪签：绪签只出现在流思笺
   revalidatePlans(planId);
   return {};
 }

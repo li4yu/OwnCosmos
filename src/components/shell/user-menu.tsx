@@ -18,7 +18,8 @@ export function UserMenu({ name, image, email }: UserMenuProps) {
   const [pending, setPending] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
-  const initial = displayInitial(name);
+  const displayName = (name || "").trim() || email.split("@")[0] || "旅人";
+  const initial = displayInitial(displayName);
 
   useEffect(() => {
     if (!open) return;
@@ -71,8 +72,8 @@ export function UserMenu({ name, image, email }: UserMenuProps) {
             {initial}
           </span>
         )}
-        <span className="hidden max-w-[6rem] truncate font-mono text-[10px] tracking-widest text-[var(--mist)] sm:inline">
-          {name}
+        <span className="max-w-[7rem] truncate text-xs tracking-wide text-[var(--paper)] sm:max-w-[9rem]">
+          {displayName}
         </span>
       </button>
 
@@ -83,7 +84,7 @@ export function UserMenu({ name, image, email }: UserMenuProps) {
           className="absolute right-0 z-40 mt-2 w-52 overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--panel)] py-1 shadow-[var(--dialog-shadow)]"
         >
           <div className="border-b border-[var(--line)] px-3 py-2">
-            <p className="truncate text-sm text-[var(--paper)]">{name}</p>
+            <p className="truncate text-sm text-[var(--paper)]">{displayName}</p>
             <p className="truncate text-xs text-[var(--mist)]">{email}</p>
           </div>
           <MenuLink href="/app/profile" onNavigate={() => setOpen(false)}>

@@ -16,51 +16,41 @@ export function ModuleShell({ moduleId, children }: ModuleShellProps) {
   return <ModuleShellFrame module={mod}>{children}</ModuleShellFrame>;
 }
 
-/** 模块枢纽：紧凑入口列表（侧栏已有导航，此处作摘要） */
+/** 模块枢纽：笺页流入口，侧栏已有导航 */
 export function ModuleHubCards({ moduleId }: { moduleId: string }) {
   const mod = getModule(moduleId);
   if (!mod) return null;
 
   return (
-    <ul className="flex flex-col gap-1">
+    <ul className="oc-hub">
       {mod.subfeatures.map((sub) =>
         sub.ready ? (
           <li key={sub.id}>
-            <Link
-              href={sub.href}
-              className="ui-hover-card flex items-center justify-between gap-2 rounded-md border border-[var(--line)] bg-[var(--panel)] px-2.5 py-2"
-            >
+            <Link href={sub.href}>
               <div className="min-w-0">
-                <h2 className="text-sm tracking-[0.08em] text-[var(--paper)]">
+                <h2 className="oc-scroll__title text-[1rem]">
                   <PoeticName name={sub.name} tip={sub.tip} />
                 </h2>
-                <p className="mt-0.5 line-clamp-1 text-xs text-[var(--mist)]">
-                  {sub.tip}
-                </p>
+                <p className="oc-scroll__body line-clamp-1">{sub.tip}</p>
               </div>
-              <span className="shrink-0 text-xs tracking-[0.08em] text-[var(--amber)]">
+              <span className="shrink-0 text-sm tracking-[0.12em] text-[var(--amber)]">
                 进入 →
               </span>
             </Link>
           </li>
         ) : (
           <li key={sub.id}>
-            <Link
-              href={sub.href}
-              className="flex items-center justify-between gap-2 rounded-md border border-dashed border-[var(--line)] bg-[var(--panel)]/40 px-2.5 py-2 transition hover:border-[var(--mist)]"
-            >
+            <Link href={sub.href} className="opacity-70">
               <div className="min-w-0">
                 <h2 className="text-sm tracking-[0.08em] text-[var(--mist)]">
                   <PoeticName name={sub.name} tip={sub.tip} />
-                  <span className="ml-1.5 font-mono text-[9px] tracking-wide">
+                  <span className="ml-1.5 font-mono text-[10px] tracking-wide">
                     稍后
                   </span>
                 </h2>
-                <p className="mt-0.5 line-clamp-1 text-xs text-[var(--mist)]">
-                  {sub.tip}
-                </p>
+                <p className="oc-scroll__body line-clamp-1">{sub.tip}</p>
               </div>
-              <span className="shrink-0 font-mono text-[9px] text-[var(--mist)]">
+              <span className="shrink-0 font-mono text-[10px] text-[var(--mist)]">
                 占位
               </span>
             </Link>
@@ -85,23 +75,20 @@ export function SubfeaturePlaceholder({
 
   return (
     <div className="flex flex-col gap-3">
-      <div>
-        <Link
-          href={mod.href}
-          className="mb-1 inline-flex items-center gap-1 rounded border border-[var(--line)] px-2 py-0.5 text-[11px] tracking-[0.06em] text-[var(--mist)] transition hover:border-[var(--amber)] hover:text-[var(--amber)]"
-        >
-          ← 返回{mod.name}
-        </Link>
-        <h2 className="text-sm tracking-[0.1em] text-[var(--paper)]">
-          <PoeticName name={sub.name} tip={sub.tip} />
-        </h2>
-        <p className="mt-0.5 text-xs leading-5 text-[var(--mist)]">{sub.tip}</p>
+      <div className="oc-page-head">
+        <div>
+          <Link href={mod.href} className="oc-back">
+            ← 返回{mod.name}
+          </Link>
+          <h2 className="oc-page-head__title text-[1.05rem]">
+            <PoeticName name={sub.name} tip={sub.tip} />
+          </h2>
+          <p className="oc-page-head__desc">{sub.tip}</p>
+        </div>
       </div>
-      <section className="rounded-md border border-dashed border-[var(--line)] bg-[var(--panel)] px-3 py-4 text-center">
-        <p className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
-          占位页 · 归属「{mod.name}」· 后续按阶段详细开发
-        </p>
-      </section>
+      <div className="oc-empty">
+        占位页 · 归属「{mod.name}」· 后续按阶段详细开发
+      </div>
     </div>
   );
 }

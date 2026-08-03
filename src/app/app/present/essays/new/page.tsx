@@ -16,7 +16,7 @@ export default async function NewEssayPage() {
         guardLeave
         description="手动保存；未保存离开会弹出确认小窗"
       />
-      <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
+      <div className="oc-sheet oc-sheet--ruled">
         <EssayEditor
           mode="create"
           returnHref="/app/present/essays/daily"

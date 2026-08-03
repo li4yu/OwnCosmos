@@ -1310,6 +1310,222 @@ button,
   }
 }
 
+/* 列表筛选：不套卡片，底部分隔线融入页面节奏 */
+.oc-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.1rem 0 0.95rem;
+  margin-bottom: 0.15rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 58%, transparent);
+}
+.oc-filter__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+}
+.oc-filter__eyebrow {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  color: var(--teal);
+}
+.oc-filter__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+.oc-filter__grid {
+  display: grid;
+  gap: 0.65rem 0.85rem;
+}
+.oc-filter__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8125rem;
+  color: var(--mist);
+}
+.oc-filter__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--danger, #c45);
+}
+
+/*
+ * 笺页流布局（非首页）
+ * 列表像笺纸：细线分隔、无厚卡片；编辑区为开敞笺面。
+ */
+.oc-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.35rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--mist);
+  transition: color 0.2s ease;
+}
+.oc-back:hover {
+  color: var(--amber);
+}
+.oc-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+}
+.oc-page-head__title {
+  margin: 0;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.25;
+  color: var(--paper);
+}
+.oc-page-head__desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  letter-spacing: 0.04em;
+  color: var(--mist);
+}
+.oc-page-head__eyebrow {
+  margin: 0 0 0.2rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--teal);
+}
+
+.oc-scroll {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.oc-scroll > li,
+.oc-scroll__row {
+  position: relative;
+  margin: 0;
+  padding: 0.85rem 0.15rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 48%, transparent);
+  transition: background 0.2s ease;
+}
+.oc-scroll > li:last-child,
+.oc-scroll__row:last-child {
+  border-bottom-color: transparent;
+}
+.oc-scroll > li:hover,
+.oc-scroll__row:hover {
+  background: color-mix(in srgb, var(--amber) 6%, transparent);
+}
+.oc-scroll__title {
+  margin: 0;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 1.02rem;
+  letter-spacing: 0.06em;
+  color: var(--paper);
+  line-height: 1.35;
+}
+.oc-scroll__body {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--mist);
+}
+.oc-scroll__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--mist);
+  text-align: right;
+}
+.oc-scroll__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.oc-sheet {
+  padding: 0.35rem 0 1rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.oc-sheet--ruled {
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--line) 45%, transparent);
+}
+.oc-empty {
+  margin: 0.5rem 0;
+  padding: 1.75rem 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+  color: var(--mist);
+  border: none;
+  border-top: 1px dashed color-mix(in srgb, var(--line) 55%, transparent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--line) 55%, transparent);
+  background: transparent;
+  border-radius: 0;
+}
+.oc-hub {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.oc-hub > li > a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.95rem 0.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 48%, transparent);
+  background: transparent;
+  border-radius: 0;
+  transition: background 0.2s ease, padding-left 0.2s ease;
+}
+.oc-hub > li:last-child > a {
+  border-bottom-color: transparent;
+}
+.oc-hub > li > a:hover {
+  background: color-mix(in srgb, var(--amber) 6%, transparent);
+  padding-left: 0.35rem;
+}
+.oc-section-label {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 1.02rem;
+  letter-spacing: 0.14em;
+  color: var(--paper);
+}
+
 /* 首页：紧凑纵向节奏，预留给后续图表 */
 .home-v1 {
   display: flex;
@@ -1347,8 +1563,8 @@ button,
 }
 .home-v1__lede {
   margin-top: 0.35rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.98rem;
+  line-height: 1.55;
   letter-spacing: 0.04em;
   color: var(--mist);
 }
@@ -1364,20 +1580,20 @@ button,
   margin: 0;
   font-family: var(--font-cormorant), Georgia, serif;
   font-style: italic;
-  font-size: 0.88rem;
+  font-size: 0.98rem;
   letter-spacing: 0.1em;
   color: var(--teal);
   white-space: nowrap;
 }
 
-/* 首页 · 今日脉搏（紧凑一行，不做成厚卡片） */
+/* 首页 · 今日脉搏（笺墨线形，非厚仪表盘） */
 .home-v1__pulse {
   display: grid;
-  gap: 1rem 1.25rem;
+  gap: 1rem 1.5rem;
   grid-template-columns: 1fr;
-  padding: 0.35rem 0 0.55rem;
-  border-top: 1px solid color-mix(in srgb, var(--line) 50%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent);
+  padding: 0.55rem 0 0.7rem;
+  border-top: 1px solid color-mix(in srgb, var(--line) 48%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 48%, transparent);
 }
 @media (min-width: 720px) {
   .home-v1__pulse {
@@ -1387,13 +1603,13 @@ button,
 }
 @media (min-width: 1100px) {
   .home-v1__pulse {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(9.5rem, 0.75fr);
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(10rem, 0.85fr);
   }
 }
 .home-v1__pulse-block {
   min-width: 0;
 }
-.home-v1__pulse-block--pie {
+.home-v1__pulse-block--mix {
   display: flex;
   flex-direction: column;
 }
@@ -1402,45 +1618,51 @@ button,
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.4rem;
 }
 .home-v1__pulse-label {
   margin: 0;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
-  letter-spacing: 0.16em;
-  color: var(--teal);
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  color: var(--paper);
 }
 .home-v1__pulse-empty,
 .home-v1__pulse-foot {
-  margin: 0.2rem 0 0;
-  min-height: 1.1rem;
-  font-size: 11px;
+  margin: 0.35rem 0 0;
+  min-height: 1.25rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
   color: var(--mist);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.55rem;
 }
 .home-v1__pulse-legend {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.28rem;
 }
 .home-v1__pulse-swatch {
   display: inline-block;
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 1px;
+  width: 0.55rem;
+  height: 1px;
+  border-radius: 0;
+  vertical-align: middle;
 }
 .home-v1__pulse-swatch--habit {
-  background: color-mix(in srgb, var(--amber) 80%, transparent);
+  background: color-mix(in srgb, var(--amber) 88%, transparent);
+  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--amber) 40%, transparent);
 }
 .home-v1__pulse-swatch--cycle {
-  background: color-mix(in srgb, var(--teal) 75%, transparent);
+  background: color-mix(in srgb, var(--teal) 85%, transparent);
+  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--teal) 35%, transparent);
 }
 .home-v1__pulse-swatch--focus {
-  background: color-mix(in srgb, var(--amber) 45%, var(--paper));
+  background: color-mix(in srgb, var(--paper) 55%, var(--amber));
+  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--amber) 30%, transparent);
 }
 .home-v1__pulse-svg {
   display: block;
@@ -1451,95 +1673,157 @@ button,
 .home-v1__pulse-svg--lg {
   min-height: 5.75rem;
 }
-.home-v1__pulse-pie-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 5.75rem;
-  flex: 1;
-}
-.home-v1__pulse-pie {
-  width: 7.5rem;
-  height: 7.5rem;
-}
-.home-v1__pulse-pie-slice {
-  cursor: default;
-  transition: filter 0.15s ease, opacity 0.15s ease;
-}
-.home-v1__pulse-pie-slice:hover {
-  filter: brightness(1.12);
-}
-.home-v1__pulse-pie--habit {
-  fill: color-mix(in srgb, var(--amber) 78%, transparent);
-}
-.home-v1__pulse-pie--cycle {
-  fill: color-mix(in srgb, var(--teal) 72%, transparent);
-}
-.home-v1__pulse-pie--focus {
-  fill: color-mix(in srgb, var(--amber) 40%, var(--paper));
-}
-.home-v1__pulse-pie-hole {
-  fill: var(--background);
-}
-.home-v1__pulse-pie-empty-ring {
-  fill: none;
-  stroke: color-mix(in srgb, var(--line) 80%, transparent);
-  stroke-width: 14;
-}
-.home-v1__pulse-pie-center {
-  fill: var(--paper);
-  font-size: 16px;
-  font-family: ui-monospace, monospace;
-  font-weight: 600;
-}
-.home-v1__pulse-pie-sub {
-  fill: var(--mist);
-  font-size: 9px;
-  font-family: ui-monospace, monospace;
-}
 .home-v1__pulse-axis {
-  stroke: color-mix(in srgb, var(--line) 75%, transparent);
+  stroke: color-mix(in srgb, var(--line) 70%, transparent);
   stroke-width: 1;
+  stroke-dasharray: 1.5 3.5;
 }
 .home-v1__pulse-svg-tick {
   fill: var(--mist);
-  font-size: 7px;
-  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.04em;
 }
-.home-v1__pulse-stem:hover .home-v1__pulse-stem-habit {
-  filter: brightness(1.15);
+.home-v1__pulse-ink {
+  stroke-linecap: round;
+  stroke-width: 1.75;
+  transition: stroke 0.15s ease, stroke-width 0.15s ease;
 }
-.home-v1__pulse-stem:hover .home-v1__pulse-stem-cycle {
-  filter: brightness(1.15);
+.home-v1__pulse-ink--habit {
+  stroke: color-mix(in srgb, var(--amber) 88%, transparent);
 }
-.home-v1__pulse-stem-habit {
-  fill: color-mix(in srgb, var(--amber) 78%, transparent);
-  transition: filter 0.15s ease;
+.home-v1__pulse-ink--cycle {
+  stroke: color-mix(in srgb, var(--teal) 82%, transparent);
 }
-.home-v1__pulse-stem-cycle {
-  fill: color-mix(in srgb, var(--teal) 72%, transparent);
-  transition: filter 0.15s ease;
+.home-v1__pulse-stem:hover .home-v1__pulse-ink {
+  stroke-width: 2.35;
 }
-.home-v1__pulse-dot-empty {
-  fill: color-mix(in srgb, var(--line) 80%, transparent);
-}
-.home-v1__pulse-area {
-  fill: color-mix(in srgb, var(--amber) 14%, transparent);
+.home-v1__pulse-tick-empty {
+  stroke: color-mix(in srgb, var(--line) 90%, transparent);
+  stroke-width: 1;
+  stroke-linecap: round;
 }
 .home-v1__pulse-line {
-  stroke: color-mix(in srgb, var(--amber) 85%, var(--teal));
-  stroke-width: 1.6;
+  stroke: color-mix(in srgb, var(--amber) 72%, var(--teal));
+  stroke-width: 1.15;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 .home-v1__pulse-node {
-  fill: var(--amber);
-  stroke: color-mix(in srgb, var(--panel) 70%, transparent);
-  stroke-width: 1;
-  transition: r 0.15s ease, filter 0.15s ease;
+  fill: none;
+  stroke: color-mix(in srgb, var(--amber) 85%, var(--paper));
+  stroke-width: 1.25;
+  transition: stroke 0.15s ease, r 0.15s ease;
 }
 .home-v1__pulse-node:hover {
-  filter: brightness(1.2);
+  stroke: var(--amber);
+  stroke-width: 1.6;
+}
+
+/* 构成：比例墨条 + 行账，替代饼图 */
+.home-v1__pulse-mix {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-height: 5.75rem;
+  justify-content: center;
+}
+.home-v1__pulse-mix-total {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+.home-v1__pulse-mix-num {
+  font-family: var(--font-cormorant), var(--font-noto-serif), serif;
+  font-size: 1.65rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--paper);
+}
+.home-v1__pulse-mix-unit {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--mist);
+}
+.home-v1__pulse-mix-track {
+  display: flex;
+  width: 100%;
+  height: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--line) 55%, transparent);
+  gap: 2px;
+}
+.home-v1__pulse-mix-track--empty {
+  opacity: 0.55;
+}
+.home-v1__pulse-mix-seg {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border: 0;
+  padding: 0;
+  cursor: default;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.home-v1__pulse-mix-seg:hover {
+  filter: brightness(1.18);
+}
+.home-v1__pulse-mix-seg--habit {
+  background: color-mix(in srgb, var(--amber) 88%, transparent);
+}
+.home-v1__pulse-mix-seg--cycle {
+  background: color-mix(in srgb, var(--teal) 82%, transparent);
+}
+.home-v1__pulse-mix-seg--focus {
+  background: color-mix(in srgb, var(--paper) 50%, var(--amber));
+}
+.home-v1__pulse-mix-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.home-v1__pulse-mix-row {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 35%, transparent);
+  background: transparent;
+  padding: 0.2rem 0;
+  cursor: default;
+  color: inherit;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+.home-v1__pulse-mix-row:hover {
+  background: color-mix(in srgb, var(--amber) 5%, transparent);
+}
+.home-v1__pulse-mix-row-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--mist);
+}
+.home-v1__pulse-mix-row-val {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--paper);
+}
+.home-v1__pulse-mix-row-val em {
+  margin-left: 0.45rem;
+  font-style: normal;
+  color: var(--mist);
+  opacity: 0.85;
 }
 
 .home-v1__split {
@@ -1632,7 +1916,7 @@ button,
 }
 .home-v1__daily-panel-hint {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   letter-spacing: 0.04em;
   color: var(--mist);
 }
@@ -1863,8 +2147,8 @@ button,
 }
 .home-v1__daily-link {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
   color: var(--amber);
 }
 .home-v1__daily-link:hover {
@@ -1997,8 +2281,8 @@ button,
 .home-v1__metric-label {
   font-family: var(--font-cormorant), Georgia, serif;
   font-style: italic;
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
+  font-size: 0.88rem;
+  letter-spacing: 0.12em;
   color: var(--teal);
 }
 .home-v1__metric-value {
@@ -2053,8 +2337,8 @@ button,
 .home-v1__jump-eyebrow {
   display: block;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
-  letter-spacing: 0.16em;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
   color: var(--teal);
 }
 .home-v1__jump-name {
@@ -2082,12 +2366,12 @@ button,
 }
 .home-v1__action {
   font-family: var(--font-noto-serif), "Songti SC", serif;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   letter-spacing: 0.12em;
   color: var(--paper);
   border: 1px solid var(--line);
   border-radius: 9999px;
-  padding: 0.4rem 0.85rem;
+  padding: 0.45rem 0.95rem;
   background: color-mix(in srgb, var(--panel) 70%, transparent);
   transition: border-color 0.2s ease, background 0.2s ease;
 }

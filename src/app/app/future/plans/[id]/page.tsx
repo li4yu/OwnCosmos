@@ -15,7 +15,6 @@ import {
   resolvePlanSourceLink,
   seriesHasArchivedPeriodOnDate,
 } from "@/services/plans";
-import { listActiveTags, listPlanTagIds } from "@/services/tags";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -37,10 +36,8 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
     session.user.id,
     item.sourceEssayId,
   );
-  const [tasks, tags, tagIds, focusAgg] = await Promise.all([
+  const [tasks, focusAgg] = await Promise.all([
     listPlanTasks(session.user.id, item.id),
-    listActiveTags(session.user.id),
-    listPlanTagIds(session.user.id, item.id),
     sumFocusMsForPlan(session.user.id, item.id),
   ]);
   const todayKey = localTaskCheckinDate();
@@ -58,13 +55,17 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
   return (
     <main>
       <PageHeader
-        title="编辑计划"
+        title={kind === PLAN_KIND_CYCLE ? "编辑轮期" : "编辑计划"}
         backHref={listHref}
         backLabel="返回列表"
         guardLeave
-        description="可改标题、日期、描述、子任务与完成状态"
+        description={
+          kind === PLAN_KIND_CYCLE
+            ? "可改周期、描述、子任务与完成本期"
+            : "可改标题、日期、描述与完成状态"
+        }
       />
-      <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
+      <div className="oc-sheet">
         <PlanEditor
           mode="edit"
           planId={item.id}
@@ -76,13 +77,6 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
           initialKind={kind}
           initialCycleUnit={item.cycleUnit}
           initialCycleEveryDays={item.cycleEveryDays}
-          initialMood={item.mood}
-          initialTagIds={tagIds}
-          allTags={tags.map((t) => ({
-            id: t.id,
-            name: t.name,
-            active: t.active,
-          }))}
           sourceLink={sourceLink}
           periodDoneToday={periodDoneToday}
           tasks={tasks.map((t) => ({

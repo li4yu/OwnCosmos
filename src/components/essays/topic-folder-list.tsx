@@ -77,7 +77,7 @@ export function TopicFolderList({ folders }: { folders: Folder[] }) {
     <div className="flex flex-col gap-3">
       <form
         onSubmit={(e) => void onCreate(e)}
-        className="flex flex-wrap items-end gap-2 rounded-md border border-[var(--line)] bg-[var(--panel)] p-3"
+        className="oc-filter flex flex-wrap items-end gap-2 pb-3"
       >
         <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-sm text-[var(--mist)]">
           新建专题
@@ -106,44 +106,41 @@ export function TopicFolderList({ folders }: { folders: Folder[] }) {
       ) : null}
 
       {folders.length === 0 ? (
-        <p className="rounded-md border border-dashed border-[var(--line)] px-3 py-6 text-center text-sm text-[var(--mist)]">
-          还没有专题。建一个夹，再往里面写相关随笔。
-        </p>
+        <p className="oc-empty">还没有专题。建一个夹，再往里面写相关随笔。</p>
       ) : (
-        <ul className="flex flex-col gap-1">
+        <ul className="oc-scroll">
           {folders.map((folder) => (
-            <li
-              key={folder.id}
-              className="flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--panel)] px-2.5 py-2"
-            >
+            <li key={folder.id} className="flex items-center gap-2">
               <Link
                 href={`/app/present/essays/topics/${folder.id}`}
-                className="ui-hover-card min-w-0 flex-1 rounded-sm px-1 py-0.5"
+                className="min-w-0 flex-1"
               >
-                <p className="truncate text-sm tracking-[0.06em] text-[var(--paper)]">
+                <p className="oc-scroll__title truncate text-[1rem]">
                   {folder.name}
                 </p>
-                <p className="mt-0.5 text-xs text-[var(--mist)]">
+                <p className="oc-scroll__body">
                   {folder.activeCount} 篇
                   {folder.body ? ` · ${folder.body}` : ""}
                 </p>
               </Link>
-              <button
-                type="button"
-                className="ui-btn-ghost ui-btn-sm shrink-0 text-[var(--teal)]"
-                disabled={pending || folder.activeCount === 0}
-                onClick={() => setArchiveTarget(folder)}
-              >
-                归档
-              </button>
-              <button
-                type="button"
-                className="ui-btn-ghost ui-btn-sm shrink-0 text-[var(--danger)]"
-                disabled={pending}
-                onClick={() => setDeleteTarget(folder)}
-              >
-                删除
-              </button>
+              <div className="oc-scroll__actions">
+                <button
+                  type="button"
+                  className="ui-btn-ghost ui-btn-sm shrink-0 text-[var(--teal)]"
+                  disabled={pending || folder.activeCount === 0}
+                  onClick={() => setArchiveTarget(folder)}
+                >
+                  归档
+                </button>
+                <button
+                  type="button"
+                  className="ui-btn-ghost ui-btn-sm shrink-0 text-[var(--danger)]"
+                  disabled={pending}
+                  onClick={() => setDeleteTarget(folder)}
+                >
+                  删除
+                </button>
+              </div>
             </li>
           ))}
         </ul>

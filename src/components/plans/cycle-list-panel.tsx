@@ -4,10 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { ListPager } from "@/components/ui/list-pager";
-import { MOOD_OPTIONS } from "@/lib/moods";
 import { PLAN_PAGE_SIZE, buildPlanQueryHref } from "@/lib/plan-query";
-
-type TagOption = { value: string; label: string };
 
 type CycleListPanelProps = {
   basePath?: string;
@@ -17,12 +14,9 @@ type CycleListPanelProps = {
   pageSize?: number;
   filters: {
     q: string;
-    tag: string;
-    mood: string;
     from: string;
     to: string;
   };
-  tagOptions: TagOption[];
   children: ReactNode;
   emptyHint: string;
 };
@@ -35,14 +29,11 @@ export function CycleListPanel({
   totalPages,
   pageSize = PLAN_PAGE_SIZE,
   filters,
-  tagOptions,
   children,
   emptyHint,
 }: CycleListPanelProps) {
   const router = useRouter();
   const [q, setQ] = useState(filters.q);
-  const [tag, setTag] = useState(filters.tag);
-  const [mood, setMood] = useState(filters.mood);
   const [from, setFrom] = useState(filters.from);
   const [to, setTo] = useState(filters.to);
   const [size, setSize] = useState(pageSize);
@@ -64,8 +55,6 @@ export function CycleListPanel({
     router.push(
       buildPlanQueryHref(basePath, {
         q,
-        tag,
-        mood,
         from,
         to,
         page: nextPage,
@@ -76,12 +65,34 @@ export function CycleListPanel({
 
   return (
     <div className="flex flex-col gap-2">
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          查询进行中
-        </p>
-        <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
+      <section className="oc-filter" aria-label="筛选轮期">
+        <div className="oc-filter__head">
+          <p className="oc-filter__eyebrow">筛选</p>
+          <div className="oc-filter__actions">
+            <button
+              type="button"
+              className="ui-btn-primary ui-btn-sm"
+              onClick={() => apply(1)}
+            >
+              查询
+            </button>
+            <button
+              type="button"
+              className="ui-btn-ghost ui-btn-sm"
+              onClick={() => {
+                setQ("");
+                setFrom("");
+                setTo("");
+                setError(null);
+                router.push(basePath);
+              }}
+            >
+              清空
+            </button>
+          </div>
+        </div>
+        <div className="oc-filter__grid sm:grid-cols-2 lg:grid-cols-3">
+          <label className="oc-filter__field">
             标题 / 描述
             <input
               value={q}
@@ -92,38 +103,6 @@ export function CycleListPanel({
               placeholder="模糊匹配"
               className="auth-field !py-1.5 text-sm text-[var(--paper)]"
             />
-          </label>
-          {tagOptions.length > 0 ? (
-            <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
-              绪签
-              <select
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                className="auth-field !py-1.5 text-sm text-[var(--paper)]"
-              >
-                <option value="">绪签不限</option>
-                {tagOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">
-            心情
-            <select
-              value={mood}
-              onChange={(e) => setMood(e.target.value)}
-              className="auth-field !py-1.5 text-sm text-[var(--paper)]"
-            >
-              <option value="">心情不限</option>
-              {MOOD_OPTIONS.map((m) => (
-                <option key={m.key} value={m.key}>
-                  {m.emoji} {m.label}
-                </option>
-              ))}
-            </select>
           </label>
           <DatePickerField
             name="dueFrom"
@@ -151,47 +130,19 @@ export function CycleListPanel({
           />
         </div>
         {rangeErr || error ? (
-          <p className="mt-1.5 text-xs text-[var(--danger, #c45)]">
-            {error || rangeErr}
-          </p>
+          <p className="oc-filter__hint">{error || rangeErr}</p>
         ) : null}
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            className="ui-btn-primary ui-btn-sm"
-            onClick={() => apply(1)}
-          >
-            查询
-          </button>
-          <button
-            type="button"
-            className="ui-btn-ghost ui-btn-sm"
-            onClick={() => {
-              setQ("");
-              setTag("");
-              setMood("");
-              setFrom("");
-              setTo("");
-              setError(null);
-              router.push(basePath);
-            }}
-          >
-            清空条件
-          </button>
-        </div>
       </section>
 
-      <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
+      <h2 className="oc-section-label">
         进行中
-        <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
+        <span className="ml-2 font-mono text-[10px] text-[var(--mist)] font-normal tracking-normal normal-case">
           {total}
         </span>
       </h2>
 
       {total === 0 ? (
-        <div className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
-          {emptyHint}
-        </div>
+        <div className="oc-empty">{emptyHint}</div>
       ) : (
         children
       )}

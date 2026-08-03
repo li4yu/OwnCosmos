@@ -12,8 +12,6 @@ import {
   type PlanActionState,
 } from "@/app/app/future/actions";
 import { PlanTaskPanel, type PlanTaskItem } from "@/components/plans/plan-task-panel";
-import { MoodPicker } from "@/components/tags/mood-picker";
-import { TagField } from "@/components/tags/tag-field";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
@@ -58,8 +56,6 @@ type SourceLink = {
   archived: boolean;
 };
 
-type TagOption = { id: string; name: string; active?: boolean };
-
 type PlanEditorProps =
   | {
       mode: "create";
@@ -68,7 +64,6 @@ type PlanEditorProps =
       initialBody?: string;
       sourceEssayId?: string | null;
       listHref?: string;
-      allTags?: TagOption[];
     }
   | {
       mode: "edit";
@@ -81,9 +76,6 @@ type PlanEditorProps =
       initialKind: PlanKind;
       initialCycleUnit?: string | null;
       initialCycleEveryDays?: number | null;
-      initialMood?: string | null;
-      initialTagIds?: string[];
-      allTags?: TagOption[];
       capsuleLocked?: boolean;
       sourceLink?: SourceLink | null;
       tasks?: PlanTaskItem[];
@@ -141,13 +133,9 @@ export function PlanEditor(props: PlanEditorProps) {
   const [body, setBody] = useState(
     isEdit ? props.initialBody : (props.initialBody ?? ""),
   );
-  const [mood, setMood] = useState(
-    isEdit ? (props.initialMood ?? "") : "",
-  );
-  const [tagIds, setTagIds] = useState<string[]>(
-    isEdit ? (props.initialTagIds ?? []) : [],
-  );
-  const [allTags, setAllTags] = useState<TagOption[]>(props.allTags ?? []);
+  /** 新建轮期时的本地子任务草稿（创建后写入） */
+  const [draftTasks, setDraftTasks] = useState<string[]>([]);
+  const [draftTaskInput, setDraftTaskInput] = useState("");
   const [dueAt, setDueAt] = useState(() => {
     if (isEdit) {
       return props.initialDueAt ? formatDueDateInput(props.initialDueAt) : "";
@@ -155,7 +143,11 @@ export function PlanEditor(props: PlanEditorProps) {
     return formatDueDateInput(new Date());
   });
   const [cycleUnit, setCycleUnit] = useState(
-    isEdit ? (props.initialCycleUnit ?? CYCLE_UNIT_WEEK) : CYCLE_UNIT_WEEK,
+    isEdit
+      ? (props.initialCycleUnit ?? CYCLE_UNIT_WEEK)
+      : props.defaultKind === PLAN_KIND_CYCLE
+        ? CYCLE_UNIT_DAY
+        : CYCLE_UNIT_WEEK,
   );
   const [cycleEveryDays, setCycleEveryDays] = useState(() => {
     if (isEdit && props.initialCycleEveryDays != null) {
@@ -200,10 +192,6 @@ export function PlanEditor(props: PlanEditorProps) {
         ? "本期结束"
         : "截止日期";
   const periodDoneToday = isEdit ? Boolean(props.periodDoneToday) : false;
-
-  useEffect(() => {
-    setAllTags(props.allTags ?? []);
-  }, [props.allTags]);
 
   useEffect(() => {
     if (props.mode !== "edit") return;
@@ -667,29 +655,93 @@ export function PlanEditor(props: PlanEditorProps) {
         )}
 
         {!capsuleLocked ? (
-          <>
-            <MoodPicker
-              value={mood}
-              onChange={(next) => {
-                setMood(next);
-                markDirty();
-              }}
-            />
-            <TagField
-              allTags={allTags}
-              selectedIds={tagIds}
-              onChange={(ids) => {
-                setTagIds(ids);
-                markDirty();
-              }}
-              onTagsMutated={() => router.refresh()}
-            />
-          </>
+          kind === PLAN_KIND_CYCLE && !isEdit ? (
+            <section className="flex flex-col gap-3 rounded-xl border border-[var(--line)] bg-[var(--field-bg)]/40 p-3 sm:p-4">
+              {draftTasks.map((t, i) => (
+                <input key={`${t}-${i}`} type="hidden" name="taskTitle" value={t} />
+              ))}
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div>
+                  <p className="text-sm text-[var(--paper)]">子任务</p>
+                  <p className="mt-0.5 text-xs text-[var(--mist)]">
+                    创建后可每日打卡记次；与「完成本期」无关
+                  </p>
+                </div>
+                <p className="font-mono text-xs tracking-wide text-[var(--teal)]">
+                  {draftTasks.length === 0
+                    ? "无子任务"
+                    : `${draftTasks.length} 项`}
+                </p>
+              </div>
+              {draftTasks.length === 0 ? (
+                <p className="text-sm text-[var(--mist)]">
+                  还没有子任务。可拆成每日打卡记次的小项。
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {draftTasks.map((t, i) => (
+                    <li
+                      key={`${t}-${i}`}
+                      className="flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2"
+                    >
+                      <span className="min-w-0 flex-1 text-sm text-[var(--paper)]">
+                        {t}
+                      </span>
+                      <button
+                        type="button"
+                        className="text-xs text-[var(--danger)]"
+                        onClick={() => {
+                          setDraftTasks((prev) =>
+                            prev.filter((_, idx) => idx !== i),
+                          );
+                          markDirty();
+                        }}
+                      >
+                        删
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <input
+                  value={draftTaskInput}
+                  onChange={(e) => setDraftTaskInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    const trimmed = draftTaskInput.trim();
+                    if (!trimmed) return;
+                    setDraftTasks((prev) => [...prev, trimmed].slice(0, 40));
+                    setDraftTaskInput("");
+                    markDirty();
+                  }}
+                  placeholder="添加子任务…"
+                  maxLength={120}
+                  className="auth-field min-w-[12rem] flex-1"
+                />
+                <button
+                  type="button"
+                  disabled={!draftTaskInput.trim()}
+                  className="ui-btn-ghost px-3 py-2 text-sm"
+                  onClick={() => {
+                    const trimmed = draftTaskInput.trim();
+                    if (!trimmed) return;
+                    setDraftTasks((prev) => [...prev, trimmed].slice(0, 40));
+                    setDraftTaskInput("");
+                    markDirty();
+                  }}
+                >
+                  添加
+                </button>
+              </div>
+            </section>
+          ) : null
         ) : null}
 
       </form>
 
-      {/* 子任务仅轮期；须在计划 form 外，避免嵌套 form */}
+      {/* 编辑中的子任务（须在计划 form 外，避免嵌套 form） */}
       {isEdit && !capsuleLocked && kind === PLAN_KIND_CYCLE ? (
         <div className="mt-4">
           <PlanTaskPanel planId={props.planId} tasks={props.tasks ?? []} />
