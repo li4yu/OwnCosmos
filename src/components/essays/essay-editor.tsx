@@ -22,6 +22,10 @@ type EssayEditorProps =
   | {
       mode: "create";
       allTags?: TagOption[];
+      /** 写入专题随笔时传入 */
+      folderId?: string | null;
+      /** 离开/删除后返回 */
+      returnHref?: string;
     }
   | {
       mode: "edit";
@@ -35,6 +39,9 @@ type EssayEditorProps =
       justCreated?: boolean;
       /** 缘想溯源：来日途计划 */
       sourcePlanLink?: { title: string; href: string } | null;
+      returnHref?: string;
+      /** 专题篇：无自动逾时沉淀 */
+      topicEssay?: boolean;
     };
 
 const initialState: EssayActionState = {};
@@ -51,6 +58,14 @@ export function EssayEditor(props: EssayEditorProps) {
   const action = isEdit
     ? updateEssayAction.bind(null, props.essayId)
     : createEssayAction;
+  const returnHref =
+    props.returnHref ??
+    (props.mode === "create" && props.folderId
+      ? `/app/present/essays/topics/${props.folderId}`
+      : "/app/present/essays/daily");
+  const topicEssay =
+    (props.mode === "create" && Boolean(props.folderId)) ||
+    (props.mode === "edit" && Boolean(props.topicEssay));
 
   const [state, formAction, pending] = useActionState(action, initialState);
   const [title, setTitle] = useState(isEdit ? props.initialTitle : "");
@@ -130,7 +145,7 @@ export function EssayEditor(props: EssayEditorProps) {
       setLeaveOpen(true);
       return;
     }
-    router.push("/app/present/essays");
+    router.push(returnHref);
   }
 
   async function confirmDelete() {
@@ -144,7 +159,7 @@ export function EssayEditor(props: EssayEditorProps) {
       return;
     }
     emitEssayDirty(false);
-    router.push("/app/present/essays");
+    router.push(returnHref);
     router.refresh();
   }
 
@@ -198,6 +213,9 @@ export function EssayEditor(props: EssayEditorProps) {
   return (
     <>
       <form action={formAction} className="flex flex-col gap-4">
+        {!isEdit && props.folderId ? (
+          <input type="hidden" name="folderId" value={props.folderId} />
+        ) : null}
         {sourcePlanLink ? (
           <p className="text-sm text-[var(--mist)]">
             <PoeticName
@@ -319,16 +337,18 @@ export function EssayEditor(props: EssayEditorProps) {
               >
                 提炼
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActionError(null);
-                  setArchiveOpen(true);
-                }}
-                className="ui-btn-ghost px-4 py-2.5 text-[var(--teal)] hover:border-[var(--teal)]"
-              >
-                归档
-              </button>
+              {!topicEssay ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActionError(null);
+                    setArchiveOpen(true);
+                  }}
+                  className="ui-btn-ghost px-4 py-2.5 text-[var(--teal)] hover:border-[var(--teal)]"
+                >
+                  归档
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => {
@@ -355,7 +375,7 @@ export function EssayEditor(props: EssayEditorProps) {
           setLeaveOpen(false);
           setDirty(false);
           emitEssayDirty(false);
-          router.push("/app/present/essays");
+          router.push(returnHref);
         }}
       />
 
@@ -374,20 +394,22 @@ export function EssayEditor(props: EssayEditorProps) {
         }}
       />
 
-      <ConfirmDialog
-        open={archiveOpen}
-        title="归档这条随笔？"
-        message="将沉淀入昔时往拾忆馆藏（随笔沉淀），今时际不再可编辑。确定归档吗？"
-        confirmLabel="归档"
-        cancelLabel="取消"
-        pending={actionPending}
-        onCancel={() => {
-          if (!actionPending) setArchiveOpen(false);
-        }}
-        onConfirm={() => {
-          void confirmArchive();
-        }}
-      />
+      {!topicEssay ? (
+        <ConfirmDialog
+          open={archiveOpen}
+          title="归档这条随笔？"
+          message="将沉淀入昔时往拾忆馆藏（随笔沉淀），今时际不再可编辑。确定归档吗？"
+          confirmLabel="归档"
+          cancelLabel="取消"
+          pending={actionPending}
+          onCancel={() => {
+            if (!actionPending) setArchiveOpen(false);
+          }}
+          onConfirm={() => {
+            void confirmArchive();
+          }}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={deleteOpen}

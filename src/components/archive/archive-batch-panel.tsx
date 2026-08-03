@@ -9,6 +9,7 @@ import {
 } from "@/app/app/past/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePickerField } from "@/components/ui/date-picker-field";
+import { ListPager } from "@/components/ui/list-pager";
 import { PoeticName } from "@/components/ui/poetic-name";
 import {
   ARCHIVE_PAGE_SIZE,
@@ -26,6 +27,7 @@ import {
   galleryDetailHref,
   type GallerySectionId,
 } from "@/lib/gallery-sections";
+import { ARCHIVE_TYPE_ESSAY_TOPIC } from "@/db/schema";
 
 type Item = {
   id: string;
@@ -36,6 +38,7 @@ type Item = {
   archivedAt: Date | string;
   inKnowledge: boolean;
   imageUrl?: string | null;
+  cycleCount?: number | null;
 };
 
 type BatchKind = "keep" | "unkeep" | "wipe";
@@ -60,7 +63,7 @@ type ArchiveBatchPanelProps = {
   typeOptions?: ArchiveTypeOption[];
   tagOptions?: ArchiveTypeOption[];
   emptyHint: string;
-  /** 当前分区是否允许抹忆（轮期/日课/碎片为 false） */
+  /** 当前分区是否允许抹忆 */
   allowWipe?: boolean;
   showTypeChip?: boolean;
 };
@@ -98,6 +101,7 @@ export function ArchiveBatchPanel({
   const [from, setFrom] = useState(filters.from);
   const [to, setTo] = useState(filters.to);
   const [tag, setTag] = useState(filters.tag);
+  const [size, setSize] = useState(pageSize);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
   const [batchKind, setBatchKind] = useState<BatchKind | null>(null);
@@ -119,7 +123,7 @@ export function ArchiveBatchPanel({
     [from, to],
   );
 
-  function applyFilters(nextPage = 1) {
+  function applyFilters(nextPage = 1, nextSize = size) {
     if (rangeErr) {
       setError(rangeErr);
       setFlash(null);
@@ -128,6 +132,7 @@ export function ArchiveBatchPanel({
     setSelected(new Set());
     setError(null);
     setFlash(null);
+    setSize(nextSize);
     router.push(
       buildArchiveQueryHref(basePath, {
         q,
@@ -137,6 +142,7 @@ export function ArchiveBatchPanel({
         to,
         tag,
         page: nextPage,
+        pageSize: nextSize,
       }),
     );
   }
@@ -163,7 +169,7 @@ export function ArchiveBatchPanel({
       return;
     }
     if (kind === "wipe" && wipeableSelected.length === 0) {
-      setError("所选条目不含可抹忆类型（随笔沉淀 / 规划归档 / 凝录）");
+      setError("所选条目不可抹忆或不存在");
       return;
     }
     setError(null);
@@ -217,7 +223,7 @@ export function ArchiveBatchPanel({
       ? `将所选 ${selected.size} 条纳入知识库（图片仍不进入向量侧）。是否继续？`
       : batchKind === "unkeep"
         ? `将把所选 ${selected.size} 条移出知识库（仍保留在馆藏）。是否继续？`
-        : `将永久删除所选中可抹的 ${wipeableSelected.length} 条（随笔沉淀 / 规划归档 / 凝录）。轮期、日课与碎片不会被删。此操作不可恢复。`;
+        : `将永久删除所选中可抹的 ${wipeableSelected.length} 条馆藏（含轮期/日课归档、碎片等）。不删除来日途计划与日课本体；打卡次数请用「取消打卡」回退。此操作不可恢复。`;
 
   return (
     <div className="flex flex-col gap-2">
@@ -347,9 +353,6 @@ export function ArchiveBatchPanel({
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-mono text-[9px] tracking-wide text-[var(--mist)]">
-          共 {total} 条 · 第 {page}/{totalPages} 页 · 每页 {pageSize}
-        </p>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm text-[var(--mist)]">
             <input
@@ -392,7 +395,7 @@ export function ArchiveBatchPanel({
             >
               <PoeticName
                 name="抹忆所选"
-                tip="永久删除所选中的随笔沉淀、规划归档或凝录"
+                tip="永久删除馆藏条目（含轮期/日课归档、碎片）；不删除来日途计划与日课本体"
               />
             </button>
           ) : null}
@@ -440,6 +443,9 @@ export function ArchiveBatchPanel({
                   ) : null}
                   <span>{archiveReasonLabel(item.archiveReason)}</span>
                   {item.inKnowledge ? <span>已藏忆</span> : <span>未藏忆</span>}
+                  {item.type === ARCHIVE_TYPE_ESSAY_TOPIC ? (
+                    <span>共 {item.cycleCount ?? 0} 篇</span>
+                  ) : null}
                 </p>
                 {item.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -450,8 +456,11 @@ export function ArchiveBatchPanel({
                   />
                 ) : null}
                 <p className="mt-0.5 line-clamp-2 text-xs text-[var(--mist)]">
-                  {item.body.trim() ||
-                    (item.imageUrl ? "（图片碎片）" : "（无正文）")}
+                  {item.type === ARCHIVE_TYPE_ESSAY_TOPIC
+                    ? item.body.trim() ||
+                      `专题夹 · ${item.cycleCount ?? 0} 篇随笔`
+                    : item.body.trim() ||
+                      (item.imageUrl ? "（图片碎片）" : "（无正文）")}
                 </p>
               </Link>
             </li>
@@ -459,40 +468,15 @@ export function ArchiveBatchPanel({
         </ul>
       )}
 
-      {totalPages > 1 ? (
-        <nav className="flex flex-wrap items-center gap-2" aria-label="分页">
-          <Link
-            href={buildArchiveQueryHref(basePath, {
-              q: filters.q,
-              type: typeOptions ? filters.type : undefined,
-              kept: filters.kept,
-              from: filters.from,
-              to: filters.to,
-              tag: filters.tag,
-              page: Math.max(1, page - 1),
-            })}
-            className={`ui-btn-ghost ui-btn-sm ${page <= 1 ? "pointer-events-none opacity-40" : ""}`}
-            aria-disabled={page <= 1}
-          >
-            上一页
-          </Link>
-          <Link
-            href={buildArchiveQueryHref(basePath, {
-              q: filters.q,
-              type: typeOptions ? filters.type : undefined,
-              kept: filters.kept,
-              from: filters.from,
-              to: filters.to,
-              tag: filters.tag,
-              page: Math.min(totalPages, page + 1),
-            })}
-            className={`ui-btn-ghost ui-btn-sm ${page >= totalPages ? "pointer-events-none opacity-40" : ""}`}
-            aria-disabled={page >= totalPages}
-          >
-            下一页
-          </Link>
-        </nav>
-      ) : null}
+      <ListPager
+        page={page}
+        pageSize={pageSize}
+        totalPages={totalPages}
+        total={total}
+        onNavigate={({ page: nextPage, pageSize: nextSize }) =>
+          applyFilters(nextPage, nextSize)
+        }
+      />
 
       <ConfirmDialog
         open={batchKind !== null}

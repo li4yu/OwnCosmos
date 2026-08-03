@@ -246,6 +246,39 @@ export async function setPlanTags(
   return { ok: true as const };
 }
 
+/** 归档时：把多篇随笔绪签去重合并进馆藏父条 */
+export async function mergeEssayTagsToArchive(
+  userId: string,
+  essayIds: string[],
+  archiveItemId: string,
+) {
+  if (essayIds.length === 0) return;
+  const rows = await getDb()
+    .select({
+      tagId: essayTag.tagId,
+      name: tag.name,
+    })
+    .from(essayTag)
+    .innerJoin(tag, eq(essayTag.tagId, tag.id))
+    .where(
+      and(eq(essayTag.userId, userId), inArray(essayTag.essayId, essayIds)),
+    );
+
+  const byTag = new Map<string, string>();
+  for (const r of rows) {
+    if (!byTag.has(r.tagId)) byTag.set(r.tagId, r.name);
+  }
+  if (byTag.size === 0) return;
+  await getDb().insert(archiveItemTag).values(
+    [...byTag.entries()].map(([tagId, nameSnapshot]) => ({
+      userId,
+      archiveItemId,
+      tagId,
+      nameSnapshot,
+    })),
+  );
+}
+
 /** 归档时：把随笔绪签复制进馆藏（含 name_snapshot） */
 export async function copyEssayTagsToArchive(
   userId: string,

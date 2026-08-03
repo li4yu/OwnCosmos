@@ -28,10 +28,10 @@ export function PresentEssayPreview({ items }: PresentEssayPreviewProps) {
     <section className="flex h-full min-h-0 flex-col rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
-          流动随笔
+          每日随笔
         </h3>
         <Link
-          href="/app/present/essays"
+          href="/app/present/essays/daily"
           className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
         >
           全部 →

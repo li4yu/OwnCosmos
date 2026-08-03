@@ -5,7 +5,7 @@ import { PoeticName } from "@/components/ui/poetic-name";
 import { runPlanOverdueCatchUp } from "@/lib/plan-catchup";
 import { formatDueDateInput } from "@/lib/plan-dates";
 import { PLANNING_KINDS, planKindLabel } from "@/lib/plan-kinds";
-import { PLAN_PAGE_SIZE, parsePlanListSearch } from "@/lib/plan-query";
+import { parsePlanListSearch } from "@/lib/plan-query";
 import { requireSession } from "@/lib/session";
 import {
   queryCompletedPlanningPlans,
@@ -23,6 +23,7 @@ type Props = {
     to?: string;
     page?: string;
     cpage?: string;
+    size?: string;
   }>;
 };
 
@@ -40,7 +41,7 @@ export default async function FuturePlansPage({ searchParams }: Props) {
     kinds: PLANNING_KINDS,
     dueFrom: parsed.dueFrom,
     dueTo: parsed.dueTo,
-    pageSize: PLAN_PAGE_SIZE,
+    pageSize: parsed.pageSize,
   };
 
   const [open, done, tags] = await Promise.all([
@@ -118,7 +119,7 @@ export default async function FuturePlansPage({ searchParams }: Props) {
           page: done.page,
           totalPages: done.totalPages,
         }}
-        pageSize={PLAN_PAGE_SIZE}
+        pageSize={parsed.pageSize}
         filters={{
           q: parsed.titleQ ?? "",
           tag: parsed.tagInput,

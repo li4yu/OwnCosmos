@@ -11,6 +11,8 @@ export const authClient = createAuthClient({
         anniversaryRemind: { type: "boolean", required: true },
         notifyEnabled: { type: "boolean", required: true },
         notifyDueReminder: { type: "boolean", required: true },
+        focusDnd: { type: "boolean", required: true },
+        focusCountdownDefaultMs: { type: "number", required: true },
       },
     }),
   ],

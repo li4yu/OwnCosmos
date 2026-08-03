@@ -2,7 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { checkinPlanTaskAction } from "@/app/app/future/actions";
+import {
+  cancelPlanTaskCheckinAction,
+  checkinPlanTaskAction,
+} from "@/app/app/future/actions";
 
 export type CycleTaskInlineItem = {
   id: string;
@@ -68,29 +71,61 @@ export function CycleTasksInline({ planId, tasks, compact }: Props) {
                 {count} 次
                 {already ? " · 今日已打" : ""}
               </span>
-              <button
-                type="button"
-                disabled={pending || already}
-                className="ui-btn-ghost shrink-0 px-2 py-1 text-[11px]"
-                onClick={() => {
-                  setError(null);
-                  startTransition(async () => {
-                    const result = await checkinPlanTaskAction(planId, task.id);
-                    if (result.error || result.checkCount == null) {
-                      setError(result.error ?? "打卡失败");
-                      return;
-                    }
-                    setCounts((prev) => ({
-                      ...prev,
-                      [task.id]: result.checkCount!,
-                    }));
-                    setDoneToday((prev) => ({ ...prev, [task.id]: true }));
-                    router.refresh();
-                  });
-                }}
-              >
-                {already ? "已打卡" : "打卡"}
-              </button>
+              {already ? (
+                <button
+                  type="button"
+                  disabled={pending}
+                  className="ui-btn-ghost shrink-0 px-2 py-1 text-[11px]"
+                  onClick={() => {
+                    setError(null);
+                    startTransition(async () => {
+                      const result = await cancelPlanTaskCheckinAction(
+                        planId,
+                        task.id,
+                      );
+                      if (result.error || result.checkCount == null) {
+                        setError(result.error ?? "取消失败");
+                        return;
+                      }
+                      setCounts((prev) => ({
+                        ...prev,
+                        [task.id]: result.checkCount!,
+                      }));
+                      setDoneToday((prev) => ({ ...prev, [task.id]: false }));
+                      router.refresh();
+                    });
+                  }}
+                >
+                  取消打卡
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={pending}
+                  className="ui-btn-ghost shrink-0 px-2 py-1 text-[11px]"
+                  onClick={() => {
+                    setError(null);
+                    startTransition(async () => {
+                      const result = await checkinPlanTaskAction(
+                        planId,
+                        task.id,
+                      );
+                      if (result.error || result.checkCount == null) {
+                        setError(result.error ?? "打卡失败");
+                        return;
+                      }
+                      setCounts((prev) => ({
+                        ...prev,
+                        [task.id]: result.checkCount!,
+                      }));
+                      setDoneToday((prev) => ({ ...prev, [task.id]: true }));
+                      router.refresh();
+                    });
+                  }}
+                >
+                  打卡
+                </button>
+              )}
             </li>
           );
         })}

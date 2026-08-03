@@ -38,7 +38,7 @@ export default async function PresentHubPage() {
     user.anniversaryRemind
       ? listAnniversaryHits(session.user.id)
       : Promise.resolve([]),
-    listActiveEssays(session.user.id),
+    listActiveEssays(session.user.id, { folderId: null }),
     getUserEssayIdleHours(session.user.id),
   ]);
 

@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { DatePickerField } from "@/components/ui/date-picker-field";
+import { ListPager } from "@/components/ui/list-pager";
 import { MOOD_OPTIONS } from "@/lib/moods";
 import { PLAN_PAGE_SIZE, buildPlanQueryHref } from "@/lib/plan-query";
 
@@ -45,6 +45,7 @@ export function CycleListPanel({
   const [mood, setMood] = useState(filters.mood);
   const [from, setFrom] = useState(filters.from);
   const [to, setTo] = useState(filters.to);
+  const [size, setSize] = useState(pageSize);
   const [error, setError] = useState<string | null>(null);
 
   const rangeErr = useMemo(() => {
@@ -53,12 +54,13 @@ export function CycleListPanel({
     return null;
   }, [from, to]);
 
-  function apply() {
+  function apply(nextPage = 1, nextSize = size) {
     if (rangeErr) {
       setError(rangeErr);
       return;
     }
     setError(null);
+    setSize(nextSize);
     router.push(
       buildPlanQueryHref(basePath, {
         q,
@@ -66,7 +68,8 @@ export function CycleListPanel({
         mood,
         from,
         to,
-        page: 1,
+        page: nextPage,
+        pageSize: nextSize,
       }),
     );
   }
@@ -84,7 +87,7 @@ export function CycleListPanel({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") apply();
+                if (e.key === "Enter") apply(1);
               }}
               placeholder="模糊匹配"
               className="auth-field !py-1.5 text-sm text-[var(--paper)]"
@@ -153,7 +156,11 @@ export function CycleListPanel({
           </p>
         ) : null}
         <div className="mt-1.5 flex flex-wrap gap-1.5">
-          <button type="button" className="ui-btn-primary ui-btn-sm" onClick={apply}>
+          <button
+            type="button"
+            className="ui-btn-primary ui-btn-sm"
+            onClick={() => apply(1)}
+          >
             查询
           </button>
           <button
@@ -174,17 +181,12 @@ export function CycleListPanel({
         </div>
       </section>
 
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
-          进行中
-          <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
-            {total}
-          </span>
-        </h2>
-        <p className="font-mono text-[9px] text-[var(--mist)]">
-          第 {page}/{totalPages} 页 · 每页 {pageSize}
-        </p>
-      </div>
+      <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
+        进行中
+        <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
+          {total}
+        </span>
+      </h2>
 
       {total === 0 ? (
         <div className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
@@ -194,28 +196,16 @@ export function CycleListPanel({
         children
       )}
 
-      {totalPages > 1 ? (
-        <nav className="flex flex-wrap gap-2" aria-label="轮期分页">
-          <Link
-            href={buildPlanQueryHref(basePath, {
-              ...filters,
-              page: Math.max(1, page - 1),
-            })}
-            className={`ui-btn-ghost ui-btn-sm ${page <= 1 ? "pointer-events-none opacity-40" : ""}`}
-          >
-            上一页
-          </Link>
-          <Link
-            href={buildPlanQueryHref(basePath, {
-              ...filters,
-              page: Math.min(totalPages, page + 1),
-            })}
-            className={`ui-btn-ghost ui-btn-sm ${page >= totalPages ? "pointer-events-none opacity-40" : ""}`}
-          >
-            下一页
-          </Link>
-        </nav>
-      ) : null}
+      <ListPager
+        label="轮期分页"
+        page={page}
+        pageSize={pageSize}
+        totalPages={totalPages}
+        total={total}
+        onNavigate={({ page: nextPage, pageSize: nextSize }) =>
+          apply(nextPage, nextSize)
+        }
+      />
     </div>
   );
 }

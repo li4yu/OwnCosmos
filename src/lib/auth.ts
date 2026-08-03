@@ -59,6 +59,18 @@ export const auth = betterAuth({
         defaultValue: true,
         input: true,
       },
+      focusDnd: {
+        type: "boolean",
+        required: true,
+        defaultValue: false,
+        input: true,
+      },
+      focusCountdownDefaultMs: {
+        type: "number",
+        required: true,
+        defaultValue: 1_500_000,
+        input: true,
+      },
     },
     changeEmail: {
       enabled: false,

@@ -10,15 +10,16 @@ export default async function NewEssayPage() {
   return (
     <main>
       <PageHeader
-        title="新建随笔"
-        backHref="/app/present/essays"
-        backLabel="返回流思笺"
+        title="新建每日随笔"
+        backHref="/app/present/essays/daily"
+        backLabel="返回每日随笔"
         guardLeave
         description="手动保存；未保存离开会弹出确认小窗"
       />
       <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
         <EssayEditor
           mode="create"
+          returnHref="/app/present/essays/daily"
           allTags={tags.map((t) => ({ id: t.id, name: t.name, active: t.active }))}
         />
       </div>

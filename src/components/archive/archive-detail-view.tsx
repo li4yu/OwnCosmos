@@ -6,11 +6,13 @@ import {
   archiveTypeLabel,
   formatDwell,
   getArchiveItem,
+  listArchiveTopicEssays,
   sourceModuleLabel,
 } from "@/services/archive";
 import {
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_ESSAY_TOPIC,
   ARCHIVE_TYPE_FOCUS_RECORD,
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_CYCLE,
@@ -52,11 +54,15 @@ export async function ArchiveDetailView({
   if (!item) notFound();
 
   const isFragment = item.type === ARCHIVE_TYPE_MEMORY_FRAGMENT;
-  const [tags, focusSession] = await Promise.all([
+  const isTopic = item.type === ARCHIVE_TYPE_ESSAY_TOPIC;
+  const [tags, focusSession, topicEssays] = await Promise.all([
     listArchiveItemTags(userId, item.id),
     item.type === ARCHIVE_TYPE_FOCUS_RECORD && item.sourceFocusSessionId
       ? getFocusSession(userId, item.sourceFocusSessionId)
       : Promise.resolve(null),
+    isTopic
+      ? listArchiveTopicEssays(userId, item.id)
+      : Promise.resolve([]),
   ]);
 
   return (
@@ -74,7 +80,7 @@ export async function ArchiveDetailView({
             />
             {isFragment ? <FragmentActions itemId={item.id} /> : null}
           </div>
-          <QuoteNewActions archiveItemId={item.id} />
+          {!isTopic ? <QuoteNewActions archiveItemId={item.id} /> : null}
         </div>
       </div>
 
@@ -104,7 +110,9 @@ export async function ArchiveDetailView({
             {moodDisplay(item.mood)}
           </p>
         ) : null}
-        <ArchiveMoodEditor itemId={item.id} initialMood={item.mood} />
+        {!isTopic ? (
+          <ArchiveMoodEditor itemId={item.id} initialMood={item.mood} />
+        ) : null}
         <dl className="mt-2 grid gap-2 text-xs text-[var(--mist)] sm:grid-cols-2">
           <div>
             <dt className="font-mono text-[10px] tracking-wide opacity-70">
@@ -132,8 +140,25 @@ export async function ArchiveDetailView({
               <dd className="mt-0.5">{formatWhen(item.keptAt)}</dd>
             </div>
           ) : null}
-          {item.type === ARCHIVE_TYPE_PLAN_CYCLE ||
-          item.type === ARCHIVE_TYPE_DAILY_CHECKIN ? (
+          {isTopic ? (
+            <>
+              <div>
+                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                  夹内篇数
+                </dt>
+                <dd className="mt-0.5 text-[var(--paper)]">
+                  {item.cycleCount ?? topicEssays.length} 篇
+                </dd>
+              </div>
+              <div>
+                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                  专题建立
+                </dt>
+                <dd className="mt-0.5">{formatWhen(item.sourceCreatedAt)}</dd>
+              </div>
+            </>
+          ) : item.type === ARCHIVE_TYPE_PLAN_CYCLE ||
+            item.type === ARCHIVE_TYPE_DAILY_CHECKIN ? (
             <>
               <div>
                 <dt className="font-mono text-[10px] tracking-wide opacity-70">
@@ -229,13 +254,61 @@ export async function ArchiveDetailView({
             className="mt-6 max-h-[420px] w-full rounded-lg border border-[var(--line)] object-contain"
           />
         ) : null}
-        <div
-          className="mt-6 whitespace-pre-wrap text-base leading-8 text-[var(--paper)] select-text"
-          aria-readonly={isFragment ? undefined : "true"}
-        >
-          {item.body.trim() || (item.imageUrl ? "" : "（无正文）")}
-        </div>
+        {!isTopic ? (
+          <div
+            className="mt-6 whitespace-pre-wrap text-base leading-8 text-[var(--paper)] select-text"
+            aria-readonly={isFragment ? undefined : "true"}
+          >
+            {item.body.trim() || (item.imageUrl ? "" : "（无正文）")}
+          </div>
+        ) : item.body.trim() ? (
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[var(--mist)]">
+            {item.body}
+          </p>
+        ) : null}
       </article>
+
+      {isTopic ? (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-sm tracking-[0.08em] text-[var(--paper)]">
+            夹内随笔
+          </h2>
+          {topicEssays.length === 0 ? (
+            <p className="rounded-md border border-dashed border-[var(--line)] px-3 py-4 text-sm text-[var(--mist)]">
+              没有夹内篇快照。
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {topicEssays.map((entry, index) => (
+                <li
+                  key={entry.id}
+                  className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2.5"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 className="text-sm text-[var(--paper)]">
+                      <span className="mr-1.5 font-mono text-[10px] text-[var(--mist)]">
+                        {index + 1}.
+                      </span>
+                      {entry.title}
+                    </h3>
+                    <time className="font-mono text-[10px] text-[var(--mist)]">
+                      {formatWhen(entry.sourceUpdatedAt)}
+                    </time>
+                  </div>
+                  {entry.mood ? (
+                    <p className="mt-0.5 text-xs text-[var(--teal)]">
+                      {moodDisplay(entry.mood)}
+                    </p>
+                  ) : null}
+                  <p className="mt-1.5 whitespace-pre-wrap text-sm leading-7 text-[var(--mist)]">
+                    {entry.body.trim() || "（无正文）"}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
     </main>
   );
 }

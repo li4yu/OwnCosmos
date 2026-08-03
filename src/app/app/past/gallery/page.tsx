@@ -10,6 +10,7 @@ type Props = {
     from?: string;
     to?: string;
     page?: string;
+    size?: string;
   }>;
 };
 

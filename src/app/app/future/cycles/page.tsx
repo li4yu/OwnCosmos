@@ -8,7 +8,7 @@ import { runPlanOverdueCatchUp } from "@/lib/plan-catchup";
 import { formatDueDateInput } from "@/lib/plan-dates";
 import { galleryDetailHref } from "@/lib/gallery-sections";
 import { PLAN_KIND_CYCLE, cycleUnitLabel } from "@/lib/plan-kinds";
-import { PLAN_PAGE_SIZE, parsePlanListSearch } from "@/lib/plan-query";
+import { parsePlanListSearch } from "@/lib/plan-query";
 import { requireSession } from "@/lib/session";
 import { listArchiveItems } from "@/services/archive";
 import {
@@ -39,6 +39,7 @@ type Props = {
     from?: string;
     to?: string;
     page?: string;
+    size?: string;
   }>;
 };
 
@@ -57,7 +58,7 @@ export default async function FutureCyclesPage({ searchParams }: Props) {
       dueFrom: parsed.dueFrom,
       dueTo: parsed.dueTo,
       page: parsed.page,
-      pageSize: PLAN_PAGE_SIZE,
+      pageSize: parsed.pageSize,
     }),
     listActiveTags(session.user.id),
     listCyclePlanTasksForHome(session.user.id),

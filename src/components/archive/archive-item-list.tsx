@@ -8,6 +8,7 @@ import {
 import {
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_ESSAY_TOPIC,
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_CYCLE,
 } from "@/db/schema";
@@ -78,6 +79,9 @@ export function ArchiveItemList({
                   ) : null}
                 </>
               ) : null}
+              {item.type === ARCHIVE_TYPE_ESSAY_TOPIC ? (
+                <span>共 {item.cycleCount ?? 0} 篇</span>
+              ) : null}
               {item.type === ARCHIVE_TYPE_ESSAY_SEDIMENT ? (
                 <span>
                   停留 {formatDwell(item.sourceCreatedAt, item.archivedAt)}
@@ -93,8 +97,10 @@ export function ArchiveItemList({
               />
             ) : null}
             <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-[var(--mist)]">
-              {item.body.trim() ||
-                (item.imageUrl ? "（图片碎片）" : "（无正文）")}
+              {item.type === ARCHIVE_TYPE_ESSAY_TOPIC
+                ? item.body.trim() || `专题夹 · ${item.cycleCount ?? 0} 篇随笔`
+                : item.body.trim() ||
+                  (item.imageUrl ? "（图片碎片）" : "（无正文）")}
             </p>
           </Link>
         </li>

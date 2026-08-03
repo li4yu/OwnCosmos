@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
+  quickCancelHabitCheckinAction,
   quickCheckinCycleAction,
   quickCheckinHabitAction,
 } from "@/app/app/future/actions";
@@ -159,6 +160,30 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
                           ? "改心得"
                           : "打卡"}
                     </button>
+                    {item.kind === "daily" && item.checkedIn ? (
+                      <button
+                        type="button"
+                        disabled={pending}
+                        className="ui-btn-ghost ui-btn-sm"
+                        onClick={() => {
+                          startTransition(async () => {
+                            const result = await quickCancelHabitCheckinAction(
+                              item.id,
+                            );
+                            if (result.error) {
+                              setNotice({
+                                title: "无法取消",
+                                message: result.error,
+                              });
+                              return;
+                            }
+                            router.refresh();
+                          });
+                        }}
+                      >
+                        取消打卡
+                      </button>
+                    ) : null}
                     <Link
                       href={item.href}
                       className="ui-btn-ghost ui-btn-sm text-center"

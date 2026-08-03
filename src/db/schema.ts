@@ -24,7 +24,11 @@ import {
  * Phase 13: 绪签 / 心情 / 素材匣（不做 plan_ref）。
  * Phase 14: 凝时逆漏 / 绑计划 / 唤起随笔溯源。
  * Phase 15: 往迹廊 / 心绪鉴 / 通知偏好（复用 archive_item.mood）。
+ * Phase 16: 凝时勿扰 / 逆漏默认时长；桌面通知 + Cron 归档；专题随笔。
  */
+
+/** Phase 16: 逆漏默认时长（25 分钟） */
+export const DEFAULT_FOCUS_COUNTDOWN_MS = 1_500_000;
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -43,10 +47,16 @@ export const user = pgTable("user", {
   essayIdleHours: integer("essay_idle_hours").notNull().default(48),
   /** Phase 15: 同年回望（今时际轻提示） */
   anniversaryRemind: boolean("anniversary_remind").notNull().default(false),
-  /** Phase 15: 总通知开关（偏好存储；桌面推送后置） */
+  /** Phase 15–16: 总通知开关（浏览器桌面通知） */
   notifyEnabled: boolean("notify_enabled").notNull().default(true),
-  /** Phase 15: 临期提醒偏好（偏好存储；桌面推送后置） */
+  /** Phase 15–16: 临期提醒（浏览器桌面通知） */
   notifyDueReminder: boolean("notify_due_reminder").notNull().default(true),
+  /** Phase 16: 勿扰 — 专注页弱化打断；专注中不弹桌面通知 */
+  focusDnd: boolean("focus_dnd").notNull().default(false),
+  /** Phase 16: 逆漏默认目标毫秒 */
+  focusCountdownDefaultMs: integer("focus_countdown_default_ms")
+    .notNull()
+    .default(DEFAULT_FOCUS_COUNTDOWN_MS),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -91,7 +101,29 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-/** Phase 3: 流思笺（流动中随笔） */
+/**
+ * Phase 16: 专题随笔的「专题」夹
+ * 删除专题时：未归档篇由服务层级联删；已归档篇 folder_id 置空（onDelete set null）
+ */
+export const essayFolder = pgTable(
+  "essay_folder",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    /** 可选说明 */
+    body: text("body").notNull().default(""),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("essay_folder_user_updated_idx").on(t.userId, t.updatedAt),
+  ],
+);
+
+/** Phase 3: 流思笺（流动中随笔）；folder_id 空=每日随笔 */
 export const essay = pgTable(
   "essay",
   {
@@ -117,6 +149,10 @@ export const essay = pgTable(
       (): AnyPgColumn => focusSession.id,
       { onDelete: "set null" },
     ),
+    /** Phase 16: 所属专题；null = 每日随笔（可自动逾时沉淀） */
+    folderId: text("folder_id").references(() => essayFolder.id, {
+      onDelete: "set null",
+    }),
   },
   (t) => [
     index("essay_user_archived_idx").on(t.userId, t.archivedAt),
@@ -124,11 +160,18 @@ export const essay = pgTable(
     index("essay_user_source_plan_idx").on(t.userId, t.sourcePlanId),
     index("essay_user_mood_idx").on(t.userId, t.mood),
     index("essay_user_source_focus_idx").on(t.userId, t.sourceFocusSessionId),
+    index("essay_user_folder_archived_idx").on(
+      t.userId,
+      t.folderId,
+      t.archivedAt,
+    ),
   ],
 );
 
 /** Phase 4+: 拾忆馆藏条目（快照；类型可扩展） */
 export const ARCHIVE_TYPE_ESSAY_SEDIMENT = "essay_sediment" as const;
+/** Phase 16: 专题整夹归档（父条；子篇见 archive_topic_essay） */
+export const ARCHIVE_TYPE_ESSAY_TOPIC = "essay_topic_archive" as const;
 /** Phase 7 写入；P5 仅分区空态预留 */
 export const ARCHIVE_TYPE_PLAN_ARCHIVE = "plan_archive" as const;
 /** Phase 10: 轮期系列计次归档（同 series 一条） */
@@ -154,11 +197,18 @@ export const ARCHIVE_REASON_FOCUS_COMPLETE = "focus_complete" as const;
 /** Phase 12: 记忆碎片上传 */
 export const ARCHIVE_REASON_USER_UPLOAD = "user_upload" as const;
 
-/** 抹忆可删的流入类（不含轮期 / 日课 / 碎片） */
+/**
+ * 抹忆可删类型（硬删馆藏行；不级联删来日途计划 / 日课本体）。
+ * 打卡本账仍用「取消打卡」回退次数。
+ */
 export const WIPE_ARCHIVE_TYPES = [
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_ESSAY_TOPIC,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_FOCUS_RECORD,
+  ARCHIVE_TYPE_MEMORY_FRAGMENT,
+  ARCHIVE_TYPE_PLAN_CYCLE,
+  ARCHIVE_TYPE_DAILY_CHECKIN,
 ] as const;
 
 export const archiveItem = pgTable(
@@ -168,7 +218,7 @@ export const archiveItem = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    /** essay_sediment | plan_archive | plan_cycle_archive | daily_checkin_archive | focus_record | memory_fragment */
+    /** essay_sediment | essay_topic_archive | plan_archive | plan_cycle_archive | daily_checkin_archive | focus_record | memory_fragment */
     type: text("type").notNull(),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
@@ -230,6 +280,38 @@ export const archiveItem = pgTable(
     index("archive_item_user_mood_idx").on(t.userId, t.mood),
     uniqueIndex("archive_item_user_series_uidx").on(t.userId, t.sourceSeriesId),
     uniqueIndex("archive_item_user_habit_uidx").on(t.userId, t.sourceHabitId),
+  ],
+);
+
+/**
+ * Phase 16: 专题归档夹内篇快照（父条 type=essay_topic_archive）
+ * 抹忆父条时 cascade 删除。
+ */
+export const archiveTopicEssay = pgTable(
+  "archive_topic_essay",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    archiveItemId: text("archive_item_id")
+      .notNull()
+      .references(() => archiveItem.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    body: text("body").notNull().default(""),
+    mood: text("mood"),
+    sourceEssayId: text("source_essay_id").references(() => essay.id, {
+      onDelete: "set null",
+    }),
+    sourceCreatedAt: timestamp("source_created_at").notNull(),
+    sourceUpdatedAt: timestamp("source_updated_at").notNull(),
+    sortIndex: integer("sort_index").notNull().default(0),
+  },
+  (t) => [
+    index("archive_topic_essay_user_archive_idx").on(
+      t.userId,
+      t.archiveItemId,
+    ),
   ],
 );
 
@@ -534,12 +616,22 @@ export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   essays: many(essay),
+  essayFolders: many(essayFolder),
   archiveItems: many(archiveItem),
+  archiveTopicEssays: many(archiveTopicEssay),
   plans: many(plan),
   planTasks: many(planTask),
   dailyHabits: many(dailyHabit),
   dailyCheckins: many(dailyCheckin),
   focusSessions: many(focusSession),
+}));
+
+export const essayFolderRelations = relations(essayFolder, ({ one, many }) => ({
+  user: one(user, {
+    fields: [essayFolder.userId],
+    references: [user.id],
+  }),
+  essays: many(essay),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -560,6 +652,10 @@ export const essayRelations = relations(essay, ({ one, many }) => ({
   user: one(user, {
     fields: [essay.userId],
     references: [user.id],
+  }),
+  folder: one(essayFolder, {
+    fields: [essay.folderId],
+    references: [essayFolder.id],
   }),
   archiveItems: many(archiveItem),
   refinedPlans: many(plan),
@@ -598,7 +694,26 @@ export const archiveItemRelations = relations(archiveItem, ({ one, many }) => ({
     references: [dailyHabit.id],
   }),
   archiveItemTags: many(archiveItemTag),
+  topicEssays: many(archiveTopicEssay),
 }));
+
+export const archiveTopicEssayRelations = relations(
+  archiveTopicEssay,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [archiveTopicEssay.userId],
+      references: [user.id],
+    }),
+    archiveItem: one(archiveItem, {
+      fields: [archiveTopicEssay.archiveItemId],
+      references: [archiveItem.id],
+    }),
+    sourceEssay: one(essay, {
+      fields: [archiveTopicEssay.sourceEssayId],
+      references: [essay.id],
+    }),
+  }),
+);
 
 export const planRelations = relations(plan, ({ one, many }) => ({
   user: one(user, {

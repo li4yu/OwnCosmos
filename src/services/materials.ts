@@ -21,6 +21,7 @@ import {
   material,
   plan,
 } from "@/db/schema";
+import { clampListPageSize } from "@/lib/list-paging";
 import { MATERIAL_PAGE_SIZE } from "@/lib/material-query";
 
 function newId() {
@@ -55,10 +56,7 @@ export async function queryMaterials(
   userId: string,
   opts: MaterialQueryOpts = {},
 ) {
-  const pageSize = Math.min(
-    10,
-    Math.max(1, Math.floor(opts.pageSize ?? MATERIAL_PAGE_SIZE)),
-  );
+  const pageSize = clampListPageSize(opts.pageSize ?? MATERIAL_PAGE_SIZE);
   const page = Math.max(1, Math.floor(opts.page ?? 1));
   const conditions: SQL[] = [eq(material.userId, userId)];
   const q = opts.titleQ?.trim();

@@ -52,6 +52,7 @@ import {
   type PlanKind,
 } from "@/lib/plan-kinds";
 import { parseMoodKey, type MoodKey } from "@/lib/moods";
+import { clampListPageSize } from "@/lib/list-paging";
 import { PLAN_PAGE_SIZE } from "@/lib/plan-query";
 import { clampRemindDays, DEFAULT_REMIND_DAYS } from "@/lib/plan-remind";
 
@@ -197,10 +198,7 @@ export async function queryOpenPlanningPlans(
   userId: string,
   opts: PlanQueryOpts = {},
 ) {
-  const pageSize = Math.min(
-    10,
-    Math.max(1, Math.floor(opts.pageSize ?? PLAN_PAGE_SIZE)),
-  );
+  const pageSize = clampListPageSize(opts.pageSize ?? PLAN_PAGE_SIZE);
   const page = Math.max(1, Math.floor(opts.page ?? 1));
   const where = buildPlanFilterConditions(userId, opts, [
     eq(plan.userId, userId),
@@ -238,10 +236,7 @@ export async function queryCompletedPlanningPlans(
   userId: string,
   opts: PlanQueryOpts = {},
 ) {
-  const pageSize = Math.min(
-    10,
-    Math.max(1, Math.floor(opts.pageSize ?? PLAN_PAGE_SIZE)),
-  );
+  const pageSize = clampListPageSize(opts.pageSize ?? PLAN_PAGE_SIZE);
   const page = Math.max(1, Math.floor(opts.page ?? 1));
   const where = buildPlanFilterConditions(userId, opts, [
     eq(plan.userId, userId),

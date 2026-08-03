@@ -1,9 +1,6 @@
 import { MaterialsPanel } from "@/components/materials/materials-panel";
 import { PageHeader } from "@/components/shell/page-header";
-import {
-  MATERIAL_PAGE_SIZE,
-  parseMaterialListSearch,
-} from "@/lib/material-query";
+import { parseMaterialListSearch } from "@/lib/material-query";
 import { requireSession } from "@/lib/session";
 import { queryMaterials } from "@/services/materials";
 
@@ -14,6 +11,7 @@ type Props = {
     from?: string;
     to?: string;
     page?: string;
+    size?: string;
   }>;
 };
 
@@ -27,7 +25,7 @@ export default async function MaterialsPage({ searchParams }: Props) {
     createdFrom: parsed.createdFrom,
     createdTo: parsed.createdTo,
     page: parsed.page,
-    pageSize: MATERIAL_PAGE_SIZE,
+    pageSize: parsed.pageSize,
   });
 
   const hasFilters = Boolean(

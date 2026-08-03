@@ -27,3 +27,22 @@ export async function runEssayArchiveCatchUp(userId: string) {
     return 0;
   }
 }
+
+/**
+ * Cron 全量补算：遍历用户，按各自空闲小时数归档（与进站补算同一服务）。
+ */
+export async function runEssayArchiveCatchUpAllUsers() {
+  const rows = await getDb()
+    .select({ id: user.id, essayIdleHours: user.essayIdleHours })
+    .from(user);
+  let total = 0;
+  for (const row of rows) {
+    try {
+      const hours = row.essayIdleHours ?? DEFAULT_ESSAY_IDLE_HOURS;
+      total += await catchUpIdleEssayArchives(row.id, hours);
+    } catch (err) {
+      console.error("[archive catch-up all]", row.id, err);
+    }
+  }
+  return { users: rows.length, archived: total };
+}

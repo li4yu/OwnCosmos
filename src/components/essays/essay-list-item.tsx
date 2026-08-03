@@ -16,6 +16,8 @@ type EssayListItemProps = {
   updatedLabel: string;
   moodLabel?: string;
   tagNames?: string[];
+  /** 专题篇不提供单篇归档 */
+  allowArchive?: boolean;
 };
 
 export function EssayListItem({
@@ -25,6 +27,7 @@ export function EssayListItem({
   updatedLabel,
   moodLabel,
   tagNames,
+  allowArchive = true,
 }: EssayListItemProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -87,16 +90,18 @@ export function EssayListItem({
           >
             编辑
           </Link>
-          <button
-            type="button"
-            className="ui-btn-ghost ui-btn-sm text-[var(--teal)]"
-            onClick={() => {
-              setError(null);
-              setArchiveOpen(true);
-            }}
-          >
-            归档
-          </button>
+          {allowArchive ? (
+            <button
+              type="button"
+              className="ui-btn-ghost ui-btn-sm text-[var(--teal)]"
+              onClick={() => {
+                setError(null);
+                setArchiveOpen(true);
+              }}
+            >
+              归档
+            </button>
+          ) : null}
           <button
             type="button"
             className="ui-btn-danger ui-btn-sm"
@@ -115,20 +120,22 @@ export function EssayListItem({
         </p>
       ) : null}
 
-      <ConfirmDialog
-        open={archiveOpen}
-        title="归档这条随笔？"
-        message="将沉淀入昔时往拾忆馆藏，今时际列表将不再显示。确定归档吗？"
-        confirmLabel="归档"
-        cancelLabel="取消"
-        pending={pending}
-        onCancel={() => {
-          if (!pending) setArchiveOpen(false);
-        }}
-        onConfirm={() => {
-          void confirmArchive();
-        }}
-      />
+      {allowArchive ? (
+        <ConfirmDialog
+          open={archiveOpen}
+          title="归档这条随笔？"
+          message="将沉淀入昔时往拾忆馆藏，今时际列表将不再显示。确定归档吗？"
+          confirmLabel="归档"
+          cancelLabel="取消"
+          pending={pending}
+          onCancel={() => {
+            if (!pending) setArchiveOpen(false);
+          }}
+          onConfirm={() => {
+            void confirmArchive();
+          }}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={deleteOpen}

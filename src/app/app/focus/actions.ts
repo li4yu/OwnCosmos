@@ -128,7 +128,11 @@ export async function createFocusEssayAction(
     body: text,
     sourceFocusSessionId: sessionId,
   });
+  if (!essayId) {
+    return { error: "创建随笔失败" };
+  }
   revalidatePath("/app/present/essays");
+  revalidatePath("/app/present/essays/daily");
   revalidatePath(`/app/present/essays/${essayId}`);
   return { essayId };
 }

@@ -18,7 +18,9 @@ export async function quoteArchiveAsEssayAction(archiveItemId: string) {
     body: item.body,
     mood: item.mood,
   });
+  if (!id) return { error: "创建随笔失败" };
   revalidatePath("/app/present/essays");
+  revalidatePath("/app/present/essays/daily");
   return { essayId: id };
 }
 

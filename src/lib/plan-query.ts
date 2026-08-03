@@ -2,6 +2,12 @@ import {
   archiveDateRangeError,
   dayBoundsFromInput,
 } from "@/lib/archive-query";
+import {
+  DEFAULT_LIST_PAGE_SIZE,
+  appendListPagingParams,
+  parseListPage,
+  parseListPageSize,
+} from "@/lib/list-paging";
 import { isMoodKey } from "@/lib/moods";
 import {
   PLAN_KIND_ONCE,
@@ -9,7 +15,7 @@ import {
   type PlanKind,
 } from "@/lib/plan-kinds";
 
-export const PLAN_PAGE_SIZE = 10;
+export const PLAN_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export const PLAN_LIST_KIND_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "类型不限" },
@@ -26,6 +32,7 @@ export type PlanListSearch = {
   to?: string;
   page?: string;
   cpage?: string;
+  size?: string;
 };
 
 export function parsePlanListSearch(sp: PlanListSearch) {
@@ -35,8 +42,9 @@ export function parsePlanListSearch(sp: PlanListSearch) {
   const kindRaw = (sp.kind ?? "").trim();
   const fromRaw = (sp.from ?? "").trim();
   const toRaw = (sp.to ?? "").trim();
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
-  const cpage = Math.max(1, Number.parseInt(sp.cpage ?? "1", 10) || 1);
+  const page = parseListPage(sp.page);
+  const cpage = parseListPage(sp.cpage);
+  const pageSize = parseListPageSize(sp.size, PLAN_PAGE_SIZE);
   const rangeError = archiveDateRangeError(fromRaw, toRaw);
   const fromBound = dayBoundsFromInput(fromRaw);
   const toBound = dayBoundsFromInput(toRaw);
@@ -61,6 +69,7 @@ export function parsePlanListSearch(sp: PlanListSearch) {
     dueTo: rangeError ? undefined : toBound.end,
     page,
     cpage,
+    pageSize,
   };
 }
 
@@ -75,6 +84,7 @@ export function buildPlanQueryHref(
     to?: string;
     page?: number;
     cpage?: number;
+    pageSize?: number;
   },
 ) {
   const sp = new URLSearchParams();
@@ -84,7 +94,10 @@ export function buildPlanQueryHref(
   if (params.kind?.trim()) sp.set("kind", params.kind.trim());
   if (params.from?.trim()) sp.set("from", params.from.trim());
   if (params.to?.trim()) sp.set("to", params.to.trim());
-  if (params.page && params.page > 1) sp.set("page", String(params.page));
+  appendListPagingParams(sp, {
+    page: params.page,
+    pageSize: params.pageSize,
+  });
   if (params.cpage && params.cpage > 1) sp.set("cpage", String(params.cpage));
   const qs = sp.toString();
   return qs ? `${basePath}?${qs}` : basePath;

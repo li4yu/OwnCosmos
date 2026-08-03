@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { EssayEditor } from "@/components/essays/essay-editor";
 import { PageHeader } from "@/components/shell/page-header";
 import { requireSession } from "@/lib/session";
+import { getEssayFolder } from "@/services/essay-folders";
 import { getActiveEssay } from "@/services/essays";
 import { getActivePlan } from "@/services/plans";
 import { listActiveTags, listEssayTagIds } from "@/services/tags";
@@ -18,10 +19,17 @@ export default async function EditEssayPage({ params, searchParams }: Props) {
   const item = await getActiveEssay(session.user.id, id);
   if (!item) notFound();
 
-  const [tags, tagIds] = await Promise.all([
+  const [tags, tagIds, folder] = await Promise.all([
     listActiveTags(session.user.id),
     listEssayTagIds(session.user.id, id),
+    item.folderId
+      ? getEssayFolder(session.user.id, item.folderId)
+      : Promise.resolve(null),
   ]);
+
+  const returnHref = item.folderId
+    ? `/app/present/essays/topics/${item.folderId}`
+    : "/app/present/essays/daily";
 
   let sourcePlanLink: { title: string; href: string } | null = null;
   if (item.sourcePlanId) {
@@ -42,11 +50,15 @@ export default async function EditEssayPage({ params, searchParams }: Props) {
   return (
     <main>
       <PageHeader
-        title="编辑随笔"
-        backHref="/app/present/essays"
-        backLabel="返回流思笺"
+        title={folder ? `编辑 · ${folder.name}` : "编辑每日随笔"}
+        backHref={returnHref}
+        backLabel={folder ? "返回专题" : "返回每日随笔"}
         guardLeave
-        description="可删除；未保存离开会弹出确认小窗"
+        description={
+          folder
+            ? "专题篇请整专题归档；未保存离开会弹出确认小窗"
+            : "可删除；未保存离开会弹出确认小窗"
+        }
       />
       <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-4">
         <EssayEditor
@@ -56,6 +68,8 @@ export default async function EditEssayPage({ params, searchParams }: Props) {
           initialBody={item.body}
           initialMood={item.mood}
           initialTagIds={tagIds}
+          returnHref={returnHref}
+          topicEssay={Boolean(item.folderId)}
           allTags={tags.map((t) => ({
             id: t.id,
             name: t.name,

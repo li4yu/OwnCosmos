@@ -3,6 +3,7 @@ import { unlink } from "node:fs/promises";
 import path from "node:path";
 import {
   and,
+  asc,
   count,
   desc,
   eq,
@@ -27,16 +28,20 @@ import {
   ARCHIVE_REASON_USER_UPLOAD,
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_ESSAY_TOPIC,
   ARCHIVE_TYPE_FOCUS_RECORD,
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
   WIPE_ARCHIVE_TYPES,
   archiveItem,
+  archiveTopicEssay,
   essay,
+  essayFolder,
 } from "@/db/schema";
 import { DEFAULT_ESSAY_IDLE_HOURS } from "@/lib/archive-constants";
 import { archiveHasKeepableText } from "@/lib/archive-labels";
+import { clampListPageSize } from "@/lib/list-paging";
 import { parseMoodKey, type MoodKey } from "@/lib/moods";
 
 export {
@@ -90,6 +95,7 @@ async function insertEssaySediment(
 /**
  * 手动 / 自动归档单条流动随笔：
  * 写 archive_item 快照 + essay.archived_at
+ * 专题篇禁止单篇归档，须走 archiveEssayFolder
  */
 export async function archiveActiveEssay(
   userId: string,
@@ -109,6 +115,7 @@ export async function archiveActiveEssay(
     .limit(1);
   const row = rows[0];
   if (!row) return null;
+  if (row.folderId) return null;
 
   const now = new Date();
   const archiveId = await insertEssaySediment(row, reason, now);
@@ -117,6 +124,106 @@ export async function archiveActiveEssay(
     .set({ archivedAt: now })
     .where(and(eq(essay.id, essayId), eq(essay.userId, userId)));
   return archiveId;
+}
+
+/**
+ * 整专题归档：一条父馆藏 + 夹内篇快照，并删除专题夹。
+ */
+export async function archiveEssayFolder(userId: string, folderId: string) {
+  const { getEssayFolder } = await import("@/services/essay-folders");
+  const folder = await getEssayFolder(userId, folderId);
+  if (!folder) return { error: "专题不存在" as const };
+
+  const rows = await getDb()
+    .select()
+    .from(essay)
+    .where(
+      and(
+        eq(essay.userId, userId),
+        eq(essay.folderId, folderId),
+        isNull(essay.archivedAt),
+      ),
+    )
+    .orderBy(asc(essay.createdAt));
+
+  if (rows.length === 0) {
+    return { error: "专题内没有可归档的随笔" as const };
+  }
+
+  const now = new Date();
+  const archiveId = newId();
+  await getDb().insert(archiveItem).values({
+    id: archiveId,
+    userId,
+    type: ARCHIVE_TYPE_ESSAY_TOPIC,
+    title: folder.name,
+    body: folder.body,
+    sourceModule: "present",
+    archiveReason: ARCHIVE_REASON_MANUAL,
+    archivedAt: now,
+    sourceCreatedAt: folder.createdAt,
+    sourceUpdatedAt: folder.updatedAt,
+    cycleCount: rows.length,
+    inKnowledge: true,
+    keptAt: now,
+    updatedAt: now,
+  });
+
+  await getDb().insert(archiveTopicEssay).values(
+    rows.map((row, index) => ({
+      id: newId(),
+      userId,
+      archiveItemId: archiveId,
+      title: row.title,
+      body: row.body,
+      mood: row.mood,
+      sourceEssayId: row.id,
+      sourceCreatedAt: row.createdAt,
+      sourceUpdatedAt: row.updatedAt,
+      sortIndex: index,
+    })),
+  );
+
+  const { mergeEssayTagsToArchive } = await import("@/services/tags");
+  await mergeEssayTagsToArchive(
+    userId,
+    rows.map((r) => r.id),
+    archiveId,
+  );
+
+  for (const row of rows) {
+    await getDb()
+      .update(essay)
+      .set({ archivedAt: now })
+      .where(and(eq(essay.id, row.id), eq(essay.userId, userId)));
+  }
+
+  await getDb()
+    .delete(essayFolder)
+    .where(and(eq(essayFolder.id, folderId), eq(essayFolder.userId, userId)));
+
+  return {
+    ok: true as const,
+    count: rows.length,
+    name: folder.name,
+    archiveId,
+  };
+}
+
+export async function listArchiveTopicEssays(
+  userId: string,
+  archiveItemId: string,
+) {
+  return getDb()
+    .select()
+    .from(archiveTopicEssay)
+    .where(
+      and(
+        eq(archiveTopicEssay.userId, userId),
+        eq(archiveTopicEssay.archiveItemId, archiveItemId),
+      ),
+    )
+    .orderBy(asc(archiveTopicEssay.sortIndex), asc(archiveTopicEssay.sourceCreatedAt));
 }
 
 /** 进站补算：将该用户超过设定小时数未编辑的流动随笔自动归档 */
@@ -133,6 +240,7 @@ export async function catchUpIdleEssayArchives(
       and(
         eq(essay.userId, userId),
         isNull(essay.archivedAt),
+        isNull(essay.folderId),
         lt(essay.updatedAt, cutoff),
       ),
     );
@@ -232,10 +340,7 @@ export async function queryArchiveItems(
   userId: string,
   opts: ArchiveQueryOpts = {},
 ) {
-  const pageSize = Math.min(
-    10,
-    Math.max(1, Math.floor(opts.pageSize ?? DEFAULT_PAGE_SIZE)),
-  );
+  const pageSize = clampListPageSize(opts.pageSize ?? DEFAULT_PAGE_SIZE);
   const page = Math.max(1, Math.floor(opts.page ?? 1));
   const where = buildArchiveConditions(userId, opts);
 
@@ -364,7 +469,7 @@ async function hardDeleteArchiveRows(
 }
 
 /**
- * 抹忆：按归档时间范围硬删流入类（随笔沉淀 / 规划归档 / 凝录）
+ * 抹忆：按归档时间范围硬删（WIPE_ARCHIVE_TYPES，含轮期/日课归档）
  */
 export async function wipeInflowArchives(
   userId: string,
@@ -393,7 +498,7 @@ export async function wipeInflowArchives(
   return { ok: true as const, count: deleted };
 }
 
-/** 抹忆：按选中 id 硬删（仅流入类） */
+/** 抹忆：按选中 id 硬删（流入类 + 记忆碎片） */
 export async function wipeInflowArchivesByIds(
   userId: string,
   itemIds: string[],

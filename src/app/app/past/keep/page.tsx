@@ -7,10 +7,11 @@ type Props = {
     from?: string;
     to?: string;
     page?: string;
+    size?: string;
   }>;
 };
 
-/** 旧独立藏忆入口 → 馆藏总览（列表内可批量藏忆 / 取消） */
+/** ??????? ? ????????????? / ??? */
 export default async function KeepArchivesRedirect({ searchParams }: Props) {
   const sp = await searchParams;
   const qs = new URLSearchParams();
@@ -19,6 +20,7 @@ export default async function KeepArchivesRedirect({ searchParams }: Props) {
   if (sp.from) qs.set("from", sp.from);
   if (sp.to) qs.set("to", sp.to);
   if (sp.page) qs.set("page", sp.page);
+  if (sp.size) qs.set("size", sp.size);
   const suffix = qs.toString();
   redirect(suffix ? `/app/past/gallery?${suffix}` : "/app/past/gallery");
 }

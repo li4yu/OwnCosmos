@@ -15,7 +15,7 @@ type PrefKey =
   | "notifyDueReminder"
   | "anniversaryRemind";
 
-/** 通知与同年回望偏好（仅存储；桌面推送后置） */
+/** 通知与同年回望偏好；开启总开关时申请浏览器通知权限 */
 export function NotifyPreferenceForm({
   initialNotifyEnabled,
   initialNotifyDueReminder,
@@ -28,6 +28,29 @@ export function NotifyPreferenceForm({
   const [pending, setPending] = useState<PrefKey | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [permHint, setPermHint] = useState<string | null>(null);
+
+  async function ensurePermission() {
+    if (typeof Notification === "undefined") {
+      setPermHint("当前环境不支持浏览器桌面通知");
+      return false;
+    }
+    if (Notification.permission === "granted") {
+      setPermHint(null);
+      return true;
+    }
+    if (Notification.permission === "denied") {
+      setPermHint("浏览器已拒绝通知，请在站点权限中重新允许");
+      return false;
+    }
+    const result = await Notification.requestPermission();
+    if (result !== "granted") {
+      setPermHint("未授予通知权限，偏好已保存，但暂不会弹出系统通知");
+      return false;
+    }
+    setPermHint(null);
+    return true;
+  }
 
   async function save(key: PrefKey, value: boolean) {
     setPending(key);
@@ -43,6 +66,14 @@ export function NotifyPreferenceForm({
     if (key === "anniversaryRemind") setAnniversary(value);
 
     try {
+      if (
+        value &&
+        (key === "notifyEnabled" ||
+          key === "notifyDueReminder" ||
+          key === "anniversaryRemind")
+      ) {
+        await ensurePermission();
+      }
       const { error: updateError } = await authClient.updateUser({
         [key]: value,
       });
@@ -68,29 +99,34 @@ export function NotifyPreferenceForm({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs leading-5 text-[var(--mist)]">
-        偏好仅存账号；系统桌面通知尚未接入。今时际「同年回望」轻提示受下方开关控制。
+        开启后，在支持的浏览器中可弹出系统通知（临期 / 同年回望）。今时际页内轻提示仍受「同年回望」开关控制。
       </p>
       <PrefRow
-        label="启用通知偏好"
-        tip="总开关，供后续推送使用"
+        label="启用桌面通知"
+        tip="总开关；首次开启会申请浏览器权限"
         checked={notifyEnabled}
         disabled={pending !== null}
         onChange={(v) => save("notifyEnabled", v)}
       />
       <PrefRow
         label="临期提醒"
-        tip="计划进入提醒窗口时的提醒偏好"
+        tip="有临期帖时弹出桌面通知（同会话每日至多一次）"
         checked={notifyDue}
         disabled={pending !== null || !notifyEnabled}
         onChange={(v) => save("notifyDueReminder", v)}
       />
       <PrefRow
         label="同年回望"
-        tip="往年同日有归档时，在今时际显示轻提示"
+        tip="往年同日有归档时：今时际轻提示 + 可选桌面通知"
         checked={anniversary}
         disabled={pending !== null}
         onChange={(v) => save("anniversaryRemind", v)}
       />
+      {permHint ? (
+        <p className="text-[11px] text-[var(--amber)]" role="status">
+          {permHint}
+        </p>
+      ) : null}
       {error ? (
         <p className="text-xs text-[var(--danger)]" role="alert">
           {error}

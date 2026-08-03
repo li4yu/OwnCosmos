@@ -1,6 +1,7 @@
 import {
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_ESSAY_TOPIC,
   ARCHIVE_TYPE_FOCUS_RECORD,
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
@@ -27,6 +28,15 @@ export const GALLERY_SECTIONS = [
     filterType: ARCHIVE_TYPE_ESSAY_SEDIMENT,
     ready: true,
     emptyHint: "还没有随笔沉淀。去流思笺写一条并归档，或等待自动沉淀。",
+  },
+  {
+    id: "essay-topic",
+    href: "/app/past/gallery/essay-topic",
+    name: "专题归档",
+    tip: "专题夹整夹沉淀；点开可看夹内各篇",
+    filterType: ARCHIVE_TYPE_ESSAY_TOPIC,
+    ready: true,
+    emptyHint: "尚无专题归档。在流思笺 · 专题随笔中「归档专题」后出现于此。",
   },
   {
     id: "plan-archive",

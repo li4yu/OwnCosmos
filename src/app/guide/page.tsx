@@ -104,19 +104,19 @@ export default function GuidePage() {
           <p>
             顶栏顺序是<strong>过去 → 现在 → 将来 → 专注</strong>：首页 → 昔时往 → 今时际 → 来日途 → 凝时。品牌「自宇」是标识，回首页请点「首页」。
           </p>
-          <p>二级入口大致如下（未开放的会先占位）：</p>
+          <p>二级入口均已开放：</p>
           <ul className="guide-page__rules">
             <li>
-              <strong>昔时往</strong>：拾忆馆藏（馆内可有「全部 / 随笔沉淀」等分区）；往迹廊、心绪鉴等为后续能力。
+              <strong>昔时往</strong>：拾忆馆藏（分区含随笔沉淀 / 规划归档 / 凝录 / 碎片等）、往迹廊、心绪鉴。
             </li>
             <li>
-              <strong>今时际</strong>：流思笺、临期帖。
+              <strong>今时际</strong>：流思笺、临期帖（可延期、缘想）。
             </li>
             <li>
-              <strong>来日途</strong>：规划（当前以单次事件为主）；轮期、日课、时间胶囊等为后续。
+              <strong>来日途</strong>：规划、轮期、时间胶囊、日课。
             </li>
             <li>
-              <strong>凝时</strong>：顺钟、凝录列表；逆漏等为后续。
+              <strong>凝时</strong>：顺钟、逆漏、凝录列表。
             </li>
           </ul>
         </section>
@@ -156,7 +156,12 @@ export default function GuidePage() {
           <h3>流思笺 · 归档空闲时长</h3>
           <p>
             在设置中可配置：随笔连续多久<strong>没有任何编辑</strong>后自动逾时沉淀。默认多为 48 小时；改小可更快沉淀，改大则草稿在今时际停留更久。
-            每次编辑会重置这笔「空闲计时」。
+            每次编辑会重置这笔「空闲计时」。进站补算与后台定时任务会双保险执行归档。
+          </p>
+
+          <h3>通知、回望与凝时偏好</h3>
+          <p>
+            设置中可开关桌面通知（临期 / 同年回望）、同年回望轻提示，以及凝时「勿扰」、逆漏默认时长。导出未归档随笔与开放中的计划文本也在设置页。
           </p>
         </section>
 
@@ -182,30 +187,30 @@ export default function GuidePage() {
             今时际是<strong>当下工作台</strong>：捕捉瞬时思绪，并承接来自未来的提醒。内容动态可变；该沉淀时会单向流入昔时往。
           </p>
 
-          <h3>流思笺（随笔）</h3>
+          <h3>流思笺（每日随笔 / 专题随笔）</h3>
           <ol className="guide-page__steps">
             <li>
-              <strong>新建</strong>
+              <strong>每日随笔</strong>
               <span>
-                进入今时际 → 流思笺 → 新建。填写标题与正文（当前为纯文本），手动保存。离开未保存页面时，会出现主题确认小窗，避免误丢内容。
+                进入今时际 → 流思笺 → 每日随笔 → 新建。随手记灵感；填写标题与正文后手动保存。离开未保存页面时有确认小窗。
               </span>
             </li>
             <li>
-              <strong>继续编辑</strong>
+              <strong>专题随笔</strong>
               <span>
-                未归档列表只显示「还在流动中」的随笔。打开即可改；保存后仍留在今时际。
+                先建一个专题夹（如「工作」），再往夹里写多篇相关随笔。专题篇<strong>不会</strong>自动逾时沉淀；也<strong>不能</strong>单篇归档，须「归档专题」：馆藏出现一条「专题归档」夹，点开可看夹内各篇。
               </span>
             </li>
             <li>
-              <strong>手动归档（逾时沉淀的手动版）</strong>
+              <strong>手动归档（每日随笔）</strong>
               <span>
-                觉得这条已告一段落，可手动归档：它从今时际列表消失，在昔时往 · 拾忆馆藏的「随笔沉淀」中出现只读快照。
+                觉得这条每日随笔已告一段落，可手动归档：从流动列表消失，在昔时往 · 拾忆馆藏「随笔沉淀」中出现只读快照。
               </span>
             </li>
             <li>
-              <strong>自动逾时沉淀</strong>
+              <strong>自动逾时沉淀（仅每日随笔）</strong>
               <span>
-                若持续达到你设置的空闲小时数且无任何编辑，系统会在进站补算等时机把它自动归档进馆藏。想留住草稿，只要再编辑一次即可重置计时。
+                若持续达到你设置的空闲小时数且无任何编辑，系统会在进站补算或定时任务中把它自动归档。专题随笔不参与此项。
               </span>
             </li>
             <li>
@@ -223,8 +228,13 @@ export default function GuidePage() {
           <ul className="guide-page__rules">
             <li>卡片上可看名称、剩余天数等，<strong>不要</strong>在卡片上改计划正文。</li>
             <li>点「完成」会回写到来日途本体，并触发规划归档；对应卡片随之清除。</li>
-            <li>当前版本不以临期帖做延期、关卡片、缘想等操作（后续再增强）。</li>
+            <li>可<strong>延期</strong>（回写截止日期）或写<strong>缘想</strong>（生成一条带溯源的流思笺）。不提供「关闭单条提醒」。</li>
           </ul>
+
+          <h3>织网能力（随笔侧）</h3>
+          <p>
+            编辑随笔时可<strong>借忆</strong>（检索昔时往插入复制）、打<strong>绪签</strong>与固定心情；全局关键词检索与素材匣可跨模块调取（复制，不迁移原文）。
+          </p>
         </section>
 
         <section id="future" className="guide-page__section">
@@ -233,30 +243,32 @@ export default function GuidePage() {
             来日途是<strong>远期规划仓库</strong>：计划本体住在这里。提醒同步到今时际；到期或完成后，终成过往。
           </p>
 
-          <h3>单次事件（规划）</h3>
+          <h3>规划 / 轮期 / 日课 / 时间胶囊</h3>
           <ol className="guide-page__steps">
             <li>
-              <strong>新建</strong>
+              <strong>规划</strong>
               <span>
-                来日途 → 规划 → 新建。填写标题、描述、截止日期，并设置<strong>临期配</strong>（提前几天开始在今时际提醒）。
+                单次事件或长期愿景：标题、描述、截止日期、<strong>临期配</strong>；可从流思笺「提炼」生成并可溯源。
               </span>
             </li>
             <li>
-              <strong>编辑与列表</strong>
+              <strong>轮期</strong>
               <span>
-                未完成的计划可继续改。列表可区分未完成 / 已完成：已完成仍可能可见，便于回看并进入馆藏详情。
+                日 / 周 / 月 / 年 / 自定义天数；当期结束归档并滚下一期；子任务可记次。
               </span>
             </li>
             <li>
-              <strong>临期出现</strong>
-              <span>
-                进入你配置的提醒窗口后，今时际 · 临期帖会出现对应卡片。本体仍在来日途，卡片只是副本。
-              </span>
+              <strong>日课</strong>
+              <span>每日打卡，可写一句心得；完成记录会沉淀进馆藏。</span>
             </li>
             <li>
-              <strong>完成与归档</strong>
+              <strong>时间胶囊</strong>
+              <span>指定日期解锁；未到期不可读全文。</span>
+            </li>
+            <li>
+              <strong>临期与完成</strong>
               <span>
-                在临期帖或规划侧完成计划后，条目归档进昔时往「规划归档」，临期卡片清除。时序走完：未来 → 当下提醒 → 过往。
+                进入提醒窗口后今时际出现临期帖；完成回写本体并归档，卡片清除。
               </span>
             </li>
           </ol>
@@ -265,26 +277,22 @@ export default function GuidePage() {
         <section id="focus" className="guide-page__section">
           <h2>凝时 · 怎么用</h2>
           <p>
-            凝时把注意力凝成可计量的光阴。当前主推<strong>顺钟</strong>（正向累计）；结束后留下<strong>凝录</strong>。
+            凝时把注意力凝成可计量的光阴：<strong>顺钟</strong>正向累计，<strong>逆漏</strong>倒数到点；结束后留下<strong>凝录</strong>。
           </p>
           <ol className="guide-page__steps">
             <li>
-              <strong>开始顺钟</strong>
+              <strong>顺钟 / 逆漏</strong>
               <span>
-                进入凝时 → 顺钟，点开始。计时向前累计；可暂停、继续。沉浸界面会弱化干扰，便于把心神留在这段时间里。
+                可选绑定来日途目标（规划 / 日课 / 轮期）。逆漏默认时长可在设置中改；开启勿扰后到点只暂停不弹窗。
               </span>
+            </li>
+            <li>
+              <strong>专注中写随笔</strong>
+              <span>可一键唤起流思笺弹窗，计时不中断；随笔可溯源到本次会话。</span>
             </li>
             <li>
               <strong>结束并写心得</strong>
-              <span>
-                结束时可选填写这段专注的收获或心情。确认后生成一条凝录（含时长等信息）。
-              </span>
-            </li>
-            <li>
-              <strong>凝录去哪了</strong>
-              <span>
-                凝录自动进入昔时往 · 拾忆馆藏（类型：凝录），只读可回望；也可在凝时侧的凝录列表查看。
-              </span>
+              <span>确认后生成凝录（含时长等），自动进拾忆馆藏；凝录列表亦可查看。</span>
             </li>
           </ol>
         </section>
@@ -298,24 +306,29 @@ export default function GuidePage() {
           <h3>拾忆馆藏</h3>
           <ol className="guide-page__steps">
             <li>
-              <strong>浏览</strong>
+              <strong>浏览与操作</strong>
               <span>
-                列表默认按归档时间倒序。可用类型或馆内分区筛选，例如「全部」「随笔沉淀」，以及规划归档、凝录等类型。
+                按类型分区；支持标题模糊、时间范围与分页。可藏忆 / 取消藏忆、抹忆（硬删流入类），以及上传记忆碎片（图片默认不进知识库）。
               </span>
             </li>
             <li>
               <strong>打开详情</strong>
               <span>
-                详情为只读：可看正文快照、归档时间、归档方式、来源，以及从创建到归档的停留时长等元信息。
+                正文只读；可补改绪印。元信息含归档时间、方式、来源、停留时长等。
               </span>
             </li>
             <li>
-              <strong>不要在此「接着改草稿」</strong>
+              <strong>引用新建</strong>
               <span>
-                馆藏正文不能改回流动中的随笔会话。若灵感还要继续写，应在今时际新建流思笺（引用过往是后续能力）。
+                可从昔时往引用复制为新随笔或新计划；禁止把归档原文迁移回可编辑本体。
               </span>
             </li>
           </ol>
+
+          <h3>往迹廊与心绪鉴</h3>
+          <p>
+            往迹廊提供岁轴密度与同年回望；心绪鉴有绪谱、岁简与绪因（情绪 × 主题共现，无 AI 文案）。
+          </p>
         </section>
 
         <section id="loops" className="guide-page__section">
@@ -397,7 +410,7 @@ export default function GuidePage() {
             </li>
             <li>
               <strong>归档 ≠ 知识库</strong>
-              ：进拾忆馆藏是归档浏览；主动「藏忆」进知识库是另一层选择（后续能力）。二者不是一回事。
+              ：进拾忆馆藏是归档浏览；「藏忆」是知识库标记（当前为布尔标记，语义检索后置）。二者不是一回事。
             </li>
             <li>
               <strong>时序不倒流</strong>
@@ -468,7 +481,19 @@ export default function GuidePage() {
             </div>
             <div>
               <dt>藏忆</dt>
-              <dd>将文本主动珍藏进知识库（后续能力；与「归档进馆藏」不同）</dd>
+              <dd>将文本标记进知识库集合（与「归档进馆藏」不同；图片永不进库）</dd>
+            </div>
+            <div>
+              <dt>逆漏</dt>
+              <dd>设定时长倒数，到点提醒，适合限时任务</dd>
+            </div>
+            <div>
+              <dt>往迹廊</dt>
+              <dd>岁轴回望沉淀密度；可开同年回望提示</dd>
+            </div>
+            <div>
+              <dt>心绪鉴</dt>
+              <dd>绪谱、岁简与绪因：用规则统计看情绪与主题</dd>
             </div>
           </dl>
         </section>
@@ -476,18 +501,18 @@ export default function GuidePage() {
         <section id="later" className="guide-page__section">
           <h2>后续会有什么（不必现在找）</h2>
           <p>
-            产品文档里还有更完整的宇宙：轮期、日课、时间胶囊、逆漏、借忆、缘想、往迹廊、心绪鉴、藏忆与抹忆、AI
-            复盘等。它们属于后续阶段；当前版本先把主闭环跑稳：
+            主闭环与增强模块（轮期、逆漏、往迹廊、藏忆、借忆等）已可用。更后的能力包括：账号可信加固、富文本与对象存储、以及 AI
+            语义检索 / 岁简文案等——见实现阶段规划近程 Phase，不必在界面里空等占位。
           </p>
           <div className="guide-page__callout">
             <p>
               <em>
-                写随笔 → 沉淀进馆藏 · 建计划 → 临期 → 完成归档 · 顺钟 → 凝录进馆藏 ·
-                首页能看见今天
+                写随笔 → 沉淀 · 建计划 / 轮期 → 临期完成归档 · 顺钟或逆漏 → 凝录 ·
+                往迹廊与心绪鉴回望
               </em>
             </p>
           </div>
-          <p>先把这几条变成肌肉记忆，自宇才会从「好看的词」变成「每天愿意打开的地方」。</p>
+          <p>先把日常链路变成肌肉记忆，自宇才会从「好看的词」变成「每天愿意打开的地方」。</p>
         </section>
 
         <section className="guide-page__section guide-page__section--end">

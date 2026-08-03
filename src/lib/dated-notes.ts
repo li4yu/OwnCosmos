@@ -61,3 +61,13 @@ export function mergeDatedArchiveBody(
   }
   return formatDatedNotes(blocks, legacy);
 }
+
+/** 取消某日打卡：去掉该日段落；若正文已空返回空串 */
+export function removeDatedArchiveDay(prevBody: string, checkinDate: string) {
+  const { blocks, legacy } = parseDatedNotes(prevBody);
+  const next = blocks.filter((b) => b.date !== checkinDate);
+  if (next.length === blocks.length) {
+    return formatDatedNotes(blocks, legacy);
+  }
+  return formatDatedNotes(next, legacy);
+}

@@ -15,6 +15,7 @@ import {
 import { getDb } from "@/db";
 import { essay } from "@/db/schema";
 import { ESSAY_PAGE_SIZE } from "@/lib/essay-query";
+import { clampListPageSize } from "@/lib/list-paging";
 import { parseMoodKey, type MoodKey } from "@/lib/moods";
 
 function newId() {
@@ -37,13 +38,33 @@ export type EssayQueryOpts = {
   updatedTo?: Date;
   page?: number;
   pageSize?: number;
+  /**
+   * undefined = 不限专题；
+   * null = 每日随笔（folder_id IS NULL）；
+   * string = 指定专题
+   */
+  folderId?: string | null;
 };
 
-export async function listActiveEssays(userId: string) {
+export async function listActiveEssays(
+  userId: string,
+  opts?: { folderId?: string | null },
+) {
+  const conditions: SQL[] = [
+    eq(essay.userId, userId),
+    isNull(essay.archivedAt),
+  ];
+  if (opts && "folderId" in opts) {
+    if (opts.folderId === null) {
+      conditions.push(isNull(essay.folderId));
+    } else if (opts.folderId) {
+      conditions.push(eq(essay.folderId, opts.folderId));
+    }
+  }
   return getDb()
     .select()
     .from(essay)
-    .where(and(eq(essay.userId, userId), isNull(essay.archivedAt)))
+    .where(and(...conditions))
     .orderBy(desc(essay.updatedAt));
 }
 
@@ -55,6 +76,13 @@ function buildActiveEssayConditions(
     eq(essay.userId, userId),
     isNull(essay.archivedAt),
   ];
+  if ("folderId" in opts) {
+    if (opts.folderId === null) {
+      conditions.push(isNull(essay.folderId));
+    } else if (opts.folderId) {
+      conditions.push(eq(essay.folderId, opts.folderId));
+    }
+  }
   const q = opts.titleQ?.trim();
   if (q) {
     const pattern = `%${escapeIlike(q)}%`;
@@ -90,10 +118,7 @@ export async function queryActiveEssays(
   userId: string,
   opts: EssayQueryOpts = {},
 ) {
-  const pageSize = Math.min(
-    10,
-    Math.max(1, Math.floor(opts.pageSize ?? ESSAY_PAGE_SIZE)),
-  );
+  const pageSize = clampListPageSize(opts.pageSize ?? ESSAY_PAGE_SIZE);
   const page = Math.max(1, Math.floor(opts.page ?? 1));
   const where = buildActiveEssayConditions(userId, opts);
 
@@ -139,8 +164,15 @@ export async function createEssay(
     sourcePlanId?: string | null;
     sourceFocusSessionId?: string | null;
     mood?: string | null;
+    folderId?: string | null;
   },
 ) {
+  let folderId: string | null = input.folderId ?? null;
+  if (folderId) {
+    const { getEssayFolder } = await import("@/services/essay-folders");
+    const folder = await getEssayFolder(userId, folderId);
+    if (!folder) return null;
+  }
   const now = new Date();
   const id = newId();
   const title = input.title.trim() || "无标题";
@@ -156,6 +188,7 @@ export async function createEssay(
     sourcePlanId: input.sourcePlanId ?? null,
     sourceFocusSessionId: input.sourceFocusSessionId ?? null,
     mood: parseMoodKey(input.mood),
+    folderId,
   });
   return id;
 }

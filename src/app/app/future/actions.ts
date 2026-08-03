@@ -25,11 +25,13 @@ import {
   PLAN_STATUS_OPEN,
 } from "@/db/schema";
 import {
+  cancelHabitCheckin,
   checkinHabit,
   createHabit,
   deactivateHabit,
 } from "@/services/daily";
 import {
+  cancelPlanTaskCheckin,
   checkinPlanTask,
   createPlanTask,
   deletePlanTask,
@@ -294,6 +296,25 @@ export async function checkinPlanTaskAction(
   };
 }
 
+/** 取消今日轮期子任务打卡 */
+export async function cancelPlanTaskCheckinAction(
+  planId: string,
+  taskId: string,
+): Promise<PlanActionState & { checkCount?: number }> {
+  const session = await requireSession();
+  const result = await cancelPlanTaskCheckin(session.user.id, taskId);
+  if (!result.ok) {
+    if (result.error === "not_today") {
+      return { error: "今日尚未打卡，无需取消" };
+    }
+    return { error: "子任务不存在或不是进行中的轮期" };
+  }
+  revalidatePlans(planId);
+  revalidatePath("/app");
+  revalidatePath("/app/past/gallery/plan-cycle");
+  return { checkCount: result.checkCount };
+}
+
 export async function deletePlanTaskAction(
   planId: string,
   taskId: string,
@@ -336,6 +357,17 @@ export async function checkinHabitAction(
   return { ok: true };
 }
 
+/** 取消今日日课打卡（回退馆藏计次与当日段落） */
+export async function cancelHabitCheckinAction(
+  habitId: string,
+): Promise<DailyActionState> {
+  const session = await requireSession();
+  const result = await cancelHabitCheckin(session.user.id, habitId);
+  if (!result.ok) return { error: result.error };
+  revalidateDaily();
+  return { ok: true };
+}
+
 export async function deactivateHabitAction(
   habitId: string,
 ): Promise<DailyActionState> {
@@ -354,6 +386,17 @@ export async function quickCheckinHabitAction(
   const session = await requireSession();
   const id = await checkinHabit(session.user.id, habitId, note);
   if (!id) return { error: "日课不存在或已停用" };
+  revalidateDaily();
+  return { ok: true };
+}
+
+/** 首页快捷：取消今日日课打卡 */
+export async function quickCancelHabitCheckinAction(
+  habitId: string,
+): Promise<DailyActionState> {
+  const session = await requireSession();
+  const result = await cancelHabitCheckin(session.user.id, habitId);
+  if (!result.ok) return { error: result.error };
   revalidateDaily();
   return { ok: true };
 }

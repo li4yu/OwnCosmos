@@ -6,6 +6,9 @@ import { listFocusBindOptions } from "@/services/focus";
 
 export default async function FocusForwardPage() {
   const session = await requireSession();
+  const user = session.user as typeof session.user & {
+    focusDnd?: boolean;
+  };
   const [active, bindOptions] = await Promise.all([
     loadFocusTimerActive(session.user.id),
     listFocusBindOptions(session.user.id),
@@ -16,6 +19,7 @@ export default async function FocusForwardPage() {
       pageMode={FOCUS_MODE_FORWARD}
       active={active}
       bindOptions={bindOptions}
+      focusDnd={Boolean(user.focusDnd)}
     />
   );
 }

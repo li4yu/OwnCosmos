@@ -8,7 +8,11 @@ import {
   dailyCheckin,
   dailyHabit,
 } from "@/db/schema";
-import { mergeDatedArchiveBody } from "@/lib/dated-notes";
+import {
+  mergeDatedArchiveBody,
+  parseDatedNotes,
+  removeDatedArchiveDay,
+} from "@/lib/dated-notes";
 import { formatDueDateInput } from "@/lib/plan-dates";
 
 function newId() {
@@ -158,6 +162,71 @@ async function upsertDailyHabitArchive(
     keptAt: now,
   });
   return id;
+}
+
+/**
+ * 取消今日打卡：删当日打卡行，馆藏去掉该日段落并回退计次（计次归零且无段落则删归档）
+ */
+export async function cancelHabitCheckin(
+  userId: string,
+  habitId: string,
+  now = new Date(),
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const habits = await getDb()
+    .select()
+    .from(dailyHabit)
+    .where(
+      and(
+        eq(dailyHabit.id, habitId),
+        eq(dailyHabit.userId, userId),
+        eq(dailyHabit.active, true),
+      ),
+    )
+    .limit(1);
+  if (!habits[0]) return { ok: false, error: "日课不存在或已停用" };
+
+  const checkinDate = localCheckinDate(now);
+  const existing = await getCheckinForDate(userId, habitId, checkinDate);
+  if (!existing) return { ok: false, error: "今日尚未打卡" };
+
+  await getDb()
+    .delete(dailyCheckin)
+    .where(eq(dailyCheckin.id, existing.id));
+
+  const archives = await getDb()
+    .select()
+    .from(archiveItem)
+    .where(
+      and(
+        eq(archiveItem.userId, userId),
+        eq(archiveItem.type, ARCHIVE_TYPE_DAILY_CHECKIN),
+        eq(archiveItem.sourceHabitId, habitId),
+      ),
+    )
+    .limit(1);
+  const prev = archives[0];
+  if (!prev) return { ok: true };
+
+  const nextBody = removeDatedArchiveDay(prev.body ?? "", checkinDate);
+  const nextCount = Math.max(0, (prev.cycleCount ?? 1) - 1);
+  const { blocks, legacy } = parseDatedNotes(nextBody);
+  if (blocks.length === 0 && !legacy.trim() && nextCount === 0) {
+    await getDb()
+      .delete(archiveItem)
+      .where(and(eq(archiveItem.id, prev.id), eq(archiveItem.userId, userId)));
+    return { ok: true };
+  }
+
+  await getDb()
+    .update(archiveItem)
+    .set({
+      body: nextBody,
+      cycleCount: nextCount,
+      archivedAt: now,
+      sourceUpdatedAt: now,
+    })
+    .where(eq(archiveItem.id, prev.id));
+  return { ok: true };
 }
 
 /**

@@ -76,7 +76,7 @@ export const APP_MODULES: readonly AppModuleDef[] = [
         id: "essays",
         href: "/app/present/essays",
         name: "流思笺",
-        tip: "快速记下当下灵感与草稿，未归档前可随时改",
+        tip: "每日随笔随手记；专题随笔按主题建夹写多篇",
         ready: true,
       },
       {

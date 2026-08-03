@@ -1,9 +1,11 @@
 import { AppearanceForm } from "@/components/settings/appearance-form";
 import { ArchivePreferenceForm } from "@/components/settings/archive-preference-form";
 import { ExportOpenContent } from "@/components/settings/export-open-content";
+import { FocusPreferenceForm } from "@/components/settings/focus-preference-form";
 import { NotifyPreferenceForm } from "@/components/settings/notify-preference-form";
 import { PageHeader } from "@/components/shell/page-header";
 import { PoeticName } from "@/components/ui/poetic-name";
+import { DEFAULT_FOCUS_COUNTDOWN_MS } from "@/db/schema";
 import { requireSession } from "@/lib/session";
 
 export default async function SettingsPage() {
@@ -14,6 +16,8 @@ export default async function SettingsPage() {
     anniversaryRemind?: boolean;
     notifyEnabled?: boolean;
     notifyDueReminder?: boolean;
+    focusDnd?: boolean;
+    focusCountdownDefaultMs?: number;
   };
 
   return (
@@ -21,7 +25,7 @@ export default async function SettingsPage() {
       <PageHeader
         title="设置"
         eyebrow="SETTINGS"
-        description="外观、归档节奏、通知偏好与数据导出"
+        description="外观、归档、通知、凝时偏好与数据导出"
         backHref="/app"
         backLabel="返回首页"
       />
@@ -60,6 +64,20 @@ export default async function SettingsPage() {
             initialNotifyEnabled={user.notifyEnabled ?? true}
             initialNotifyDueReminder={user.notifyDueReminder ?? true}
             initialAnniversaryRemind={Boolean(user.anniversaryRemind)}
+          />
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+          凝时
+        </p>
+        <div className="mt-1.5">
+          <FocusPreferenceForm
+            initialFocusDnd={Boolean(user.focusDnd)}
+            initialCountdownDefaultMs={
+              user.focusCountdownDefaultMs ?? DEFAULT_FOCUS_COUNTDOWN_MS
+            }
           />
         </div>
       </section>

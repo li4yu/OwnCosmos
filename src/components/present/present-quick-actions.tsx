@@ -8,19 +8,19 @@ export function PresentQuickActions() {
         href="/app/present/essays/new"
         className="ui-btn-primary ui-btn-sm !w-auto"
       >
-        新随笔
+        每日随笔
+      </Link>
+      <Link
+        href="/app/present/essays/topics"
+        className="ui-btn-ghost ui-btn-sm"
+      >
+        专题随笔
       </Link>
       <Link
         href="/app/present/due"
         className="ui-btn-ghost ui-btn-sm"
       >
         临期帖
-      </Link>
-      <Link
-        href="/app/present/essays"
-        className="ui-btn-ghost ui-btn-sm"
-      >
-        全部流思笺
       </Link>
     </div>
   );

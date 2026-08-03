@@ -37,6 +37,8 @@ export function RegisterForm({ nextPath = "/app", onSwitchLogin }: RegisterFormP
         anniversaryRemind: false,
         notifyEnabled: true,
         notifyDueReminder: true,
+        focusDnd: false,
+        focusCountdownDefaultMs: 1_500_000,
       });
       if (signUpError) {
         setError(signUpError.message || "注册失败，请稍后重试");

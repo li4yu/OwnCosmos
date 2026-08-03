@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { EssayListItem } from "@/components/essays/essay-list-item";
 import { DatePickerField } from "@/components/ui/date-picker-field";
+import { ListPager } from "@/components/ui/list-pager";
 import {
   ESSAY_PAGE_SIZE,
   buildEssayQueryHref,
@@ -38,6 +38,8 @@ type EssayListPanelProps = {
   };
   tagOptions: TagOption[];
   emptyHint: string;
+  /** 专题列表关闭单篇归档 */
+  allowArchive?: boolean;
 };
 
 export function EssayListPanel({
@@ -50,6 +52,7 @@ export function EssayListPanel({
   filters,
   tagOptions,
   emptyHint,
+  allowArchive = true,
 }: EssayListPanelProps) {
   const router = useRouter();
   const [q, setQ] = useState(filters.q);
@@ -57,6 +60,7 @@ export function EssayListPanel({
   const [mood, setMood] = useState(filters.mood);
   const [from, setFrom] = useState(filters.from);
   const [to, setTo] = useState(filters.to);
+  const [size, setSize] = useState(pageSize);
   const [error, setError] = useState<string | null>(null);
 
   const rangeErr = useMemo(() => {
@@ -65,12 +69,13 @@ export function EssayListPanel({
     return null;
   }, [from, to]);
 
-  function applyFilters(nextPage = 1) {
+  function applyFilters(nextPage = 1, nextSize = size) {
     if (rangeErr) {
       setError(rangeErr);
       return;
     }
     setError(null);
+    setSize(nextSize);
     router.push(
       buildEssayQueryHref(basePath, {
         q,
@@ -79,6 +84,7 @@ export function EssayListPanel({
         from,
         to,
         page: nextPage,
+        pageSize: nextSize,
       }),
     );
   }
@@ -190,10 +196,6 @@ export function EssayListPanel({
         </div>
       </section>
 
-      <p className="font-mono text-[9px] tracking-wide text-[var(--mist)]">
-        共 {total} 条 · 第 {page}/{totalPages} 页 · 每页 {pageSize}
-      </p>
-
       {items.length === 0 ? (
         <section className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
           {emptyHint}
@@ -209,43 +211,21 @@ export function EssayListPanel({
               updatedLabel={item.updatedLabel}
               moodLabel={item.mood ? moodDisplay(item.mood) : undefined}
               tagNames={item.tagNames}
+              allowArchive={allowArchive}
             />
           ))}
         </ul>
       )}
 
-      {totalPages > 1 ? (
-        <nav className="flex flex-wrap items-center gap-2" aria-label="分页">
-          <Link
-            href={buildEssayQueryHref(basePath, {
-              q: filters.q,
-              tag: filters.tag,
-              mood: filters.mood,
-              from: filters.from,
-              to: filters.to,
-              page: Math.max(1, page - 1),
-            })}
-            className={`ui-btn-ghost ui-btn-sm ${page <= 1 ? "pointer-events-none opacity-40" : ""}`}
-            aria-disabled={page <= 1}
-          >
-            上一页
-          </Link>
-          <Link
-            href={buildEssayQueryHref(basePath, {
-              q: filters.q,
-              tag: filters.tag,
-              mood: filters.mood,
-              from: filters.from,
-              to: filters.to,
-              page: Math.min(totalPages, page + 1),
-            })}
-            className={`ui-btn-ghost ui-btn-sm ${page >= totalPages ? "pointer-events-none opacity-40" : ""}`}
-            aria-disabled={page >= totalPages}
-          >
-            下一页
-          </Link>
-        </nav>
-      ) : null}
+      <ListPager
+        page={page}
+        pageSize={pageSize}
+        totalPages={totalPages}
+        total={total}
+        onNavigate={({ page: nextPage, pageSize: nextSize }) =>
+          applyFilters(nextPage, nextSize)
+        }
+      />
     </div>
   );
 }

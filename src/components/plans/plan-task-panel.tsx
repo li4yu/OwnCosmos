@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import {
+  cancelPlanTaskCheckinAction,
   checkinPlanTaskAction,
   createPlanTaskAction,
   deletePlanTaskAction,
@@ -107,38 +108,73 @@ export function PlanTaskPanel({ planId, tasks, readOnly }: Props) {
                 </span>
                 {!readOnly ? (
                   <>
-                    <button
-                      type="button"
-                      disabled={pending || already}
-                      className="ui-btn-primary !w-auto px-2.5 py-1 text-xs"
-                      onClick={() => {
-                        setError(null);
-                        startTransition(async () => {
-                          const result = await checkinPlanTaskAction(
-                            planId,
-                            task.id,
-                          );
-                          if (result.error || result.checkCount == null) {
-                            setError(result.error ?? "打卡失败");
-                            return;
-                          }
-                          setItems((prev) =>
-                            prev.map((t) =>
-                              t.id === task.id
-                                ? {
-                                    ...t,
-                                    checkCount: result.checkCount,
-                                    checkedInToday: true,
-                                  }
-                                : t,
-                            ),
-                          );
-                          refresh();
-                        });
-                      }}
-                    >
-                      {already ? "已打卡" : "打卡"}
-                    </button>
+                    {already ? (
+                      <button
+                        type="button"
+                        disabled={pending}
+                        className="ui-btn-ghost !w-auto px-2.5 py-1 text-xs"
+                        onClick={() => {
+                          setError(null);
+                          startTransition(async () => {
+                            const result = await cancelPlanTaskCheckinAction(
+                              planId,
+                              task.id,
+                            );
+                            if (result.error || result.checkCount == null) {
+                              setError(result.error ?? "取消失败");
+                              return;
+                            }
+                            setItems((prev) =>
+                              prev.map((t) =>
+                                t.id === task.id
+                                  ? {
+                                      ...t,
+                                      checkCount: result.checkCount,
+                                      checkedInToday: false,
+                                    }
+                                  : t,
+                              ),
+                            );
+                            refresh();
+                          });
+                        }}
+                      >
+                        取消打卡
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={pending}
+                        className="ui-btn-primary !w-auto px-2.5 py-1 text-xs"
+                        onClick={() => {
+                          setError(null);
+                          startTransition(async () => {
+                            const result = await checkinPlanTaskAction(
+                              planId,
+                              task.id,
+                            );
+                            if (result.error || result.checkCount == null) {
+                              setError(result.error ?? "打卡失败");
+                              return;
+                            }
+                            setItems((prev) =>
+                              prev.map((t) =>
+                                t.id === task.id
+                                  ? {
+                                      ...t,
+                                      checkCount: result.checkCount,
+                                      checkedInToday: true,
+                                    }
+                                  : t,
+                              ),
+                            );
+                            refresh();
+                          });
+                        }}
+                      >
+                        打卡
+                      </button>
+                    )}
                     <button
                       type="button"
                       disabled={pending}

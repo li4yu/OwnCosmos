@@ -20,7 +20,7 @@ export function PresentPulse({ stats }: PresentPulseProps) {
       <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs">
         <li>
           <Link
-            href="/app/present/essays"
+            href="/app/present/essays/daily"
             className="ui-hover-link text-[var(--mist)]"
           >
             流动中{" "}

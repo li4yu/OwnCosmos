@@ -24,6 +24,10 @@ export type CheckinPlanTaskResult =
   | { ok: true; checkCount: number; lastCheckinDate: string }
   | { ok: false; error: "not_found" | "already_today" };
 
+export type CancelPlanTaskCheckinResult =
+  | { ok: true; checkCount: number }
+  | { ok: false; error: "not_found" | "not_today" };
+
 export function localTaskCheckinDate(now = new Date()) {
   return formatDueDateInput(now);
 }
@@ -134,6 +138,45 @@ export async function checkinPlanTask(
   // 参照日课：打卡即把子任务名与次数写入轮期系列馆藏（不计本期次数）
   await syncCycleArchiveTaskSnapshot(userId, row.task.planId, now);
   return { ok: true, checkCount: nextCount, lastCheckinDate: today };
+}
+
+/** 取消今日子任务打卡：次数 -1，清除今日标记，并同步轮期馆藏快照 */
+export async function cancelPlanTaskCheckin(
+  userId: string,
+  taskId: string,
+  now = new Date(),
+): Promise<CancelPlanTaskCheckinResult> {
+  const rows = await getDb()
+    .select({
+      task: planTask,
+      kind: plan.kind,
+      archivedAt: plan.archivedAt,
+    })
+    .from(planTask)
+    .innerJoin(plan, eq(plan.id, planTask.planId))
+    .where(and(eq(planTask.id, taskId), eq(planTask.userId, userId)))
+    .limit(1);
+  const row = rows[0];
+  if (!row || row.archivedAt || row.kind !== PLAN_KIND_CYCLE) {
+    return { ok: false, error: "not_found" };
+  }
+
+  const today = localTaskCheckinDate(now);
+  if (!taskCheckedInOnDate(row.task.lastCheckinDate, today)) {
+    return { ok: false, error: "not_today" };
+  }
+
+  const nextCount = Math.max(0, (row.task.checkCount ?? 0) - 1);
+  await getDb()
+    .update(planTask)
+    .set({
+      checkCount: nextCount,
+      lastCheckinDate: null,
+      updatedAt: now,
+    })
+    .where(and(eq(planTask.id, taskId), eq(planTask.userId, userId)));
+  await syncCycleArchiveTaskSnapshot(userId, row.task.planId, now);
+  return { ok: true, checkCount: nextCount };
 }
 
 export async function deletePlanTask(userId: string, taskId: string) {

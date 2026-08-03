@@ -33,10 +33,20 @@ export async function createEssayAction(
   const title = String(formData.get("title") ?? "");
   const body = String(formData.get("body") ?? "");
   const mood = String(formData.get("mood") ?? "");
+  const folderRaw = String(formData.get("folderId") ?? "").trim();
+  const folderId = folderRaw || null;
   if (!title.trim() && !body.trim()) {
     return { error: "请至少填写标题或正文" };
   }
-  const id = await createEssay(session.user.id, { title, body, mood });
+  const id = await createEssay(session.user.id, {
+    title,
+    body,
+    mood,
+    folderId,
+  });
+  if (!id) {
+    return { error: folderId ? "专题不存在" : "创建失败" };
+  }
   const tagResult = await setEssayTags(
     session.user.id,
     id,
@@ -45,6 +55,11 @@ export async function createEssayAction(
   if ("error" in tagResult) return { error: tagResult.error };
   revalidatePath("/app/present");
   revalidatePath("/app/present/essays");
+  revalidatePath("/app/present/essays/daily");
+  if (folderId) {
+    revalidatePath("/app/present/essays/topics");
+    revalidatePath(`/app/present/essays/topics/${folderId}`);
+  }
   return { createdId: id };
 }
 
@@ -76,6 +91,8 @@ export async function updateEssayAction(
   if ("error" in tagResult) return { error: tagResult.error };
   revalidatePath("/app/present");
   revalidatePath("/app/present/essays");
+  revalidatePath("/app/present/essays/daily");
+  revalidatePath("/app/present/essays/topics");
   revalidatePath(`/app/present/essays/${essayId}`);
   return {};
 }
@@ -90,6 +107,8 @@ export async function deleteEssayAction(
   }
   revalidatePath("/app/present");
   revalidatePath("/app/present/essays");
+  revalidatePath("/app/present/essays/daily");
+  revalidatePath("/app/present/essays/topics");
   revalidatePath(`/app/present/essays/${essayId}`);
   return {};
 }
@@ -104,10 +123,12 @@ export async function archiveEssayAction(
     ARCHIVE_REASON_MANUAL,
   );
   if (!archiveId) {
-    return { error: "随笔不存在或已归档，无法归档" };
+    return { error: "随笔不存在、已归档，或属于专题（请整专题归档）" };
   }
   revalidatePath("/app/present");
   revalidatePath("/app/present/essays");
+  revalidatePath("/app/present/essays/daily");
+  revalidatePath("/app/present/essays/topics");
   revalidatePath(`/app/present/essays/${essayId}`);
   revalidatePath("/app/past");
   revalidatePath("/app/past/gallery");

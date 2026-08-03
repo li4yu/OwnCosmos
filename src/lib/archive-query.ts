@@ -1,15 +1,22 @@
 import {
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_ESSAY_TOPIC,
   ARCHIVE_TYPE_FOCUS_RECORD,
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
   WIPE_ARCHIVE_TYPES,
 } from "@/db/schema";
+import {
+  DEFAULT_LIST_PAGE_SIZE,
+  appendListPagingParams,
+  parseListPage,
+  parseListPageSize,
+} from "@/lib/list-paging";
 import { parseDueDateInput } from "@/lib/plan-dates";
 
-export const ARCHIVE_PAGE_SIZE = 10;
+export const ARCHIVE_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export type ArchiveTypeOption = {
   value: string;
@@ -19,6 +26,7 @@ export type ArchiveTypeOption = {
 export const GALLERY_TYPE_OPTIONS: ArchiveTypeOption[] = [
   { value: "", label: "全部类型" },
   { value: ARCHIVE_TYPE_ESSAY_SEDIMENT, label: "随笔沉淀" },
+  { value: ARCHIVE_TYPE_ESSAY_TOPIC, label: "专题归档" },
   { value: ARCHIVE_TYPE_PLAN_ARCHIVE, label: "规划归档" },
   { value: ARCHIVE_TYPE_PLAN_CYCLE, label: "轮期归档" },
   { value: ARCHIVE_TYPE_DAILY_CHECKIN, label: "日课归档" },
@@ -52,6 +60,7 @@ export type ArchiveListSearch = {
   /** Phase 13: 绪签 id */
   tag?: string;
   page?: string;
+  size?: string;
 };
 
 /** 将 YYYY-MM-DD 转为当日起止（本地） */
@@ -111,7 +120,8 @@ export function parseArchiveListSearch(
   const fromRaw = (sp.from ?? "").trim();
   const toRaw = (sp.to ?? "").trim();
   const tagRaw = (sp.tag ?? "").trim();
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const page = parseListPage(sp.page);
+  const pageSize = parseListPageSize(sp.size, ARCHIVE_PAGE_SIZE);
   const rangeError = archiveDateRangeError(fromRaw, toRaw);
   const fromBound = dayBoundsFromInput(fromRaw);
   const toBound = dayBoundsFromInput(toRaw);
@@ -135,6 +145,7 @@ export function parseArchiveListSearch(
     archivedFrom: rangeError ? undefined : fromBound.start,
     archivedTo: rangeError ? undefined : toBound.end,
     page,
+    pageSize,
   };
 }
 
@@ -152,6 +163,7 @@ export function buildArchiveQueryHref(
     to?: string;
     tag?: string;
     page?: number;
+    pageSize?: number;
   },
 ) {
   const sp = new URLSearchParams();
@@ -161,7 +173,10 @@ export function buildArchiveQueryHref(
   if (params.from?.trim()) sp.set("from", params.from.trim());
   if (params.to?.trim()) sp.set("to", params.to.trim());
   if (params.tag?.trim()) sp.set("tag", params.tag.trim());
-  if (params.page && params.page > 1) sp.set("page", String(params.page));
+  appendListPagingParams(sp, {
+    page: params.page,
+    pageSize: params.pageSize,
+  });
   const qs = sp.toString();
   return qs ? `${basePath}?${qs}` : basePath;
 }

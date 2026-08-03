@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
@@ -8,6 +7,7 @@ import {
   PlanListItem,
 } from "@/components/plans/plan-list-item";
 import { DatePickerField } from "@/components/ui/date-picker-field";
+import { ListPager } from "@/components/ui/list-pager";
 import { MOOD_OPTIONS, moodDisplay } from "@/lib/moods";
 import {
   PLAN_LIST_KIND_OPTIONS,
@@ -75,6 +75,7 @@ export function PlanListPanel({
   const [kind, setKind] = useState(filters.kind);
   const [from, setFrom] = useState(filters.from);
   const [to, setTo] = useState(filters.to);
+  const [size, setSize] = useState(pageSize);
   const [error, setError] = useState<string | null>(null);
 
   const rangeErr = useMemo(() => {
@@ -83,7 +84,9 @@ export function PlanListPanel({
     return null;
   }, [from, to]);
 
-  function href(overrides: { page?: number; cpage?: number } = {}) {
+  function href(
+    overrides: { page?: number; cpage?: number; pageSize?: number } = {},
+  ) {
     return buildPlanQueryHref(basePath, {
       q,
       tag,
@@ -93,6 +96,7 @@ export function PlanListPanel({
       to,
       page: overrides.page,
       cpage: overrides.cpage,
+      pageSize: overrides.pageSize ?? size,
     });
   }
 
@@ -102,7 +106,7 @@ export function PlanListPanel({
       return;
     }
     setError(null);
-    router.push(href({ page: 1, cpage: 1 }));
+    router.push(href({ page: 1, cpage: 1, pageSize: size }));
   }
 
   return (
@@ -228,17 +232,12 @@ export function PlanListPanel({
       </section>
 
       <section className="flex flex-col gap-1.5">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
-            未完成
-            <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
-              {open.total}
-            </span>
-          </h2>
-          <p className="font-mono text-[9px] text-[var(--mist)]">
-            第 {open.page}/{open.totalPages} 页 · 每页 {pageSize}
-          </p>
-        </div>
+        <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
+          未完成
+          <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
+            {open.total}
+          </span>
+        </h2>
         {open.items.length === 0 ? (
           <div className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
             暂无符合条件的未完成计划。
@@ -265,44 +264,32 @@ export function PlanListPanel({
             ))}
           </ul>
         )}
-        {open.totalPages > 1 ? (
-          <nav className="flex flex-wrap gap-2" aria-label="未完成分页">
-            <Link
-              href={buildPlanQueryHref(basePath, {
-                ...filters,
-                page: Math.max(1, open.page - 1),
+        <ListPager
+          label="未完成分页"
+          page={open.page}
+          pageSize={pageSize}
+          totalPages={open.totalPages}
+          total={open.total}
+          onNavigate={({ page: nextPage, pageSize: nextSize }) => {
+            setSize(nextSize);
+            router.push(
+              href({
+                page: nextPage,
                 cpage: done.page,
-              })}
-              className={`ui-btn-ghost ui-btn-sm ${open.page <= 1 ? "pointer-events-none opacity-40" : ""}`}
-            >
-              上一页
-            </Link>
-            <Link
-              href={buildPlanQueryHref(basePath, {
-                ...filters,
-                page: Math.min(open.totalPages, open.page + 1),
-                cpage: done.page,
-              })}
-              className={`ui-btn-ghost ui-btn-sm ${open.page >= open.totalPages ? "pointer-events-none opacity-40" : ""}`}
-            >
-              下一页
-            </Link>
-          </nav>
-        ) : null}
+                pageSize: nextSize,
+              }),
+            );
+          }}
+        />
       </section>
 
       <section className="flex flex-col gap-1.5">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
-            已完成
-            <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
-              {done.total}
-            </span>
-          </h2>
-          <p className="font-mono text-[9px] text-[var(--mist)]">
-            第 {done.page}/{done.totalPages} 页 · 每页 {pageSize}
-          </p>
-        </div>
+        <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
+          已完成
+          <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
+            {done.total}
+          </span>
+        </h2>
         {done.items.length === 0 ? (
           <div className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
             暂无符合条件的已完成计划。
@@ -331,30 +318,23 @@ export function PlanListPanel({
             ))}
           </ul>
         )}
-        {done.totalPages > 1 ? (
-          <nav className="flex flex-wrap gap-2" aria-label="已完成分页">
-            <Link
-              href={buildPlanQueryHref(basePath, {
-                ...filters,
+        <ListPager
+          label="已完成分页"
+          page={done.page}
+          pageSize={pageSize}
+          totalPages={done.totalPages}
+          total={done.total}
+          onNavigate={({ page: nextCpage, pageSize: nextSize }) => {
+            setSize(nextSize);
+            router.push(
+              href({
                 page: open.page,
-                cpage: Math.max(1, done.page - 1),
-              })}
-              className={`ui-btn-ghost ui-btn-sm ${done.page <= 1 ? "pointer-events-none opacity-40" : ""}`}
-            >
-              上一页
-            </Link>
-            <Link
-              href={buildPlanQueryHref(basePath, {
-                ...filters,
-                page: open.page,
-                cpage: Math.min(done.totalPages, done.page + 1),
-              })}
-              className={`ui-btn-ghost ui-btn-sm ${done.page >= done.totalPages ? "pointer-events-none opacity-40" : ""}`}
-            >
-              下一页
-            </Link>
-          </nav>
-        ) : null}
+                cpage: nextCpage,
+                pageSize: nextSize,
+              }),
+            );
+          }}
+        />
       </section>
     </div>
   );

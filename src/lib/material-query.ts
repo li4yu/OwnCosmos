@@ -8,8 +8,14 @@ import {
   MATERIAL_SOURCE_MANUAL,
   MATERIAL_SOURCE_PLAN,
 } from "@/db/schema";
+import {
+  DEFAULT_LIST_PAGE_SIZE,
+  appendListPagingParams,
+  parseListPage,
+  parseListPageSize,
+} from "@/lib/list-paging";
 
-export const MATERIAL_PAGE_SIZE = 10;
+export const MATERIAL_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export const MATERIAL_SOURCE_OPTIONS = [
   { value: "", label: "全部来源" },
@@ -29,6 +35,7 @@ export type MaterialListSearch = {
   from?: string;
   to?: string;
   page?: string;
+  size?: string;
 };
 
 export function parseMaterialListSearch(sp: MaterialListSearch) {
@@ -36,7 +43,8 @@ export function parseMaterialListSearch(sp: MaterialListSearch) {
   const sourceRaw = (sp.source ?? "").trim();
   const fromRaw = (sp.from ?? "").trim();
   const toRaw = (sp.to ?? "").trim();
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const page = parseListPage(sp.page);
+  const pageSize = parseListPageSize(sp.size, MATERIAL_PAGE_SIZE);
   const rangeError = archiveDateRangeError(fromRaw, toRaw);
   const fromBound = dayBoundsFromInput(fromRaw);
   const toBound = dayBoundsFromInput(toRaw);
@@ -54,6 +62,7 @@ export function parseMaterialListSearch(sp: MaterialListSearch) {
     createdFrom: rangeError ? undefined : fromBound.start,
     createdTo: rangeError ? undefined : toBound.end,
     page,
+    pageSize,
   };
 }
 
@@ -65,6 +74,7 @@ export function buildMaterialQueryHref(
     from?: string;
     to?: string;
     page?: number;
+    pageSize?: number;
   },
 ) {
   const sp = new URLSearchParams();
@@ -72,7 +82,10 @@ export function buildMaterialQueryHref(
   if (params.source?.trim()) sp.set("source", params.source.trim());
   if (params.from?.trim()) sp.set("from", params.from.trim());
   if (params.to?.trim()) sp.set("to", params.to.trim());
-  if (params.page && params.page > 1) sp.set("page", String(params.page));
+  appendListPagingParams(sp, {
+    page: params.page,
+    pageSize: params.pageSize,
+  });
   const qs = sp.toString();
   return qs ? `${basePath}?${qs}` : basePath;
 }

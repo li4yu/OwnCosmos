@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import {
@@ -8,6 +7,7 @@ import {
   deleteMaterialAction,
 } from "@/app/app/materials/actions";
 import { DatePickerField } from "@/components/ui/date-picker-field";
+import { ListPager } from "@/components/ui/list-pager";
 import {
   MATERIAL_PAGE_SIZE,
   MATERIAL_SOURCE_OPTIONS,
@@ -58,6 +58,7 @@ export function MaterialsPanel({
   const [source, setSource] = useState(filters.source);
   const [from, setFrom] = useState(filters.from);
   const [to, setTo] = useState(filters.to);
+  const [size, setSize] = useState(pageSize);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -67,12 +68,13 @@ export function MaterialsPanel({
     return null;
   }, [from, to]);
 
-  function applyFilters(nextPage = 1) {
+  function applyFilters(nextPage = 1, nextSize = size) {
     if (rangeErr) {
       setError(rangeErr);
       return;
     }
     setError(null);
+    setSize(nextSize);
     router.push(
       buildMaterialQueryHref(basePath, {
         q,
@@ -80,6 +82,7 @@ export function MaterialsPanel({
         from,
         to,
         page: nextPage,
+        pageSize: nextSize,
       }),
     );
   }
@@ -227,10 +230,6 @@ export function MaterialsPanel({
         </div>
       </section>
 
-      <p className="font-mono text-[9px] tracking-wide text-[var(--mist)]">
-        共 {total} 条 · 第 {page}/{totalPages} 页 · 每页 {pageSize}
-      </p>
-
       {items.length === 0 ? (
         <section className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
           {emptyHint}
@@ -279,28 +278,16 @@ export function MaterialsPanel({
         </ul>
       )}
 
-      {totalPages > 1 ? (
-        <nav className="flex flex-wrap gap-2" aria-label="素材分页">
-          <Link
-            href={buildMaterialQueryHref(basePath, {
-              ...filters,
-              page: Math.max(1, page - 1),
-            })}
-            className={`ui-btn-ghost ui-btn-sm ${page <= 1 ? "pointer-events-none opacity-40" : ""}`}
-          >
-            上一页
-          </Link>
-          <Link
-            href={buildMaterialQueryHref(basePath, {
-              ...filters,
-              page: Math.min(totalPages, page + 1),
-            })}
-            className={`ui-btn-ghost ui-btn-sm ${page >= totalPages ? "pointer-events-none opacity-40" : ""}`}
-          >
-            下一页
-          </Link>
-        </nav>
-      ) : null}
+      <ListPager
+        label="素材分页"
+        page={page}
+        pageSize={pageSize}
+        totalPages={totalPages}
+        total={total}
+        onNavigate={({ page: nextPage, pageSize: nextSize }) =>
+          applyFilters(nextPage, nextSize)
+        }
+      />
     </div>
   );
 }

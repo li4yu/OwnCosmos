@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import {
+  cancelHabitCheckinAction,
   checkinHabitAction,
   createHabitAction,
   deactivateHabitAction,
@@ -180,6 +181,30 @@ export function DailyHabits({ habits, todayLabel }: Props) {
                   >
                     {habit.checkedIn ? "更新打卡" : "打卡"}
                   </button>
+                  {habit.checkedIn ? (
+                    <button
+                      type="button"
+                      disabled={pending}
+                      className="ui-btn-ghost px-3 py-2 text-xs"
+                      onClick={() => {
+                        startTransition(async () => {
+                          const result = await cancelHabitCheckinAction(
+                            habit.id,
+                          );
+                          if (result.error) {
+                            setNotice({
+                              title: "无法取消",
+                              message: result.error,
+                            });
+                            return;
+                          }
+                          router.refresh();
+                        });
+                      }}
+                    >
+                      取消打卡
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className="ui-btn-ghost px-3 py-2 text-xs text-[var(--danger)]"

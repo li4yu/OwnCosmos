@@ -2,9 +2,15 @@ import {
   archiveDateRangeError,
   dayBoundsFromInput,
 } from "@/lib/archive-query";
+import {
+  DEFAULT_LIST_PAGE_SIZE,
+  appendListPagingParams,
+  parseListPage,
+  parseListPageSize,
+} from "@/lib/list-paging";
 import { isMoodKey } from "@/lib/moods";
 
-export const ESSAY_PAGE_SIZE = 10;
+export const ESSAY_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export type EssayListSearch = {
   q?: string;
@@ -13,6 +19,7 @@ export type EssayListSearch = {
   from?: string;
   to?: string;
   page?: string;
+  size?: string;
 };
 
 export function parseEssayListSearch(sp: EssayListSearch) {
@@ -21,7 +28,8 @@ export function parseEssayListSearch(sp: EssayListSearch) {
   const moodRaw = (sp.mood ?? "").trim();
   const fromRaw = (sp.from ?? "").trim();
   const toRaw = (sp.to ?? "").trim();
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const page = parseListPage(sp.page);
+  const pageSize = parseListPageSize(sp.size, ESSAY_PAGE_SIZE);
   const rangeError = archiveDateRangeError(fromRaw, toRaw);
   const fromBound = dayBoundsFromInput(fromRaw);
   const toBound = dayBoundsFromInput(toRaw);
@@ -41,6 +49,7 @@ export function parseEssayListSearch(sp: EssayListSearch) {
     updatedFrom: rangeError ? undefined : fromBound.start,
     updatedTo: rangeError ? undefined : toBound.end,
     page,
+    pageSize,
   };
 }
 
@@ -53,6 +62,7 @@ export function buildEssayQueryHref(
     from?: string;
     to?: string;
     page?: number;
+    pageSize?: number;
   },
 ) {
   const sp = new URLSearchParams();
@@ -61,7 +71,10 @@ export function buildEssayQueryHref(
   if (params.mood?.trim()) sp.set("mood", params.mood.trim());
   if (params.from?.trim()) sp.set("from", params.from.trim());
   if (params.to?.trim()) sp.set("to", params.to.trim());
-  if (params.page && params.page > 1) sp.set("page", String(params.page));
+  appendListPagingParams(sp, {
+    page: params.page,
+    pageSize: params.pageSize,
+  });
   const qs = sp.toString();
   return qs ? `${basePath}?${qs}` : basePath;
 }

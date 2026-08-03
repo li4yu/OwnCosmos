@@ -1,11 +1,5 @@
 import { ArchiveBatchPanel } from "@/components/archive/archive-batch-panel";
 import {
-  ARCHIVE_TYPE_DAILY_CHECKIN,
-  ARCHIVE_TYPE_MEMORY_FRAGMENT,
-  ARCHIVE_TYPE_PLAN_CYCLE,
-} from "@/db/schema";
-import {
-  ARCHIVE_PAGE_SIZE,
   GALLERY_TYPE_OPTIONS,
   parseGalleryListSearch,
 } from "@/lib/archive-query";
@@ -24,13 +18,8 @@ type SearchParams = {
   to?: string;
   tag?: string;
   page?: string;
+  size?: string;
 };
-
-const NO_WIPE_TYPES = new Set<string>([
-  ARCHIVE_TYPE_PLAN_CYCLE,
-  ARCHIVE_TYPE_DAILY_CHECKIN,
-  ARCHIVE_TYPE_MEMORY_FRAGMENT,
-]);
 
 export async function GallerySectionView({
   userId,
@@ -53,12 +42,10 @@ export async function GallerySectionView({
       archivedTo: parsed.archivedTo,
       tagId: parsed.tagId,
       page: parsed.page,
-      pageSize: ARCHIVE_PAGE_SIZE,
+      pageSize: parsed.pageSize,
     }),
     listAllTags(userId),
   ]);
-
-  const allowWipe = lockedType ? !NO_WIPE_TYPES.has(lockedType) : true;
 
   return (
     <ArchiveBatchPanel
@@ -77,13 +64,15 @@ export async function GallerySectionView({
         to: parsed.toInput,
         tag: parsed.tagInput,
       }}
-      tagOptions={tags.map((t) => ({
-        value: t.id,
-        label: t.active ? t.name : `${t.name}（已停用）`,
-      }))}
+      tagOptions={tags
+        .filter((t) => t.active)
+        .map((t) => ({
+          value: t.id,
+          label: t.name,
+        }))}
       typeOptions={lockedType ? undefined : GALLERY_TYPE_OPTIONS}
       emptyHint={section.emptyHint}
-      allowWipe={allowWipe}
+      allowWipe
       showTypeChip={!lockedType}
     />
   );

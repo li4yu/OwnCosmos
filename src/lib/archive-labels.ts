@@ -9,6 +9,7 @@ import {
   ARCHIVE_REASON_USER_UPLOAD,
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
+  ARCHIVE_TYPE_ESSAY_TOPIC,
   ARCHIVE_TYPE_FOCUS_RECORD,
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
@@ -29,6 +30,8 @@ export function archiveTypeLabel(type: string) {
   switch (type) {
     case ARCHIVE_TYPE_ESSAY_SEDIMENT:
       return "随笔沉淀";
+    case ARCHIVE_TYPE_ESSAY_TOPIC:
+      return "专题归档";
     case ARCHIVE_TYPE_PLAN_ARCHIVE:
       return "规划归档";
     case ARCHIVE_TYPE_PLAN_CYCLE:

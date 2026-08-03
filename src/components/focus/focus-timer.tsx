@@ -12,6 +12,7 @@ import {
   startForwardFocusAction,
 } from "@/app/app/focus/actions";
 import {
+  DEFAULT_FOCUS_COUNTDOWN_MS,
   FOCUS_MODE_COUNTDOWN,
   FOCUS_MODE_FORWARD,
   FOCUS_STATUS_PAUSED,
@@ -48,7 +49,21 @@ type FocusTimerProps = {
   pageMode: typeof FOCUS_MODE_FORWARD | typeof FOCUS_MODE_COUNTDOWN;
   active: ActiveSnapshot | null;
   bindOptions: FocusBindPickerOption[];
+  /** Phase 16: 逆漏默认时长（毫秒） */
+  countdownDefaultMs?: number;
+  /** Phase 16: 勿扰 — 到点不弹窗打断 */
+  focusDnd?: boolean;
 };
+
+function msToHmsParts(ms: number) {
+  const safe = Math.max(0, Math.floor(ms));
+  const totalSec = Math.floor(safe / 1_000);
+  return {
+    hours: String(Math.floor(totalSec / 3600)),
+    minutes: String(Math.floor((totalSec % 3600) / 60)),
+    seconds: String(totalSec % 60),
+  };
+}
 
 const COUNTDOWN_PRESETS = [
   { label: "25 分", ms: 25 * 60_000 },
@@ -158,9 +173,16 @@ function ConstellationMap({
   );
 }
 
-export function FocusTimer({ pageMode, active, bindOptions }: FocusTimerProps) {
+export function FocusTimer({
+  pageMode,
+  active,
+  bindOptions,
+  countdownDefaultMs = DEFAULT_FOCUS_COUNTDOWN_MS,
+  focusDnd = false,
+}: FocusTimerProps) {
   const router = useRouter();
   const chamberRef = useRef<HTMLDivElement>(null);
+  const initialTarget = msToHmsParts(countdownDefaultMs);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -174,9 +196,9 @@ export function FocusTimer({ pageMode, active, bindOptions }: FocusTimerProps) {
   const [entered, setEntered] = useState(false);
   const [shifting, setShifting] = useState(false);
   const [bindKey, setBindKey] = useState("");
-  const [targetHours, setTargetHours] = useState("0");
-  const [targetMinutes, setTargetMinutes] = useState("25");
-  const [targetSeconds, setTargetSeconds] = useState("0");
+  const [targetHours, setTargetHours] = useState(initialTarget.hours);
+  const [targetMinutes, setTargetMinutes] = useState(initialTarget.minutes);
+  const [targetSeconds, setTargetSeconds] = useState(initialTarget.seconds);
   const [targetReached, setTargetReached] = useState(false);
   const [arrivedOpen, setArrivedOpen] = useState(false);
   const alertedRef = useRef(false);
@@ -322,14 +344,14 @@ export function FocusTimer({ pageMode, active, bindOptions }: FocusTimerProps) {
     setTargetReached(true);
     if (alertedRef.current) return;
     alertedRef.current = true;
-    setArrivedOpen(true);
+    if (!focusDnd) setArrivedOpen(true);
     if (active.status === FOCUS_STATUS_RUNNING) {
       startTransition(async () => {
         await pauseFocusAction(active.id);
         router.refresh();
       });
     }
-  }, [active, displayMs, isCountdown, targetMs, router]);
+  }, [active, displayMs, isCountdown, targetMs, router, focusDnd]);
 
   const secondAngle = ((Math.floor(clockMs / 1000) % 60) / 60) * 360;
   const { index: xiuIndex, xiu } = xiuAtElapsed(displayMs);
