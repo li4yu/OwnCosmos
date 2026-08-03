@@ -66,6 +66,7 @@ export default async function EditEssayPage({ params, searchParams }: Props) {
           essayId={item.id}
           initialTitle={item.title}
           initialBody={item.body}
+          initialBodyFormat={item.bodyFormat}
           initialMood={item.mood}
           initialTagIds={tagIds}
           returnHref={returnHref}

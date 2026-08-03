@@ -15,13 +15,14 @@ import {
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
 } from "@/db/schema";
+import { stripToPlainText } from "@/lib/rich-text";
 
 /** 知识库只收文本；纯图或仅占位标题「无标题」不可藏忆 */
 export function archiveHasKeepableText(item: {
   title: string;
   body: string;
 }) {
-  if (item.body.trim()) return true;
+  if (stripToPlainText(item.body)) return true;
   const title = item.title.trim();
   return Boolean(title && title !== "无标题");
 }

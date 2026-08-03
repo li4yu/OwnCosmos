@@ -190,6 +190,13 @@
       "when": 1785730800000,
       "tag": "0026_phase17_backfill_email_verified",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1785761360786,
+      "tag": "0027_woozy_kree",
+      "breakpoints": true
     }
   ]
 }

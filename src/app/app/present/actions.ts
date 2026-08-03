@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ARCHIVE_REASON_MANUAL } from "@/db/schema";
+import { isRichBodyEmpty } from "@/lib/rich-text";
 import { requireSession } from "@/lib/session";
 import { localTodayNoon } from "@/lib/plan-dates";
 import { createEssay, deleteActiveEssay, updateEssay } from "@/services/essays";
@@ -8,7 +10,6 @@ import { archiveActiveEssay } from "@/services/archive";
 import { refineEssayToPlan } from "@/services/plans";
 import { setEssayTags } from "@/services/tags";
 import { searchArchivesForBorrow } from "@/services/search";
-import { ARCHIVE_REASON_MANUAL } from "@/db/schema";
 
 export type EssayActionState = {
   error?: string;
@@ -32,15 +33,17 @@ export async function createEssayAction(
   const session = await requireSession();
   const title = String(formData.get("title") ?? "");
   const body = String(formData.get("body") ?? "");
+  const bodyFormat = String(formData.get("bodyFormat") ?? "html");
   const mood = String(formData.get("mood") ?? "");
   const folderRaw = String(formData.get("folderId") ?? "").trim();
   const folderId = folderRaw || null;
-  if (!title.trim() && !body.trim()) {
+  if (!title.trim() && isRichBodyEmpty(body)) {
     return { error: "请至少填写标题或正文" };
   }
   const id = await createEssay(session.user.id, {
     title,
     body,
+    bodyFormat,
     mood,
     folderId,
   });
@@ -71,13 +74,15 @@ export async function updateEssayAction(
   const session = await requireSession();
   const title = String(formData.get("title") ?? "");
   const body = String(formData.get("body") ?? "");
+  const bodyFormat = String(formData.get("bodyFormat") ?? "html");
   const mood = String(formData.get("mood") ?? "");
-  if (!title.trim() && !body.trim()) {
+  if (!title.trim() && isRichBodyEmpty(body)) {
     return { error: "请至少填写标题或正文" };
   }
   const updated = await updateEssay(session.user.id, essayId, {
     title,
     body,
+    bodyFormat,
     mood,
   });
   if (!updated) {

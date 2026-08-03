@@ -1,6 +1,7 @@
 import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { archiveItem, essay, plan } from "@/db/schema";
+import { stripToPlainText } from "@/lib/rich-text";
 
 export type SearchHitKind = "essay" | "plan" | "archive";
 
@@ -133,7 +134,7 @@ export async function searchArchivesForBorrow(
   const q = rawQ.trim();
   if (!q) return [];
   const pattern = `%${escapeLike(q)}%`;
-  return getDb()
+  const rows = await getDb()
     .select({
       id: archiveItem.id,
       title: archiveItem.title,
@@ -150,5 +151,13 @@ export async function searchArchivesForBorrow(
       ),
     )
     .orderBy(desc(archiveItem.archivedAt))
-    .limit(limit);
+    .limit(limit * 2);
+
+  return rows
+    .map((row) => ({
+      ...row,
+      body: stripToPlainText(row.body),
+    }))
+    .filter((row) => row.body.length > 0)
+    .slice(0, limit);
 }

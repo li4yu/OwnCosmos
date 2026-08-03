@@ -13,10 +13,16 @@ import {
   type SQL,
 } from "drizzle-orm";
 import { getDb } from "@/db";
-import { essay } from "@/db/schema";
+import { BODY_FORMAT_HTML, BODY_FORMAT_PLAIN, essay } from "@/db/schema";
 import { ESSAY_PAGE_SIZE } from "@/lib/essay-query";
 import { clampListPageSize } from "@/lib/list-paging";
 import { parseMoodKey, type MoodKey } from "@/lib/moods";
+import {
+  isRichBodyEmpty,
+  resolveBodyFormat,
+  sanitizeEssayHtml,
+} from "@/lib/rich-text";
+import { syncEssayImagesFromBody } from "@/services/essay-images";
 
 function newId() {
   return randomBytes(16).toString("hex");
@@ -161,6 +167,7 @@ export async function createEssay(
   input: {
     title: string;
     body: string;
+    bodyFormat?: string | null;
     sourcePlanId?: string | null;
     sourceFocusSessionId?: string | null;
     mood?: string | null;
@@ -176,12 +183,17 @@ export async function createEssay(
   const now = new Date();
   const id = newId();
   const title = input.title.trim() || "无标题";
-  const body = input.body;
+  const bodyFormat = resolveBodyFormat(input.bodyFormat ?? BODY_FORMAT_HTML);
+  const body =
+    bodyFormat === BODY_FORMAT_HTML
+      ? sanitizeEssayHtml(input.body)
+      : input.body;
   await getDb().insert(essay).values({
     id,
     userId,
     title,
     body,
+    bodyFormat,
     createdAt: now,
     updatedAt: now,
     archivedAt: null,
@@ -190,6 +202,9 @@ export async function createEssay(
     mood: parseMoodKey(input.mood),
     folderId,
   });
+  if (bodyFormat === BODY_FORMAT_HTML) {
+    await syncEssayImagesFromBody(userId, id, body);
+  }
   return id;
 }
 
@@ -205,11 +220,12 @@ export async function createYuanxiangEssay(
   const planRow = await getActivePlan(userId, planId);
   if (!planRow || planRow.archivedAt) return null;
   const text = body.trim();
-  if (!text) return null;
+  if (!text || isRichBodyEmpty(text)) return null;
   const title = `缘想 · ${planRow.title.trim() || "无标题"}`;
   return createEssay(userId, {
     title,
     body: text,
+    bodyFormat: BODY_FORMAT_PLAIN,
     sourcePlanId: planId,
   });
 }
@@ -217,21 +233,37 @@ export async function createYuanxiangEssay(
 export async function updateEssay(
   userId: string,
   essayId: string,
-  input: { title: string; body: string; mood?: string | null },
+  input: {
+    title: string;
+    body: string;
+    bodyFormat?: string | null;
+    mood?: string | null;
+  },
 ) {
   const existing = await getActiveEssay(userId, essayId);
   if (!existing) return null;
   const now = new Date();
   const title = input.title.trim() || "无标题";
+  const bodyFormat = resolveBodyFormat(
+    input.bodyFormat ?? existing.bodyFormat ?? BODY_FORMAT_HTML,
+  );
+  const body =
+    bodyFormat === BODY_FORMAT_HTML
+      ? sanitizeEssayHtml(input.body)
+      : input.body;
   await getDb()
     .update(essay)
     .set({
       title,
-      body: input.body,
+      body,
+      bodyFormat,
       updatedAt: now,
       ...(input.mood !== undefined ? { mood: parseMoodKey(input.mood) } : {}),
     })
     .where(and(eq(essay.id, essayId), eq(essay.userId, userId)));
+  if (bodyFormat === BODY_FORMAT_HTML) {
+    await syncEssayImagesFromBody(userId, essayId, body);
+  }
   return essayId;
 }
 

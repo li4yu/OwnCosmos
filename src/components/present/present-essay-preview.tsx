@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { moodDisplay } from "@/lib/moods";
+import { stripToPlainText } from "@/lib/rich-text";
 
 export type PresentEssayPreviewItem = {
   id: string;
@@ -71,7 +72,7 @@ export function PresentEssayPreview({ items }: PresentEssayPreviewProps) {
                   </p>
                 ) : null}
                 <p className="mt-0.5 line-clamp-2 text-[11px] text-[var(--mist)]">
-                  {item.body.trim() || "（无正文）"}
+                  {stripToPlainText(item.body) || "（无正文）"}
                 </p>
               </Link>
             </li>

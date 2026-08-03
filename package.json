@@ -15,6 +15,12 @@
     "db:create-test-user": "tsx scripts/create-test-user.ts"
   },
   "dependencies": {
+    "@tiptap/extension-image": "^3.29.2",
+    "@tiptap/extension-link": "^3.29.2",
+    "@tiptap/extension-placeholder": "^3.29.2",
+    "@tiptap/pm": "^3.29.2",
+    "@tiptap/react": "^3.29.2",
+    "@tiptap/starter-kit": "^3.29.2",
     "better-auth": "^1.6.25",
     "drizzle-orm": "^0.45.2",
     "next": "15.5.7",

@@ -12,11 +12,13 @@ import {
   type EssayActionState,
 } from "@/app/app/present/actions";
 import { BorrowMemoryPanel } from "@/components/essays/borrow-memory-panel";
+import { EssayRichEditor } from "@/components/essays/essay-rich-editor";
 import { MoodPicker } from "@/components/tags/mood-picker";
 import { TagField, type TagOption } from "@/components/tags/tag-field";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
 import { PoeticName } from "@/components/ui/poetic-name";
+import { sanitizeEssayHtml } from "@/lib/rich-text";
 
 type EssayEditorProps =
   | {
@@ -32,6 +34,7 @@ type EssayEditorProps =
       essayId: string;
       initialTitle: string;
       initialBody: string;
+      initialBodyFormat?: string | null;
       initialMood?: string | null;
       initialTagIds?: string[];
       allTags?: TagOption[];
@@ -265,16 +268,15 @@ export function EssayEditor(props: EssayEditorProps) {
 
         <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
           正文
-          <textarea
-            name="body"
+          <EssayRichEditor
             value={body}
-            onChange={(e) => {
-              setBody(e.target.value);
+            format={
+              isEdit ? (props.initialBodyFormat ?? "html") : "html"
+            }
+            onChange={(html) => {
+              setBody(html);
               markDirty();
             }}
-            rows={14}
-            className="auth-field min-h-[280px] resize-y leading-7"
-            placeholder="写下此刻……"
           />
         </label>
 
@@ -298,9 +300,16 @@ export function EssayEditor(props: EssayEditorProps) {
 
         <BorrowMemoryPanel
           onInsert={(text) => {
+            const snippet = text.trim();
+            if (!snippet) return;
             setBody((prev) => {
-              const sep = prev.trim() ? "\n\n" : "";
-              return `${prev}${sep}${text}`;
+              const block = `<blockquote><p>${snippet
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll("\n", "<br>")}</p></blockquote>`;
+              const base = prev.trim() ? sanitizeEssayHtml(prev) : "";
+              return sanitizeEssayHtml(`${base}${block}`);
             });
             markDirty();
           }}

@@ -23,6 +23,7 @@ import {
   archiveReasonLabel,
   archiveTypeLabel,
 } from "@/lib/archive-labels";
+import { stripToPlainText } from "@/lib/rich-text";
 import {
   galleryDetailHref,
   type GallerySectionId,
@@ -452,9 +453,9 @@ export function ArchiveBatchPanel({
                 ) : null}
                 <p className="oc-scroll__body line-clamp-2">
                   {item.type === ARCHIVE_TYPE_ESSAY_TOPIC
-                    ? item.body.trim() ||
+                    ? stripToPlainText(item.body) ||
                       `专题夹 · ${item.cycleCount ?? 0} 篇随笔`
-                    : item.body.trim() ||
+                    : stripToPlainText(item.body) ||
                       (item.imageUrl ? "（图片碎片）" : "（无正文）")}
                 </p>
               </Link>

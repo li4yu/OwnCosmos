@@ -26,7 +26,12 @@ import {
  * Phase 15: 往迹廊 / 心绪鉴 / 通知偏好（复用 archive_item.mood）。
  * Phase 16: 凝时勿扰 / 逆漏默认时长；桌面通知 + Cron 归档；专题随笔。
  * Phase 17: 邮箱验证 / 重置改密 / 注销（复用 email_verified + verification）。
+ * Phase 18: 流思笺富文本 HTML + essay_image；图片本地 uploads（暂不 S3）。
  */
+
+/** Phase 18: 正文格式 */
+export const BODY_FORMAT_PLAIN = "plain" as const;
+export const BODY_FORMAT_HTML = "html" as const;
 
 /** Phase 16: 逆漏默认时长（25 分钟） */
 export const DEFAULT_FOCUS_COUNTDOWN_MS = 1_500_000;
@@ -134,6 +139,8 @@ export const essay = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
+    /** Phase 18: plain | html */
+    bodyFormat: text("body_format").notNull().default(BODY_FORMAT_PLAIN),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
     /** NULL = 流动中；Phase 4 归档时写入 */
@@ -167,6 +174,26 @@ export const essay = pgTable(
       t.archivedAt,
     ),
   ],
+);
+
+/**
+ * Phase 18: 随笔插图登记（URL 在正文 HTML 内；删篇 cascade，本阶段不删磁盘文件）
+ */
+export const essayImage = pgTable(
+  "essay_image",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    essayId: text("essay_id")
+      .notNull()
+      .references(() => essay.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    sortIndex: integer("sort_index").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("essay_image_user_essay_idx").on(t.userId, t.essayId)],
 );
 
 /** Phase 4+: 拾忆馆藏条目（快照；类型可扩展） */
@@ -223,6 +250,8 @@ export const archiveItem = pgTable(
     type: text("type").notNull(),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
+    /** Phase 18: 随笔沉淀快照格式 plain | html */
+    bodyFormat: text("body_format").notNull().default(BODY_FORMAT_PLAIN),
     sourceModule: text("source_module").notNull(),
     sourceEssayId: text("source_essay_id").references(() => essay.id, {
       onDelete: "set null",
@@ -300,6 +329,8 @@ export const archiveTopicEssay = pgTable(
       .references(() => archiveItem.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
+    /** Phase 18 */
+    bodyFormat: text("body_format").notNull().default(BODY_FORMAT_PLAIN),
     mood: text("mood"),
     sourceEssayId: text("source_essay_id").references(() => essay.id, {
       onDelete: "set null",
@@ -618,6 +649,7 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   essays: many(essay),
   essayFolders: many(essayFolder),
+  essayImages: many(essayImage),
   archiveItems: many(archiveItem),
   archiveTopicEssays: many(archiveTopicEssay),
   plans: many(plan),
@@ -658,6 +690,7 @@ export const essayRelations = relations(essay, ({ one, many }) => ({
     fields: [essay.folderId],
     references: [essayFolder.id],
   }),
+  images: many(essayImage),
   archiveItems: many(archiveItem),
   refinedPlans: many(plan),
   sourcePlan: one(plan, {
@@ -671,6 +704,17 @@ export const essayRelations = relations(essay, ({ one, many }) => ({
     relationName: "essay_from_focus",
   }),
   essayTags: many(essayTag),
+}));
+
+export const essayImageRelations = relations(essayImage, ({ one }) => ({
+  user: one(user, {
+    fields: [essayImage.userId],
+    references: [user.id],
+  }),
+  essay: one(essay, {
+    fields: [essayImage.essayId],
+    references: [essay.id],
+  }),
 }));
 
 export const archiveItemRelations = relations(archiveItem, ({ one, many }) => ({

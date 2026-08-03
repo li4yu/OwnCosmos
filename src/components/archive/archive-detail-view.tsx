@@ -21,11 +21,13 @@ import { ArchiveMoodEditor } from "@/components/archive/archive-mood-editor";
 import { FragmentActions } from "@/components/archive/fragment-actions";
 import { KeepArchiveButton } from "@/components/archive/keep-archive-button";
 import { QuoteNewActions } from "@/components/archive/quote-new-actions";
+import { EssayBodyView } from "@/components/essays/essay-body-view";
 import { moodDisplay } from "@/lib/moods";
 import { listArchiveItemTags } from "@/services/tags";
 import { formatFocusDurationMs } from "@/lib/focus-duration";
 import { cycleUnitLabel } from "@/lib/plan-kinds";
 import { getFocusSession } from "@/services/focus";
+import { stripToPlainText } from "@/lib/rich-text";
 
 function formatWhen(d: Date) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -255,16 +257,26 @@ export async function ArchiveDetailView({
           />
         ) : null}
         {!isTopic ? (
-          <div
-            className="mt-6 whitespace-pre-wrap text-base leading-8 text-[var(--paper)] select-text"
-            aria-readonly={isFragment ? undefined : "true"}
-          >
-            {item.body.trim() || (item.imageUrl ? "" : "（无正文）")}
-          </div>
-        ) : item.body.trim() ? (
-          <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[var(--mist)]">
-            {item.body}
-          </p>
+          isFragment ? (
+            <div
+              className="mt-6 whitespace-pre-wrap text-base leading-8 text-[var(--paper)] select-text"
+            >
+              {item.body.trim() || (item.imageUrl ? "" : "（无正文）")}
+            </div>
+          ) : (
+            <EssayBodyView
+              body={item.body}
+              bodyFormat={item.bodyFormat}
+              className="mt-6 text-base leading-8 text-[var(--paper)] select-text"
+              empty={item.imageUrl ? "" : "（无正文）"}
+            />
+          )
+        ) : stripToPlainText(item.body) ? (
+          <EssayBodyView
+            body={item.body}
+            bodyFormat={item.bodyFormat}
+            className="mt-4 text-sm leading-7 text-[var(--mist)]"
+          />
         ) : null}
       </article>
 
@@ -293,9 +305,11 @@ export async function ArchiveDetailView({
                       {moodDisplay(entry.mood)}
                     </p>
                   ) : null}
-                  <p className="oc-scroll__body whitespace-pre-wrap">
-                    {entry.body.trim() || "（无正文）"}
-                  </p>
+                  <EssayBodyView
+                    body={entry.body}
+                    bodyFormat={entry.bodyFormat}
+                    className="oc-scroll__body"
+                  />
                 </li>
               ))}
             </ul>

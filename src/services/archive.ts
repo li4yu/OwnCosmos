@@ -33,6 +33,7 @@ import {
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
+  BODY_FORMAT_PLAIN,
   WIPE_ARCHIVE_TYPES,
   archiveItem,
   archiveTopicEssay,
@@ -41,6 +42,7 @@ import {
 } from "@/db/schema";
 import { DEFAULT_ESSAY_IDLE_HOURS } from "@/lib/archive-constants";
 import { archiveHasKeepableText } from "@/lib/archive-labels";
+import { resolveBodyFormat } from "@/lib/rich-text";
 import { clampListPageSize } from "@/lib/list-paging";
 import { parseMoodKey, type MoodKey } from "@/lib/moods";
 
@@ -75,6 +77,7 @@ async function insertEssaySediment(
     type: ARCHIVE_TYPE_ESSAY_SEDIMENT,
     title: row.title,
     body: row.body,
+    bodyFormat: resolveBodyFormat(row.bodyFormat),
     sourceModule: "present",
     sourceEssayId: row.id,
     sourcePlanId: row.sourcePlanId,
@@ -158,6 +161,7 @@ export async function archiveEssayFolder(userId: string, folderId: string) {
     type: ARCHIVE_TYPE_ESSAY_TOPIC,
     title: folder.name,
     body: folder.body,
+    bodyFormat: BODY_FORMAT_PLAIN,
     sourceModule: "present",
     archiveReason: ARCHIVE_REASON_MANUAL,
     archivedAt: now,
@@ -176,6 +180,7 @@ export async function archiveEssayFolder(userId: string, folderId: string) {
       archiveItemId: archiveId,
       title: row.title,
       body: row.body,
+      bodyFormat: resolveBodyFormat(row.bodyFormat),
       mood: row.mood,
       sourceEssayId: row.id,
       sourceCreatedAt: row.createdAt,

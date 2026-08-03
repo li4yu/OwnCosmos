@@ -8,6 +8,7 @@ import {
   deleteEssayAction,
 } from "@/app/app/present/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { stripToPlainText } from "@/lib/rich-text";
 
 type EssayListItemProps = {
   id: string;
@@ -78,7 +79,7 @@ export function EssayListItem({
             </p>
           ) : null}
           <p className="oc-scroll__body line-clamp-2">
-            {body.trim() || "（无正文）"}
+            {stripToPlainText(body) || "（无正文）"}
           </p>
         </Link>
         <div className="oc-scroll__actions flex-col">

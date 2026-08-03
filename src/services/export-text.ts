@@ -1,8 +1,9 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import { essay, plan, PLAN_STATUS_OPEN } from "@/db/schema";
-import { planKindLabel } from "@/lib/plan-kinds";
 import { moodDisplay } from "@/lib/moods";
+import { stripToPlainText } from "@/lib/rich-text";
+import { planKindLabel } from "@/lib/plan-kinds";
 
 function formatWhen(d: Date) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -51,7 +52,7 @@ export async function buildOpenContentExportText(userId: string) {
       lines.push(`更新：${formatWhen(e.updatedAt)}`);
       if (e.mood) lines.push(`心情：${moodDisplay(e.mood)}`);
       lines.push("");
-      lines.push(e.body || "（空正文）");
+      lines.push(stripToPlainText(e.body) || "（空正文）");
       lines.push("---");
     }
   }
