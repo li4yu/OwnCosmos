@@ -224,7 +224,7 @@ export function ArchiveBatchPanel({
       ? `将所选 ${selected.size} 条纳入知识库（图片仍不进入向量侧）。是否继续？`
       : batchKind === "unkeep"
         ? `将把所选 ${selected.size} 条移出知识库（仍保留在馆藏）。是否继续？`
-        : `将永久删除所选中可抹的 ${wipeableSelected.length} 条馆藏（含轮期/日课归档、碎片等）。不删除来日途计划与日课本体；打卡次数请用「取消打卡」回退。此操作不可恢复。`;
+        : `将永久删除所选中可抹的 ${wipeableSelected.length} 条馆藏（含轮期/日课归档、碎片等）。若含规划归档，会同步从来日途「已完成」中删除对应计划；不删除未完成的计划与日课本体。打卡次数请用「取消打卡」回退。此操作不可恢复。`;
 
   return (
     <div className="flex flex-col gap-2">
@@ -396,7 +396,7 @@ export function ArchiveBatchPanel({
             >
               <PoeticName
                 name="抹忆所选"
-                tip="永久删除馆藏条目（含轮期/日课归档、碎片）；不删除来日途计划与日课本体"
+                tip="永久删除馆藏条目；规划归档会同步清掉「已完成」对应计划，不删未完成计划与日课本体"
               />
             </button>
           ) : null}

@@ -93,6 +93,9 @@ export function UserMenu({ name, image, email }: UserMenuProps) {
           <MenuLink href="/app/settings" onNavigate={() => setOpen(false)}>
             设置
           </MenuLink>
+          <MenuLink href="/app/guide" onNavigate={() => setOpen(false)}>
+            使用说明
+          </MenuLink>
           <MenuLink href="/app/search" onNavigate={() => setOpen(false)}>
             全局检索
           </MenuLink>

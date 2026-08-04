@@ -52,6 +52,12 @@ export default async function AppHomePage() {
             · 留存过往，安住当下，奔赴未来
           </span>
         </p>
+        <p className="home-v1__help">
+          今日先看摘要与临期，再按需进入时序。
+          <Link href="/app/guide" className="home-v1__help-link">
+            使用说明 →
+          </Link>
+        </p>
         <div className="home-v1__actions home-v1__actions--hero" aria-label="快捷动作">
           <Link href="/app/present/essays/new" className="home-v1__action">
             写随笔
@@ -74,7 +80,7 @@ export default async function AppHomePage() {
       <section className="home-v1__summary" aria-label="今日摘要">
         <div className="home-v1__summary-head">
           <h2>今日摘要</h2>
-          <p>只读聚合</p>
+          <p>临期 · 随笔 · 专注 · 日课</p>
         </div>
         <ul className="home-v1__metrics">
           <li>

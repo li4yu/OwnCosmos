@@ -226,8 +226,9 @@ export const ARCHIVE_REASON_FOCUS_COMPLETE = "focus_complete" as const;
 export const ARCHIVE_REASON_USER_UPLOAD = "user_upload" as const;
 
 /**
- * 抹忆可删类型（硬删馆藏行；不级联删来日途计划 / 日课本体）。
- * 打卡本账仍用「取消打卡」回退次数。
+ * 抹忆可删类型（硬删馆藏行）。
+ * 规划归档（plan_archive）抹忆时会同步删除已完成的来日途计划；
+ * 不删除未完成计划与日课本体。打卡本账仍用「取消打卡」回退次数。
  */
 export const WIPE_ARCHIVE_TYPES = [
   ARCHIVE_TYPE_ESSAY_SEDIMENT,

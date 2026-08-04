@@ -1704,6 +1704,23 @@ button,
     display: none;
   }
 }
+.home-v1__help {
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--mist) 90%, transparent);
+}
+.home-v1__help-link {
+  margin-left: 0.45rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--amber);
+  text-decoration: none;
+}
+.home-v1__help-link:hover {
+  text-decoration: underline;
+}
 .home-v1__date {
   margin: 0;
   font-family: var(--font-cormorant), Georgia, serif;
@@ -4379,6 +4396,15 @@ button,
   background: var(--void);
   color: var(--paper);
   font-family: var(--font-noto-serif), "Songti SC", serif;
+}
+.guide-page--embedded {
+  min-height: 0;
+  background: transparent;
+}
+.guide-page--embedded .guide-page__main {
+  max-width: none;
+  margin: 0;
+  padding: 0.25rem 0 2.5rem;
 }
 .guide-page__topbar {
   position: sticky;

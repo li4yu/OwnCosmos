@@ -234,8 +234,8 @@ export function GuestAtmosphereLanding({
             </h1>
             <p className="guest-landing__lede">
               {loggedIn && userName
-                ? `你好，${userName}。每个人都拥有一座只属于自己的精神宇宙。留存过往，安住当下，奔赴未来——并以专注，把光阴凝成可回望的轨迹。`
-                : "每个人都拥有一座只属于自己的精神宇宙。留存过往，安住当下，奔赴未来——并以专注，把光阴凝成可回望的轨迹。"}
+                ? `你好，${userName}。自宇 V1.0 已就绪：以时序留存过往、安住当下、奔赴未来，并以专注把光阴凝成可回望的轨迹。需要步骤时打开「说明」。`
+                : "自宇 V1.0：每个人都拥有一座只属于自己的精神宇宙。留存过往，安住当下，奔赴未来——并以专注，把光阴凝成可回望的轨迹。完整步骤见「说明」。"}
             </p>
             <div className="guest-landing__pills" role="tablist" aria-label="时序维度">
               {ORBIT_PILLS.map((p) => (

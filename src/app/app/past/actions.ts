@@ -30,6 +30,12 @@ function revalidateGallery(itemId?: string) {
   if (itemId) revalidatePath(`/app/past/gallery/${itemId}`);
 }
 
+function revalidatePlansAfterWipe() {
+  revalidatePath("/app/future/plans");
+  revalidatePath("/app/future");
+  revalidatePath("/app/present/due");
+}
+
 export async function keepArchiveAction(
   itemId: string,
   kept: boolean,
@@ -59,6 +65,7 @@ export async function wipeArchivesByIdsAction(
   const result = await wipeInflowArchivesByIds(session.user.id, itemIds);
   if (!result.ok) return { error: result.error };
   revalidateGallery();
+  revalidatePlansAfterWipe();
   return { ok: true, count: result.count };
 }
 

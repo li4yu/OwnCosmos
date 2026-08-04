@@ -10,9 +10,11 @@ import {
   gte,
   ilike,
   inArray,
+  isNotNull,
   isNull,
   lt,
   lte,
+  or,
   sql,
   type SQL,
 } from "drizzle-orm";
@@ -34,11 +36,13 @@ import {
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
   BODY_FORMAT_PLAIN,
+  PLAN_STATUS_DONE,
   WIPE_ARCHIVE_TYPES,
   archiveItem,
   archiveTopicEssay,
   essay,
   essayFolder,
+  plan,
 } from "@/db/schema";
 import { DEFAULT_ESSAY_IDLE_HOURS } from "@/lib/archive-constants";
 import { archiveHasKeepableText } from "@/lib/archive-labels";
@@ -453,12 +457,30 @@ async function deleteLocalImage(imageKey: string | null | undefined) {
 
 async function hardDeleteArchiveRows(
   userId: string,
-  rows: { id: string; imageKey: string | null }[],
+  rows: {
+    id: string;
+    imageKey: string | null;
+    type: string;
+    sourcePlanId: string | null;
+  }[],
 ) {
   for (const row of rows) {
     await deleteLocalImage(row.imageKey);
   }
   if (rows.length === 0) return 0;
+
+  /** 规划归档抹忆时，同步清掉来日途「已完成」里对应计划 */
+  const completedPlanIds = [
+    ...new Set(
+      rows
+        .filter(
+          (r) =>
+            r.type === ARCHIVE_TYPE_PLAN_ARCHIVE && Boolean(r.sourcePlanId?.trim()),
+        )
+        .map((r) => r.sourcePlanId!.trim()),
+    ),
+  ];
+
   await getDb()
     .delete(archiveItem)
     .where(
@@ -470,6 +492,19 @@ async function hardDeleteArchiveRows(
         ),
       ),
     );
+
+  if (completedPlanIds.length > 0) {
+    await getDb()
+      .delete(plan)
+      .where(
+        and(
+          eq(plan.userId, userId),
+          inArray(plan.id, completedPlanIds),
+          or(isNotNull(plan.archivedAt), eq(plan.status, PLAN_STATUS_DONE))!,
+        ),
+      );
+  }
+
   return rows.length;
 }
 
@@ -488,6 +523,8 @@ export async function wipeInflowArchives(
     .select({
       id: archiveItem.id,
       imageKey: archiveItem.imageKey,
+      type: archiveItem.type,
+      sourcePlanId: archiveItem.sourcePlanId,
     })
     .from(archiveItem)
     .where(
@@ -516,6 +553,8 @@ export async function wipeInflowArchivesByIds(
     .select({
       id: archiveItem.id,
       imageKey: archiveItem.imageKey,
+      type: archiveItem.type,
+      sourcePlanId: archiveItem.sourcePlanId,
     })
     .from(archiveItem)
     .where(
