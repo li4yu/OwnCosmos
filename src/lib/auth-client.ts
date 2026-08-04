@@ -17,6 +17,7 @@ export const authClient = createAuthClient({
         notifyDueReminder: { type: "boolean", required: true },
         focusDnd: { type: "boolean", required: true },
         focusCountdownDefaultMs: { type: "number", required: true },
+        aiEnabled: { type: "boolean", required: true },
       },
     }),
   ],

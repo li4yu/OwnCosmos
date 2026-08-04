@@ -1,9 +1,9 @@
-import { AppearanceForm } from "@/components/settings/appearance-form";
-import { ArchivePreferenceForm } from "@/components/settings/archive-preference-form";
 import {
   ChangePasswordForm,
   DeleteAccountForm,
 } from "@/components/settings/account-security-forms";
+import { AppearanceForm } from "@/components/settings/appearance-form";
+import { ArchivePreferenceForm } from "@/components/settings/archive-preference-form";
 import { ExportChartsPanel } from "@/components/settings/export-charts-panel";
 import { ExportOpenContent } from "@/components/settings/export-open-content";
 import { FocusPreferenceForm } from "@/components/settings/focus-preference-form";
@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { DEFAULT_FOCUS_COUNTDOWN_MS } from "@/db/schema";
 import { requireSession } from "@/lib/session";
+import Link from "next/link";
 
 export default async function SettingsPage() {
   const session = await requireSession();
@@ -109,6 +110,21 @@ export default async function SettingsPage() {
             <DeleteAccountForm />
           </div>
         </div>
+      </section>
+
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+          AI 开发
+        </p>
+        <p className="mt-0.5 text-xs text-[var(--mist)]">
+          Phase 19 临时入口，用于检查语义召回；不进顶栏。
+        </p>
+        <Link
+          href="/app/ai/recall"
+          className="mt-1.5 inline-block text-sm text-[var(--teal)] underline-offset-2 hover:underline"
+        >
+          打开 RAG 召回测试 →
+        </Link>
       </section>
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">

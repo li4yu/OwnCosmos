@@ -81,6 +81,7 @@ export function RegisterForm({
       notifyDueReminder: true,
       focusDnd: false,
       focusCountdownDefaultMs: 1_500_000,
+      aiEnabled: false,
     });
 
     if (signUpError) {

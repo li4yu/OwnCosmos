@@ -18,6 +18,11 @@ import {
   sql,
   type SQL,
 } from "drizzle-orm";
+import {
+  scheduleArchiveRagDelete,
+  scheduleArchiveRagUpsert,
+  deleteArchiveItemsRag,
+} from "@/ai";
 import { getDb } from "@/db";
 import {
   ARCHIVE_REASON_AUTO_48H,
@@ -96,6 +101,7 @@ async function insertEssaySediment(
   });
   const { copyEssayTagsToArchive } = await import("@/services/tags");
   await copyEssayTagsToArchive(row.userId, row.id, id);
+  scheduleArchiveRagUpsert(row.userId, id);
   return id;
 }
 
@@ -210,6 +216,8 @@ export async function archiveEssayFolder(userId: string, folderId: string) {
   await getDb()
     .delete(essayFolder)
     .where(and(eq(essayFolder.id, folderId), eq(essayFolder.userId, userId)));
+
+  scheduleArchiveRagUpsert(userId, archiveId);
 
   return {
     ok: true as const,
@@ -403,6 +411,8 @@ export async function setArchiveKept(
       updatedAt: now,
     })
     .where(and(eq(archiveItem.id, itemId), eq(archiveItem.userId, userId)));
+  if (kept) scheduleArchiveRagUpsert(userId, itemId);
+  else scheduleArchiveRagDelete(userId, itemId);
   return { ok: true };
 }
 
@@ -441,6 +451,10 @@ export async function setArchiveKeptMany(
     .where(
       and(eq(archiveItem.userId, userId), inArray(archiveItem.id, targetIds)),
     );
+  for (const id of targetIds) {
+    if (kept) scheduleArchiveRagUpsert(userId, id);
+    else scheduleArchiveRagDelete(userId, id);
+  }
   return { ok: true, count: targetIds.length };
 }
 
@@ -468,6 +482,11 @@ async function hardDeleteArchiveRows(
     await deleteLocalImage(row.imageKey);
   }
   if (rows.length === 0) return 0;
+
+  await deleteArchiveItemsRag(
+    userId,
+    rows.map((r) => r.id),
+  );
 
   /** 规划归档抹忆时，同步清掉来日途「已完成」里对应计划 */
   const completedPlanIds = [
@@ -658,12 +677,18 @@ export async function updateMemoryFragment(
         : { inKnowledge: false, keptAt: null }),
     })
     .where(and(eq(archiveItem.id, itemId), eq(archiveItem.userId, userId)));
+
+  const nextKept = keepable && item.inKnowledge;
+  if (nextKept) scheduleArchiveRagUpsert(userId, itemId);
+  else if (item.inKnowledge) scheduleArchiveRagDelete(userId, itemId);
+
   return itemId;
 }
 
 export async function deleteMemoryFragment(userId: string, itemId: string) {
   const item = await getArchiveItem(userId, itemId);
   if (!item || item.type !== ARCHIVE_TYPE_MEMORY_FRAGMENT) return false;
+  await deleteArchiveItemsRag(userId, [itemId]);
   await deleteLocalImage(item.imageKey);
   await getDb()
     .delete(archiveItem)

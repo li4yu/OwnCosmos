@@ -688,6 +688,8 @@ async function insertPlanArchive(
   });
   const { copyPlanTagsToArchive } = await import("@/services/tags");
   await copyPlanTagsToArchive(row.userId, row.id, id);
+  const { scheduleArchiveRagUpsert } = await import("@/ai");
+  scheduleArchiveRagUpsert(row.userId, id);
   return id;
 }
 
@@ -813,6 +815,8 @@ export async function syncCycleArchiveTaskSnapshot(
   });
   const { copyPlanTagsToArchive } = await import("@/services/tags");
   await copyPlanTagsToArchive(userId, row.id, id);
+  const { scheduleArchiveRagUpsert } = await import("@/ai");
+  scheduleArchiveRagUpsert(userId, id);
   return id;
 }
 
@@ -907,6 +911,8 @@ async function upsertCycleSeriesArchive(
   });
   const { copyPlanTagsToArchive } = await import("@/services/tags");
   await copyPlanTagsToArchive(row.userId, row.id, id);
+  const { scheduleArchiveRagUpsert } = await import("@/ai");
+  scheduleArchiveRagUpsert(row.userId, id);
   return id;
 }
 

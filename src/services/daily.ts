@@ -141,6 +141,8 @@ async function upsertDailyHabitArchive(
         sourceUpdatedAt: now,
       })
       .where(eq(archiveItem.id, prev.id));
+    const { scheduleArchiveRagUpsert } = await import("@/ai");
+    scheduleArchiveRagUpsert(habit.userId, prev.id);
     return prev.id;
   }
 
@@ -161,6 +163,8 @@ async function upsertDailyHabitArchive(
     inKnowledge: true,
     keptAt: now,
   });
+  const { scheduleArchiveRagUpsert } = await import("@/ai");
+  scheduleArchiveRagUpsert(habit.userId, id);
   return id;
 }
 

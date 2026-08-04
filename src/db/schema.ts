@@ -27,6 +27,7 @@ import {
  * Phase 16: 凝时勿扰 / 逆漏默认时长；桌面通知 + Cron 归档；专题随笔。
  * Phase 17: 邮箱验证 / 重置改密 / 注销（复用 email_verified + verification）。
  * Phase 18: 流思笺富文本 HTML + essay_image；图片本地 uploads（暂不 S3）。
+ * Phase 19: AI/RAG — user.ai_enabled；rag_document 对账（向量在 Milvus）。
  */
 
 /** Phase 18: 正文格式 */
@@ -63,9 +64,54 @@ export const user = pgTable("user", {
   focusCountdownDefaultMs: integer("focus_countdown_default_ms")
     .notNull()
     .default(DEFAULT_FOCUS_COUNTDOWN_MS),
+  /** Phase 19: 用户启用 AI（须同时 AI_ENABLED=true） */
+  aiEnabled: boolean("ai_enabled").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+/** Phase 19: RAG 对账状态 */
+export const RAG_CORPUS_USER = "user" as const;
+export const RAG_CORPUS_PROJECT = "project" as const;
+export const RAG_SOURCE_ARCHIVE = "archive_item" as const;
+export const RAG_SOURCE_HANDBOOK = "handbook_section" as const;
+export const RAG_STATUS_PENDING = "pending" as const;
+export const RAG_STATUS_SYNCED = "synced" as const;
+export const RAG_STATUS_ERROR = "error" as const;
+export const RAG_STATUS_DELETED = "deleted" as const;
+
+/**
+ * Phase 19: RAG 对账薄表（无 embedding；向量在 Milvus）
+ * source_id：馆藏 = archive_item.id；手册 = 稳定节 id。不建 FK 到 archive_item。
+ */
+export const ragDocument = pgTable(
+  "rag_document",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+    corpus: text("corpus").notNull(),
+    sourceKind: text("source_kind").notNull(),
+    sourceId: text("source_id").notNull(),
+    archiveType: text("archive_type"),
+    contentHash: text("content_hash").notNull(),
+    chunkCount: integer("chunk_count").notNull().default(0),
+    embeddingModel: text("embedding_model").notNull(),
+    status: text("status").notNull().default(RAG_STATUS_PENDING),
+    lastSyncedAt: timestamp("last_synced_at"),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("rag_document_corpus_source_uidx").on(t.corpus, t.sourceId),
+    index("rag_document_user_corpus_status_idx").on(
+      t.userId,
+      t.corpus,
+      t.status,
+    ),
+    index("rag_document_status_updated_idx").on(t.status, t.updatedAt),
+  ],
+);
 
 export const session = pgTable("session", {
   id: text("id").primaryKey(),

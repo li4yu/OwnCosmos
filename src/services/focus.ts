@@ -322,6 +322,9 @@ export async function completeFocusSession(
     keptAt: now,
   });
 
+  const { scheduleArchiveRagUpsert } = await import("@/ai");
+  scheduleArchiveRagUpsert(userId, archiveId);
+
   await getDb()
     .update(focusSession)
     .set({

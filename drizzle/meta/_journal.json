@@ -197,6 +197,13 @@
       "when": 1785761360786,
       "tag": "0027_woozy_kree",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1785872483312,
+      "tag": "0028_wet_joystick",
+      "breakpoints": true
     }
   ]
 }

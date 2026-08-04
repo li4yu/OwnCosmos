@@ -12,7 +12,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:create-test-user": "tsx scripts/create-test-user.ts"
+    "db:create-test-user": "tsx scripts/create-test-user.ts",
+    "rag:import-handbook": "tsx scripts/rag-import-handbook.ts",
+    "rag:backfill-user": "tsx scripts/rag-backfill-user.ts"
   },
   "dependencies": {
     "@tiptap/extension-image": "^3.29.2",
@@ -21,6 +23,7 @@
     "@tiptap/pm": "^3.29.2",
     "@tiptap/react": "^3.29.2",
     "@tiptap/starter-kit": "^3.29.2",
+    "@zilliz/milvus2-sdk-node": "2.5.12",
     "better-auth": "^1.6.25",
     "drizzle-orm": "^0.45.2",
     "next": "15.5.7",
