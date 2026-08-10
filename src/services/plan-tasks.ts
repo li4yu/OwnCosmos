@@ -47,7 +47,7 @@ export async function listPlanTasks(userId: string, planId: string) {
     .orderBy(asc(planTask.sortOrder), asc(planTask.createdAt));
 }
 
-/** 首页 / 轮期列表：进行中轮期下的子任务 */
+/** 首页 / 周期计划列表：进行中周期计划下的子任务 */
 export async function listCyclePlanTasksForHome(userId: string) {
   return getDb()
     .select({
@@ -99,7 +99,7 @@ export async function createPlanTask(
   return id;
 }
 
-/** 子任务打卡：+1 次数；同一本地日仅一次；不完成轮期 */
+/** 子任务打卡：+1 次数；同一本地日仅一次；不完成周期计划 */
 export async function checkinPlanTask(
   userId: string,
   taskId: string,
@@ -135,12 +135,12 @@ export async function checkinPlanTask(
       updatedAt: now,
     })
     .where(and(eq(planTask.id, taskId), eq(planTask.userId, userId)));
-  // 参照日课：打卡即把子任务名与次数写入轮期系列馆藏（不计本期次数）
+  // 参照每日打卡：打卡即把子任务名与次数写入周期计划系列馆藏（不计本期次数）
   await syncCycleArchiveTaskSnapshot(userId, row.task.planId, now);
   return { ok: true, checkCount: nextCount, lastCheckinDate: today };
 }
 
-/** 取消今日子任务打卡：次数 -1，清除今日标记，并同步轮期馆藏快照 */
+/** 取消今日子任务打卡：次数 -1，清除今日标记，并同步周期计划馆藏快照 */
 export async function cancelPlanTaskCheckin(
   userId: string,
   taskId: string,
@@ -199,7 +199,7 @@ export async function deletePlanTask(userId: string, taskId: string) {
   return true;
 }
 
-/** 轮期滚下一期：带走子任务、累计次数与今日打卡标记 */
+/** 周期计划滚下一期：带走子任务、累计次数与今日打卡标记 */
 export async function copyPlanTasksToPlan(
   userId: string,
   fromPlanId: string,

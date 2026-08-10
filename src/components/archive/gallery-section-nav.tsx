@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { GALLERY_SECTIONS, matchGallerySection } from "@/lib/gallery-sections";
 
-/** 拾忆馆藏内三级分区 */
+/** 馆藏内三级分区 */
 export function GallerySectionNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -13,7 +13,7 @@ export function GallerySectionNav() {
 
   return (
     <nav
-      aria-label="拾忆馆藏分区"
+      aria-label="馆藏分区"
       className="flex flex-wrap gap-1 rounded-lg border border-[var(--line)] bg-[var(--field-bg)]/40 p-1"
     >
       {GALLERY_SECTIONS.map((sec) => {
@@ -33,7 +33,7 @@ export function GallerySectionNav() {
             {sec.id === "all" ? (
               sec.name
             ) : (
-              <PoeticName name={sec.name} tip={sec.tip} />
+              <PoeticName name={sec.name} tip={sec.tip} nestInControl />
             )}
             {!sec.ready ? (
               <span className="ml-1.5 font-mono text-[9px] tracking-wide opacity-60">

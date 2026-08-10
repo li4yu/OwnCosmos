@@ -23,7 +23,7 @@ export default async function GalleryMemoryFragmentPage({
           href="/app/past/gallery/memory-fragment/new"
           className="ui-btn-ghost ui-btn-sm"
         >
-          拾取碎片
+          上传碎片
         </Link>
       </div>
       <GallerySectionView

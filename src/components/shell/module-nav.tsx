@@ -51,7 +51,7 @@ export function ModuleNav() {
               }`}
               aria-current={isActive ? "page" : undefined}
             >
-              <PoeticName name={mod.name} tip={mod.tip} />
+              <PoeticName name={mod.name} tip={mod.tip} nestInControl />
             </button>
           );
         })}

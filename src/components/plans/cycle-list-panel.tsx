@@ -21,7 +21,7 @@ type CycleListPanelProps = {
   emptyHint: string;
 };
 
-/** 轮期「进行中」查询条 + 分页壳（列表行由服务端渲染以带打卡） */
+/** 周期计划「进行中」查询条 + 分页壳（列表行由服务端渲染以带打卡） */
 export function CycleListPanel({
   basePath = "/app/future/cycles",
   total,
@@ -65,7 +65,7 @@ export function CycleListPanel({
 
   return (
     <div className="flex flex-col gap-2">
-      <section className="oc-filter" aria-label="筛选轮期">
+      <section className="oc-filter" aria-label="筛选周期计划">
         <div className="oc-filter__head">
           <p className="oc-filter__eyebrow">筛选</p>
           <div className="oc-filter__actions">
@@ -148,7 +148,7 @@ export function CycleListPanel({
       )}
 
       <ListPager
-        label="轮期分页"
+        label="周期计划分页"
         page={page}
         pageSize={pageSize}
         totalPages={totalPages}

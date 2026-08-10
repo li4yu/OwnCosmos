@@ -142,14 +142,14 @@ function validatePlanInput(fields: ReturnType<typeof readPlanFields>): string | 
     return "解锁日期不能早于今天";
   }
   if (kind === PLAN_KIND_CYCLE && !cycleUnit) {
-    return "请选择轮期单位";
+    return "请选择周期计划单位";
   }
   if (kind === PLAN_KIND_CYCLE && cycleUnit === CYCLE_UNIT_CUSTOM) {
     if (!clampCycleEveryDays(Number(cycleEveryDaysRaw))) {
       return "自定义间隔请填写 2–365 天";
     }
   }
-  // 轮期 / 胶囊无临期配
+  // 周期计划 / 胶囊无提前提醒
   if (kind !== PLAN_KIND_CAPSULE && kind !== PLAN_KIND_CYCLE) {
     const remindError = validateRemindDays(remindRaw, dueAt);
     if (remindError) return remindError;
@@ -178,7 +178,7 @@ export async function createPlanAction(
     mood: "",
   });
 
-  // 新建轮期时可顺带挂子任务（心情 / 绪签仅流思笺）
+  // 新建周期计划时可顺带挂子任务（心情 / 标签仅随笔）
   if (fields.kind === PLAN_KIND_CYCLE) {
     const titles = formData
       .getAll("taskTitle")
@@ -210,12 +210,12 @@ export async function updatePlanAction(
     remindDays: fields.remindRaw,
     cycleUnit: fields.cycleUnit,
     cycleEveryDays: clampCycleEveryDays(Number(fields.cycleEveryDaysRaw)),
-    // 不更新 mood：心情只出现在流思笺
+    // 不更新 mood：心情只出现在随笔
   });
   if (!updated) {
     return { error: "计划不存在、已归档，或时间胶囊封存后不可修改" };
   }
-  // 不改绪签：绪签只出现在流思笺
+  // 不改标签：标签只出现在随笔
   revalidatePlans(planId);
   return {};
 }
@@ -236,7 +236,7 @@ export async function setPlanStatusAction(
     );
     if (!archiveId) {
       return {
-        error: "计划不存在、已归档，或轮期尚未到期（到期当天起可完成）",
+        error: "计划不存在、已归档，或周期计划尚未到期（到期当天起可完成）",
       };
     }
     revalidatePlans(planId);
@@ -275,12 +275,12 @@ export async function createPlanTaskAction(
   const session = await requireSession();
   const title = String(formData.get("title") ?? "");
   const id = await createPlanTask(session.user.id, planId, title);
-  if (!id) return { error: "无法添加子任务（仅轮期可添加）" };
+  if (!id) return { error: "无法添加子任务（仅周期计划可添加）" };
   revalidatePlans(planId);
   return { createdId: id };
 }
 
-/** 轮期子任务打卡：只加次数，每天一次，不完成本期 */
+/** 周期计划子任务打卡：只加次数，每天一次，不完成本期 */
 export async function checkinPlanTaskAction(
   planId: string,
   taskId: string,
@@ -293,7 +293,7 @@ export async function checkinPlanTaskAction(
     if (result.error === "already_today") {
       return { error: "今天已经打过卡了，明天再来" };
     }
-    return { error: "子任务不存在或不是进行中的轮期" };
+    return { error: "子任务不存在或不是进行中的周期计划" };
   }
   revalidatePlans(planId);
   revalidatePath("/app");
@@ -304,7 +304,7 @@ export async function checkinPlanTaskAction(
   };
 }
 
-/** 取消今日轮期子任务打卡 */
+/** 取消今日周期计划子任务打卡 */
 export async function cancelPlanTaskCheckinAction(
   planId: string,
   taskId: string,
@@ -315,7 +315,7 @@ export async function cancelPlanTaskCheckinAction(
     if (result.error === "not_today") {
       return { error: "今日尚未打卡，无需取消" };
     }
-    return { error: "子任务不存在或不是进行中的轮期" };
+    return { error: "子任务不存在或不是进行中的周期计划" };
   }
   revalidatePlans(planId);
   revalidatePath("/app");
@@ -347,7 +347,7 @@ export async function createHabitAction(
   const title = String(formData.get("title") ?? "");
   const body = String(formData.get("body") ?? "");
   const id = await createHabit(session.user.id, { title, body });
-  if (!id) return { error: "请填写日课名称" };
+  if (!id) return { error: "请填写每日打卡名称" };
   revalidateDaily();
   return { ok: true };
 }
@@ -360,12 +360,12 @@ export async function checkinHabitAction(
   const session = await requireSession();
   const note = String(formData.get("note") ?? "");
   const id = await checkinHabit(session.user.id, habitId, note);
-  if (!id) return { error: "日课不存在或已停用" };
+  if (!id) return { error: "每日打卡不存在或已停用" };
   revalidateDaily();
   return { ok: true };
 }
 
-/** 取消今日日课打卡（回退馆藏计次与当日段落） */
+/** 取消今日每日打卡（回退馆藏计次与当日段落） */
 export async function cancelHabitCheckinAction(
   habitId: string,
 ): Promise<DailyActionState> {
@@ -381,24 +381,24 @@ export async function deactivateHabitAction(
 ): Promise<DailyActionState> {
   const session = await requireSession();
   const ok = await deactivateHabit(session.user.id, habitId);
-  if (!ok) return { error: "日课不存在" };
+  if (!ok) return { error: "每日打卡不存在" };
   revalidateDaily();
   return { ok: true };
 }
 
-/** 首页快捷：日课打卡（心得可选，同步馆藏计次） */
+/** 首页快捷：每日打卡（心得可选，同步馆藏计次） */
 export async function quickCheckinHabitAction(
   habitId: string,
   note: string,
 ): Promise<DailyActionState> {
   const session = await requireSession();
   const id = await checkinHabit(session.user.id, habitId, note);
-  if (!id) return { error: "日课不存在或已停用" };
+  if (!id) return { error: "每日打卡不存在或已停用" };
   revalidateDaily();
   return { ok: true };
 }
 
-/** 首页快捷：取消今日日课打卡 */
+/** 首页快捷：取消今日每日打卡 */
 export async function quickCancelHabitCheckinAction(
   habitId: string,
 ): Promise<DailyActionState> {
@@ -409,7 +409,7 @@ export async function quickCancelHabitCheckinAction(
   return { ok: true };
 }
 
-/** 首页快捷：轮期完成本期并滚下一期（心得写入馆藏；未到期拒绝） */
+/** 首页快捷：周期计划完成本期并滚下一期（心得写入馆藏；未到期拒绝） */
 export async function quickCheckinCycleAction(
   planId: string,
   note: string,

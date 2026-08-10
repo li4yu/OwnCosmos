@@ -7,7 +7,7 @@ type PastHubChartsProps = {
   snapshot: PastHubSnapshot;
 };
 
-/** 昔时往枢纽 · 三图摘要（密度 / 类型 / 绪印） */
+/** 昔时往枢纽 · 三图摘要（密度 / 类型 / 情绪标记） */
 export function PastHubCharts({ snapshot }: PastHubChartsProps) {
   const { total, last7Days, last30Days, last12Months, byType, byMood } =
     snapshot;
@@ -76,19 +76,19 @@ export function PastHubCharts({ snapshot }: PastHubChartsProps) {
         <article className="flex h-full min-h-[14rem] flex-col rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
-              绪印分布
+              情绪标记分布
             </h3>
             <Link
               href="/app/past/mood"
               className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
             >
-              心绪鉴 →
+              情绪复盘 →
             </Link>
           </div>
           <div className="mt-2 min-h-0 flex-1 overflow-y-auto pr-0.5">
             <MoodBars
               items={byMood}
-              emptyHint="尚无绪印；归档时可选，或在馆藏详情补改。"
+              emptyHint="尚无情绪标记；归档时可选，或在馆藏详情补改。"
             />
           </div>
         </article>

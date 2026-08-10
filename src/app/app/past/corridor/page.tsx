@@ -38,9 +38,9 @@ export default async function PastCorridorPage({ searchParams }: Props) {
   return (
     <main className="flex flex-col gap-3">
       <PageHeader
-        title="往迹廊"
+        title="时间线"
         eyebrow="CORRIDOR"
-        description="以时间为线索回看归档密度；可开启同年回望"
+        description="以时间为线索回看归档密度；可开启往年今日"
         backHref="/app/past"
         backLabel="返回昔时往"
       />
@@ -76,7 +76,7 @@ export default async function PastCorridorPage({ searchParams }: Props) {
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3">
         <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          岁轴
+          年月密度
         </p>
         <p className="mt-0.5 mb-3 text-xs text-[var(--mist)]">
           点击月份查看该月条目

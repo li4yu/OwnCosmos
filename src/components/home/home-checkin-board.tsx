@@ -13,6 +13,7 @@ import { CycleTasksInline } from "@/components/plans/cycle-tasks-inline";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
 import { PoeticName } from "@/components/ui/poetic-name";
+import { requestCheckinCheerBubble } from "@/lib/companion-client";
 import type { HomeCheckinItem } from "@/services/home-summary";
 
 type Props = {
@@ -43,6 +44,7 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
         return;
       }
       setCycleTarget(null);
+      void requestCheckinCheerBubble(item.title);
       router.refresh();
     });
   }
@@ -53,19 +55,19 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
         <h2>
           <PoeticName
             name="今日打卡"
-            tip="日课可写心得；轮期到期可完成本期；轮期子任务打卡只记次数，与完成本期无关"
+            tip="每日打卡可写心得；周期计划到期可完成本期；周期计划子任务打卡只记次数，与完成本期无关"
           />
         </h2>
         <div className="home-v1__split-head-meta">
           <Link href="/app/future/daily" className="home-v1__daily-link">
-            日课
+            每日打卡
           </Link>
           <Link href="/app/future/cycles" className="home-v1__daily-link">
-            轮期
+            周期计划
           </Link>
           <span className="font-mono text-xs tracking-wide text-[var(--mist)]">
             {dailyTotal > 0
-              ? `日课 ${dailyDone}/${dailyTotal}`
+              ? `每日打卡 ${dailyDone}/${dailyTotal}`
               : total > 0
                 ? `${total} 项`
                 : "暂无"}
@@ -76,20 +78,20 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
       {total === 0 ? (
         <div className="home-v1__daily-panel">
           <p className="home-v1__daily-panel-hint">
-            还没有今日可打的日课或轮期
+            还没有今日可打的每日打卡或周期计划
           </p>
           <div className="home-v1__daily-empty flex flex-wrap gap-2">
             <Link
               href="/app/future/daily"
               className="ui-btn-primary ui-btn-sm !w-auto"
             >
-              添加日课
+              添加每日打卡
             </Link>
             <Link
               href="/app/future/plans/new?kind=cycle"
               className="ui-btn-ghost ui-btn-sm"
             >
-              新建轮期
+              新建周期计划
             </Link>
           </div>
         </div>
@@ -101,7 +103,7 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
             aria-valuemin={0}
             aria-valuemax={progressMax}
             aria-valuenow={progressNow}
-            aria-label="今日打卡进度（日课）"
+            aria-label="今日打卡进度（每日打卡）"
           >
             <span
               className="home-v1__daily-bar-fill"
@@ -201,7 +203,7 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
       <CheckinNoteDialog
         open={Boolean(dailyTarget)}
         title={dailyTarget?.title ?? "打卡"}
-        hint="打卡后同步计入拾忆馆藏·日课归档"
+        hint="打卡后同步计入馆藏·每日打卡归档"
         confirmLabel="打卡"
         initialNote={dailyTarget?.note ?? ""}
         pending={pending}
@@ -218,6 +220,7 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
               return;
             }
             setDailyTarget(null);
+            void requestCheckinCheerBubble(current.title);
             router.refresh();
           });
         }}
@@ -226,7 +229,7 @@ export function HomeCheckinBoard({ items, dailyDone, dailyTotal }: Props) {
       <ConfirmDialog
         open={Boolean(cycleTarget)}
         title="完成本期？"
-        message="将计次归档并开启下一期。轮期无需填写心得。"
+        message="将计次归档并开启下一期。周期计划无需填写心得。"
         confirmLabel="完成本期"
         cancelLabel="取消"
         pending={pending}

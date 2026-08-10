@@ -29,7 +29,7 @@ export function ModuleHubCards({ moduleId }: { moduleId: string }) {
             <Link href={sub.href}>
               <div className="min-w-0">
                 <h2 className="oc-scroll__title text-[1rem]">
-                  <PoeticName name={sub.name} tip={sub.tip} />
+                  <PoeticName name={sub.name} tip={sub.tip} nestInControl />
                 </h2>
                 <p className="oc-scroll__body line-clamp-1">{sub.tip}</p>
               </div>
@@ -43,7 +43,7 @@ export function ModuleHubCards({ moduleId }: { moduleId: string }) {
             <Link href={sub.href} className="opacity-70">
               <div className="min-w-0">
                 <h2 className="text-sm tracking-[0.08em] text-[var(--mist)]">
-                  <PoeticName name={sub.name} tip={sub.tip} />
+                  <PoeticName name={sub.name} tip={sub.tip} nestInControl />
                   <span className="ml-1.5 font-mono text-[10px] tracking-wide">
                     稍后
                   </span>

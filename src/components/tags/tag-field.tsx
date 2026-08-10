@@ -19,7 +19,7 @@ type TagFieldProps = {
   onTagsMutated?: () => void;
 };
 
-/** 绪签多选 + 新建 / 软停用 */
+/** 标签多选 + 新建 / 软停用 */
 export function TagField({
   name = "tagIds",
   allTags,
@@ -82,14 +82,14 @@ export function TagField({
     <div className="flex flex-col gap-1.5">
       <span className="text-xs text-[var(--mist)]">
         <PoeticName
-          name="绪签"
+          name="标签"
           tip="自定义标签，归档后随文带入昔时往，便于筛选"
         />
       </span>
       <input type="hidden" name={name} value={selectedIds.join(",")} />
       <div className="flex flex-wrap gap-1">
         {activeTags.length === 0 ? (
-          <span className="text-xs text-[var(--mist)]">暂无绪签，可在下方新建</span>
+          <span className="text-xs text-[var(--mist)]">暂无标签，可在下方新建</span>
         ) : (
           activeTags.map((t) => {
             const on = selectedIds.includes(t.id);
@@ -112,7 +112,7 @@ export function TagField({
                 <button
                   type="button"
                   className="border-l border-[var(--line)] px-1.5 py-1 text-[10px] opacity-70 hover:opacity-100"
-                  title="停用此绪签"
+                  title="停用此标签"
                   disabled={pending}
                   onClick={() => deactivate(t.id)}
                 >
@@ -133,7 +133,7 @@ export function TagField({
               createTag();
             }
           }}
-          placeholder="新建绪签"
+          placeholder="新建标签"
           maxLength={32}
           className="auth-field !py-1.5 max-w-[12rem] text-sm text-[var(--paper)]"
         />

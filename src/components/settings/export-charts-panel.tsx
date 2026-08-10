@@ -15,7 +15,7 @@ function downloadText(filename: string, text: string, mime: string) {
   URL.revokeObjectURL(url);
 }
 
-/** 设置 · 图表导出（脉搏 + 沉淀一览） */
+/** 设置 · 图表导出（动态 + 沉淀一览） */
 export function ExportChartsPanel() {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export function ExportChartsPanel() {
   return (
     <div className="flex flex-col gap-1.5">
       <p className="text-xs leading-5 text-[var(--mist)]">
-        导出首页近七日脉搏与昔时往沉淀一览（密度 / 类型 / 绪印）。SVG
+        导出首页近七日动态与昔时往沉淀一览（密度 / 类型 / 情绪标记）。SVG
         可直接打开或转 PNG；JSON / CSV 便于备份与制表。
       </p>
       <div className="flex flex-wrap gap-1.5">

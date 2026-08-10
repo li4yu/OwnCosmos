@@ -100,7 +100,7 @@ export async function listTodayCheckins(userId: string, now = new Date()) {
     );
 }
 
-/** 日课习惯计次归档：同 habit 一条；新打卡日 +1；心得按日追加（日期在前） */
+/** 每日打卡习惯计次归档：同 habit 一条；新打卡日 +1；心得按日追加（日期在前） */
 async function upsertDailyHabitArchive(
   habit: DailyHabitRecord,
   note: string,
@@ -187,7 +187,7 @@ export async function cancelHabitCheckin(
       ),
     )
     .limit(1);
-  if (!habits[0]) return { ok: false, error: "日课不存在或已停用" };
+  if (!habits[0]) return { ok: false, error: "每日打卡不存在或已停用" };
 
   const checkinDate = localCheckinDate(now);
   const existing = await getCheckinForDate(userId, habitId, checkinDate);
@@ -234,7 +234,7 @@ export async function cancelHabitCheckin(
 }
 
 /**
- * 打卡；同日重复则更新 note，并同步馆藏日课归档（按习惯计次、按日追加心得）
+ * 打卡；同日重复则更新 note，并同步馆藏每日打卡归档（按习惯计次、按日追加心得）
  */
 export async function checkinHabit(
   userId: string,

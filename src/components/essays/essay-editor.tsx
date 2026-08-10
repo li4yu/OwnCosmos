@@ -40,10 +40,10 @@ type EssayEditorProps =
       allTags?: TagOption[];
       /** 刚从「创建并保存」跳转过来 */
       justCreated?: boolean;
-      /** 缘想溯源：来日途计划 */
+      /** 随想溯源：来日途计划 */
       sourcePlanLink?: { title: string; href: string } | null;
       returnHref?: string;
-      /** 专题篇：无自动逾时沉淀 */
+      /** 专题篇：无自动自动归档 */
       topicEssay?: boolean;
     };
 
@@ -239,7 +239,7 @@ export function EssayEditor(props: EssayEditorProps) {
         {sourcePlanLink ? (
           <p className="text-sm text-[var(--mist)]">
             <PoeticName
-              name="缘想"
+              name="随想"
               tip="针对计划随手写下的想法，已存成独立随笔"
             />
             自{" "}
@@ -424,7 +424,7 @@ export function EssayEditor(props: EssayEditorProps) {
         <ConfirmDialog
           open={archiveOpen}
           title="归档这条随笔？"
-          message="将沉淀入昔时往拾忆馆藏（随笔沉淀），今时际不再可编辑。确定归档吗？"
+          message="将沉淀入昔时往馆藏（随笔归档），今时际不再可编辑。确定归档吗？"
           confirmLabel="归档"
           cancelLabel="取消"
           pending={actionPending}

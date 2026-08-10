@@ -1,8 +1,10 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  date,
   index,
   integer,
+  jsonb,
   type AnyPgColumn,
   pgTable,
   primaryKey,
@@ -14,27 +16,28 @@ import {
 /**
  * Better Auth + domain schema.
  * Phase 1–2: user/session/account/verification (+ theme/bio).
- * Phase 3: essay (流思笺).
- * Phase 4: archive_item (拾忆馆藏); essay.archived_at 写入。
+ * Phase 3: essay (随笔).
+ * Phase 4: archive_item (馆藏); essay.archived_at 写入。
  * Phase 6: plan (来日途·规划，V1 仅单次事件).
- * Phase 8: focus_session (凝时·顺钟) → archive focus_record.
+ * Phase 8: focus_session (凝时·正向计时) → archive focus_record.
  * Phase 10: plan 丰满 + plan_task / daily_habit / daily_checkin.
- * Phase 11: essay.source_plan_id（缘想）；临期延期/完成（不做关卡）。
- * Phase 12: archive_item 藏忆 / 记忆碎片图文；抹忆硬删流入类。
- * Phase 13: 绪签 / 心情 / 素材匣（不做 plan_ref）。
- * Phase 14: 凝时逆漏 / 绑计划 / 唤起随笔溯源。
- * Phase 15: 往迹廊 / 心绪鉴 / 通知偏好（复用 archive_item.mood）。
- * Phase 16: 凝时勿扰 / 逆漏默认时长；桌面通知 + Cron 归档；专题随笔。
+ * Phase 11: essay.source_plan_id（随想）；临期延期/完成（不做关卡）。
+ * Phase 12: archive_item 进知识库 / 记忆碎片图文；删除归档硬删流入类。
+ * Phase 13: 标签 / 心情 / 素材匣（不做 plan_ref）。
+ * Phase 14: 凝时倒计时 / 绑计划 / 唤起随笔溯源。
+ * Phase 15: 时间线 / 情绪复盘 / 通知偏好（复用 archive_item.mood）。
+ * Phase 16: 凝时勿扰 / 倒计时默认时长；桌面通知 + Cron 归档；专题随笔。
  * Phase 17: 邮箱验证 / 重置改密 / 注销（复用 email_verified + verification）。
- * Phase 18: 流思笺富文本 HTML + essay_image；图片本地 uploads（暂不 S3）。
+ * Phase 18: 随笔富文本 HTML + essay_image；图片本地 uploads（暂不 S3）。
  * Phase 19: AI/RAG — user.ai_enabled；rag_document 对账（向量在 Milvus）。
+ * Phase 21: AI 伴读 — 会话 / 消息 / 桌宠偏好 / 主动气泡事件。
  */
 
 /** Phase 18: 正文格式 */
 export const BODY_FORMAT_PLAIN = "plain" as const;
 export const BODY_FORMAT_HTML = "html" as const;
 
-/** Phase 16: 逆漏默认时长（25 分钟） */
+/** Phase 16: 倒计时默认时长（25 分钟） */
 export const DEFAULT_FOCUS_COUNTDOWN_MS = 1_500_000;
 
 export const user = pgTable("user", {
@@ -48,11 +51,11 @@ export const user = pgTable("user", {
   /** Phase 2: 简介 / 签名 */
   bio: text("bio"),
   /**
-   * Phase 4+: 流思笺无编辑自动归档小时数（默认 48）
+   * Phase 4+: 随笔无编辑自动归档小时数（默认 48）
    * 设置页可改
    */
   essayIdleHours: integer("essay_idle_hours").notNull().default(48),
-  /** Phase 15: 同年回望（今时际轻提示） */
+  /** Phase 15: 往年今日（今时际轻提示） */
   anniversaryRemind: boolean("anniversary_remind").notNull().default(false),
   /** Phase 15–16: 总通知开关（浏览器桌面通知） */
   notifyEnabled: boolean("notify_enabled").notNull().default(true),
@@ -60,7 +63,7 @@ export const user = pgTable("user", {
   notifyDueReminder: boolean("notify_due_reminder").notNull().default(true),
   /** Phase 16: 勿扰 — 专注页弱化打断；专注中不弹桌面通知 */
   focusDnd: boolean("focus_dnd").notNull().default(false),
-  /** Phase 16: 逆漏默认目标毫秒 */
+  /** Phase 16: 倒计时默认目标毫秒 */
   focusCountdownDefaultMs: integer("focus_countdown_default_ms")
     .notNull()
     .default(DEFAULT_FOCUS_COUNTDOWN_MS),
@@ -110,6 +113,136 @@ export const ragDocument = pgTable(
       t.status,
     ),
     index("rag_document_status_updated_idx").on(t.status, t.updatedAt),
+  ],
+);
+
+/** Phase 21: 伴读意图（路由输出） */
+export const AI_INTENT_PRODUCT_HOWTO = "product_howto" as const;
+export const AI_INTENT_USER_RECALL = "user_recall" as const;
+export const AI_INTENT_DUE_COACH = "due_coach" as const;
+export const AI_INTENT_ACTION_HINT = "action_hint" as const;
+export const AI_INTENT_FOCUS_QUERY = "focus_query" as const;
+export const AI_INTENT_MOOD_CARE = "mood_care" as const;
+export const AI_INTENT_CHAT_COMPANION = "chat_companion" as const;
+export const AI_INTENT_UNKNOWN = "unknown" as const;
+
+/** Phase 21: 主动气泡类别 */
+export const AI_PROACTIVE_WELCOME = "welcome" as const;
+export const AI_PROACTIVE_TIP = "tip" as const;
+export const AI_PROACTIVE_TIP_EXTRA = "tip_extra" as const;
+export const AI_PROACTIVE_DUE_HINT = "due_hint" as const;
+export const AI_PROACTIVE_MOOD_HINT = "mood_hint" as const;
+export const AI_PROACTIVE_FOCUS_NUDGE = "focus_nudge" as const;
+export const AI_PROACTIVE_CHECKIN_NUDGE = "checkin_nudge" as const;
+export const AI_PROACTIVE_CHECKIN_CHEER = "checkin_cheer" as const;
+export const AI_PROACTIVE_CHAT_INVITE = "chat_invite" as const;
+export const DEFAULT_DAILY_BUBBLE_CAP = 5;
+
+/** Phase 21: 伴读对话会话（勿与 Better Auth 的 session 混淆） */
+export const aiConversation = pgTable(
+  "ai_conversation",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title"),
+    /** 超窗后压缩的短摘要 */
+    summary: text("summary"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    closedAt: timestamp("closed_at"),
+  },
+  (t) => [
+    index("ai_conversation_user_updated_idx").on(t.userId, t.updatedAt),
+  ],
+);
+
+/** Phase 21: 伴读消息 */
+export const aiMessage = pgTable(
+  "ai_message",
+  {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => aiConversation.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    content: text("content").notNull(),
+    intent: text("intent"),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("ai_message_conversation_created_idx").on(
+      t.conversationId,
+      t.createdAt,
+    ),
+  ],
+);
+
+/** Phase 21: 伴读语气预设 */
+export const COMPANION_TONE_WARM = "warm" as const;
+export const COMPANION_TONE_PLAYFUL = "playful" as const;
+export const COMPANION_TONE_CALM = "calm" as const;
+export const COMPANION_TONE_EARNEST = "earnest" as const;
+export const COMPANION_TONES = [
+  COMPANION_TONE_WARM,
+  COMPANION_TONE_PLAYFUL,
+  COMPANION_TONE_CALM,
+  COMPANION_TONE_EARNEST,
+] as const;
+export type CompanionTone = (typeof COMPANION_TONES)[number];
+
+export const DEFAULT_COMPANION_NAME = "小宇";
+export const DEFAULT_COMPANION_TONE = COMPANION_TONE_WARM;
+export const DEFAULT_USER_ADDRESS = "你";
+
+/** Phase 21: 桌宠 / 主动气泡偏好（1:1 用户） */
+export const aiCompanionPref = pgTable("ai_companion_pref", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  dnd: boolean("dnd").notNull().default(false),
+  dailyBubbleCap: integer("daily_bubble_cap")
+    .notNull()
+    .default(DEFAULT_DAILY_BUBBLE_CAP),
+  /** 静默开始：一天内分钟 0–1439；null=不设 */
+  quietStartMin: integer("quiet_start_min"),
+  quietEndMin: integer("quiet_end_min"),
+  /** 伴读自称称呼 */
+  companionName: text("companion_name")
+    .notNull()
+    .default(DEFAULT_COMPANION_NAME),
+  /** warm | playful | calm | earnest */
+  tone: text("tone").notNull().default(DEFAULT_COMPANION_TONE),
+  /** 伴读如何称呼用户 */
+  userAddress: text("user_address").notNull().default(DEFAULT_USER_ADDRESS),
+  /** false：首次打开对话时引导设置人格 */
+  personaReady: boolean("persona_ready").notNull().default(false),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+/** Phase 21: 主动气泡事件（同日同类去重） */
+export const aiProactiveEvent = pgTable(
+  "ai_proactive_event",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    category: text("category").notNull(),
+    day: date("day").notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown> | null>(),
+    dismissedAt: timestamp("dismissed_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ai_proactive_user_category_day_uidx").on(
+      t.userId,
+      t.category,
+      t.day,
+    ),
+    index("ai_proactive_user_created_idx").on(t.userId, t.createdAt),
   ],
 );
 
@@ -175,7 +308,7 @@ export const essayFolder = pgTable(
   ],
 );
 
-/** Phase 3: 流思笺（流动中随笔）；folder_id 空=每日随笔 */
+/** Phase 3: 随笔（流动中随笔）；folder_id 空=每日随笔 */
 export const essay = pgTable(
   "essay",
   {
@@ -191,7 +324,7 @@ export const essay = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
     /** NULL = 流动中；Phase 4 归档时写入 */
     archivedAt: timestamp("archived_at"),
-    /** Phase 11: 缘想自来日途计划 */
+    /** Phase 11: 随想自来日途计划 */
     sourcePlanId: text("source_plan_id").references(
       (): AnyPgColumn => plan.id,
       { onDelete: "set null" },
@@ -203,7 +336,7 @@ export const essay = pgTable(
       (): AnyPgColumn => focusSession.id,
       { onDelete: "set null" },
     ),
-    /** Phase 16: 所属专题；null = 每日随笔（可自动逾时沉淀） */
+    /** Phase 16: 所属专题；null = 每日随笔（可自动自动归档） */
     folderId: text("folder_id").references(() => essayFolder.id, {
       onDelete: "set null",
     }),
@@ -242,15 +375,15 @@ export const essayImage = pgTable(
   (t) => [index("essay_image_user_essay_idx").on(t.userId, t.essayId)],
 );
 
-/** Phase 4+: 拾忆馆藏条目（快照；类型可扩展） */
+/** Phase 4+: 馆藏条目（快照；类型可扩展） */
 export const ARCHIVE_TYPE_ESSAY_SEDIMENT = "essay_sediment" as const;
 /** Phase 16: 专题整夹归档（父条；子篇见 archive_topic_essay） */
 export const ARCHIVE_TYPE_ESSAY_TOPIC = "essay_topic_archive" as const;
 /** Phase 7 写入；P5 仅分区空态预留 */
 export const ARCHIVE_TYPE_PLAN_ARCHIVE = "plan_archive" as const;
-/** Phase 10: 轮期系列计次归档（同 series 一条） */
+/** Phase 10: 周期计划系列计次归档（同 series 一条） */
 export const ARCHIVE_TYPE_PLAN_CYCLE = "plan_cycle_archive" as const;
-/** Phase 10: 日课习惯计次归档（同 habit 一条） */
+/** Phase 10: 每日打卡习惯计次归档（同 habit 一条） */
 export const ARCHIVE_TYPE_DAILY_CHECKIN = "daily_checkin_archive" as const;
 /** Phase 8 写入；P5 仅分区空态预留 */
 export const ARCHIVE_TYPE_FOCUS_RECORD = "focus_record" as const;
@@ -258,23 +391,23 @@ export const ARCHIVE_TYPE_FOCUS_RECORD = "focus_record" as const;
 export const ARCHIVE_TYPE_MEMORY_FRAGMENT = "memory_fragment" as const;
 export const ARCHIVE_REASON_MANUAL = "manual" as const;
 export const ARCHIVE_REASON_AUTO_48H = "auto_48h" as const;
-/** Phase 7: 临期帖完成归档 */
+/** Phase 7: 临期提醒完成归档 */
 export const ARCHIVE_REASON_PLAN_COMPLETE = "plan_complete" as const;
 /** Phase 7: 逾期进站补算归档 */
 export const ARCHIVE_REASON_PLAN_OVERDUE = "plan_overdue" as const;
-/** Phase 10: 轮期当期结束滚下一期 */
+/** Phase 10: 周期计划当期结束滚下一期 */
 export const ARCHIVE_REASON_PLAN_CYCLE_ROLLOVER = "plan_cycle_rollover" as const;
-/** Phase 10: 日课打卡归档 */
+/** Phase 10: 每日打卡归档 */
 export const ARCHIVE_REASON_DAILY_CHECKIN = "daily_checkin" as const;
-/** Phase 8: 顺钟完整结束 → 凝录 */
+/** Phase 8: 正向计时完整结束 → 专注记录 */
 export const ARCHIVE_REASON_FOCUS_COMPLETE = "focus_complete" as const;
 /** Phase 12: 记忆碎片上传 */
 export const ARCHIVE_REASON_USER_UPLOAD = "user_upload" as const;
 
 /**
- * 抹忆可删类型（硬删馆藏行）。
- * 规划归档（plan_archive）抹忆时会同步删除已完成的来日途计划；
- * 不删除未完成计划与日课本体。打卡本账仍用「取消打卡」回退次数。
+ * 删除归档可删类型（硬删馆藏行）。
+ * 规划归档（plan_archive）删除归档时会同步删除已完成的来日途计划；
+ * 不删除未完成计划与每日打卡本体。打卡本账仍用「取消打卡」回退次数。
  */
 export const WIPE_ARCHIVE_TYPES = [
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
@@ -297,7 +430,7 @@ export const archiveItem = pgTable(
     type: text("type").notNull(),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
-    /** Phase 18: 随笔沉淀快照格式 plain | html */
+    /** Phase 18: 随笔归档快照格式 plain | html */
     bodyFormat: text("body_format").notNull().default(BODY_FORMAT_PLAIN),
     sourceModule: text("source_module").notNull(),
     sourceEssayId: text("source_essay_id").references(() => essay.id, {
@@ -308,21 +441,21 @@ export const archiveItem = pgTable(
       (): AnyPgColumn => plan.id,
       { onDelete: "set null" },
     ),
-    /** Phase 8: 凝录溯源 */
+    /** Phase 8: 专注记录溯源 */
     sourceFocusSessionId: text("source_focus_session_id").references(
       (): AnyPgColumn => focusSession.id,
       { onDelete: "set null" },
     ),
-    /** Phase 10: 日课习惯溯源 */
+    /** Phase 10: 每日打卡习惯溯源 */
     sourceHabitId: text("source_habit_id").references(
       (): AnyPgColumn => dailyHabit.id,
       { onDelete: "set null" },
     ),
-    /** Phase 10: 轮期系列 id（与 plan.series_id 对齐） */
+    /** Phase 10: 周期计划系列 id（与 plan.series_id 对齐） */
     sourceSeriesId: text("source_series_id"),
-    /** Phase 10: 轮期 / 日课累计次数 */
+    /** Phase 10: 周期计划 / 每日打卡累计次数 */
     cycleCount: integer("cycle_count"),
-    /** Phase 10: 轮期单位快照 day|week|month|year|custom */
+    /** Phase 10: 周期计划单位快照 day|week|month|year|custom */
     cycleUnit: text("cycle_unit"),
     /** Phase 10+: 自定义间隔天数快照（cycle_unit=custom） */
     cycleEveryDays: integer("cycle_every_days"),
@@ -332,9 +465,9 @@ export const archiveItem = pgTable(
     sourceCreatedAt: timestamp("source_created_at").notNull(),
     /** 原随笔最后编辑时间快照 */
     sourceUpdatedAt: timestamp("source_updated_at").notNull(),
-    /** Phase 12: 藏忆（知识库标记，无向量）；归档默认 true，记忆碎片显式 false */
+    /** Phase 12: 进知识库（知识库标记，无向量）；归档默认 true，记忆碎片显式 false */
     inKnowledge: boolean("in_knowledge").notNull().default(true),
-    /** Phase 12: 藏忆时间 */
+    /** Phase 12: 进知识库时间 */
     keptAt: timestamp("kept_at"),
     /** Phase 12: 记忆碎片图片 URL */
     imageUrl: text("image_url"),
@@ -362,7 +495,7 @@ export const archiveItem = pgTable(
 
 /**
  * Phase 16: 专题归档夹内篇快照（父条 type=essay_topic_archive）
- * 抹忆父条时 cascade 删除。
+ * 删除归档父条时 cascade 删除。
  */
 export const archiveTopicEssay = pgTable(
   "archive_topic_essay",
@@ -423,23 +556,23 @@ export const plan = pgTable(
     kind: text("kind").notNull().default(PLAN_KIND_ONCE),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
-    /** 截止日期 / 轮期期末 / 胶囊解锁日；愿景可空 */
+    /** 截止日期 / 周期计划期末 / 胶囊解锁日；愿景可空 */
     dueAt: timestamp("due_at"),
-    /** Phase 7: 临期配，提前几天进入提醒窗（默认 1） */
+    /** Phase 7: 提前提醒，提前几天进入提醒窗（默认 1） */
     remindDays: integer("remind_days").notNull().default(1),
     /** open | done */
     status: text("status").notNull().default(PLAN_STATUS_OPEN),
     /** NULL = 仍在来日途；归档馆藏时写入 */
     archivedAt: timestamp("archived_at"),
-    /** Phase 10: 提炼自流思笺 */
+    /** Phase 10: 提炼自随笔 */
     sourceEssayId: text("source_essay_id").references(() => essay.id, {
       onDelete: "set null",
     }),
-    /** Phase 10: 轮期单位 day|week|month|year|custom */
+    /** Phase 10: 周期计划单位 day|week|month|year|custom */
     cycleUnit: text("cycle_unit"),
     /** Phase 10+: 自定义间隔天数；仅 cycle_unit=custom 时使用（2–365） */
     cycleEveryDays: integer("cycle_every_days"),
-    /** Phase 10: 轮期系列 id（同系列共享） */
+    /** Phase 10: 周期计划系列 id（同系列共享） */
     seriesId: text("series_id"),
     /** Phase 10: 阶段任务挂愿景等 */
     parentPlanId: text("parent_plan_id").references(
@@ -462,7 +595,7 @@ export const plan = pgTable(
   ],
 );
 
-/** Phase 13: 绪签字典（软停用，不硬删） */
+/** Phase 13: 标签字典（软停用，不硬删） */
 export const tag = pgTable(
   "tag",
   {
@@ -481,7 +614,7 @@ export const tag = pgTable(
   ],
 );
 
-/** Phase 13: 流动随笔 ↔ 绪签 */
+/** Phase 13: 流动随笔 ↔ 标签 */
 export const essayTag = pgTable(
   "essay_tag",
   {
@@ -501,7 +634,7 @@ export const essayTag = pgTable(
   ],
 );
 
-/** Phase 13: 规划 ↔ 绪签 */
+/** Phase 13: 规划 ↔ 标签 */
 export const planTag = pgTable(
   "plan_tag",
   {
@@ -521,7 +654,7 @@ export const planTag = pgTable(
   ],
 );
 
-/** Phase 13: 馆藏 ↔ 绪签（归档时写入，含签名快照） */
+/** Phase 13: 馆藏 ↔ 标签（归档时写入，含签名快照） */
 export const archiveItemTag = pgTable(
   "archive_item_tag",
   {
@@ -588,9 +721,9 @@ export const planTask = pgTable(
       .notNull()
       .references(() => plan.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
-    /** open | done | deferred（轮期子任务以打卡次数为主，不依赖 done） */
+    /** open | done | deferred（周期计划子任务以打卡次数为主，不依赖 done） */
     status: text("status").notNull().default(PLAN_TASK_STATUS_OPEN),
-    /** 打卡累计次数；与轮期「完成本期」无关 */
+    /** 打卡累计次数；与周期计划「完成本期」无关 */
     checkCount: integer("check_count").notNull().default(0),
     /** 最近打卡本地日 YYYY-MM-DD；同一天不可再打 */
     lastCheckinDate: text("last_checkin_date"),
@@ -604,7 +737,7 @@ export const planTask = pgTable(
   ],
 );
 
-/** Phase 10: 日课习惯模板 */
+/** Phase 10: 每日打卡习惯模板 */
 export const dailyHabit = pgTable(
   "daily_habit",
   {
@@ -621,7 +754,7 @@ export const dailyHabit = pgTable(
   (t) => [index("daily_habit_user_active_idx").on(t.userId, t.active)],
 );
 
-/** Phase 10: 日课打卡 */
+/** Phase 10: 每日打卡 */
 export const dailyCheckin = pgTable(
   "daily_checkin",
   {
@@ -645,7 +778,7 @@ export const dailyCheckin = pgTable(
 
 /** Phase 8+: 凝时会话 mode */
 export const FOCUS_MODE_FORWARD = "forward" as const;
-/** Phase 14: 逆漏 */
+/** Phase 14: 倒计时 */
 export const FOCUS_MODE_COUNTDOWN = "countdown" as const;
 export const FOCUS_STATUS_RUNNING = "running" as const;
 export const FOCUS_STATUS_PAUSED = "paused" as const;
@@ -664,13 +797,13 @@ export const focusSession = pgTable(
     status: text("status").notNull(),
     /** 已计入的专注毫秒（不含当前 running 段） */
     accumulatedMs: integer("accumulated_ms").notNull().default(0),
-    /** Phase 14: 逆漏目标毫秒；顺钟为 null */
+    /** Phase 14: 倒计时目标毫秒；正向计时为 null */
     targetMs: integer("target_ms"),
-    /** Phase 14: 绑定来日途计划（规划 / 当日轮期） */
+    /** Phase 14: 绑定来日途计划（规划 / 当日周期计划） */
     planId: text("plan_id").references((): AnyPgColumn => plan.id, {
       onDelete: "set null",
     }),
-    /** Phase 14: 绑定未完成日课（与 plan_id 互斥） */
+    /** Phase 14: 绑定未完成每日打卡（与 plan_id 互斥） */
     habitId: text("habit_id").references((): AnyPgColumn => dailyHabit.id, {
       onDelete: "set null",
     }),
@@ -949,3 +1082,41 @@ export const focusSessionRelations = relations(focusSession, ({ one, many }) => 
   archiveItems: many(archiveItem),
   essays: many(essay, { relationName: "essay_from_focus" }),
 }));
+
+export const aiConversationRelations = relations(
+  aiConversation,
+  ({ one, many }) => ({
+    user: one(user, {
+      fields: [aiConversation.userId],
+      references: [user.id],
+    }),
+    messages: many(aiMessage),
+  }),
+);
+
+export const aiMessageRelations = relations(aiMessage, ({ one }) => ({
+  conversation: one(aiConversation, {
+    fields: [aiMessage.conversationId],
+    references: [aiConversation.id],
+  }),
+}));
+
+export const aiCompanionPrefRelations = relations(
+  aiCompanionPref,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [aiCompanionPref.userId],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const aiProactiveEventRelations = relations(
+  aiProactiveEvent,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [aiProactiveEvent.userId],
+      references: [user.id],
+    }),
+  }),
+);

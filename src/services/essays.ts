@@ -119,7 +119,7 @@ function buildActiveEssayConditions(
   return and(...conditions);
 }
 
-/** 流动随笔分页查询（标题/正文模糊、绪签、心情、更新时间） */
+/** 流动随笔分页查询（标题/正文模糊、标签、心情、更新时间） */
 export async function queryActiveEssays(
   userId: string,
   opts: EssayQueryOpts = {},
@@ -209,7 +209,7 @@ export async function createEssay(
 }
 
 /**
- * 缘想：临期帖附写 → 独立流思笺，溯源计划
+ * 随想：临期提醒附写 → 独立随笔，溯源计划
  */
 export async function createYuanxiangEssay(
   userId: string,
@@ -221,7 +221,7 @@ export async function createYuanxiangEssay(
   if (!planRow || planRow.archivedAt) return null;
   const text = body.trim();
   if (!text || isRichBodyEmpty(text)) return null;
-  const title = `缘想 · ${planRow.title.trim() || "无标题"}`;
+  const title = `随想 · ${planRow.title.trim() || "无标题"}`;
   return createEssay(userId, {
     title,
     body: text,

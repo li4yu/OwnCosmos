@@ -43,7 +43,7 @@ export function PresentPulse({ stats }: PresentPulseProps) {
           </Link>
         </li>
         <li className="text-[var(--mist)]">
-          近逾时沉淀{" "}
+          近自动归档{" "}
           <span
             className={`font-mono ${
               stats.nearIdleCount > 0

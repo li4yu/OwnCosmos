@@ -82,7 +82,7 @@ export function planKindLabel(kind: string) {
     case PLAN_KIND_STAGE:
       return "阶段";
     case PLAN_KIND_CYCLE:
-      return "轮期";
+      return "周期计划";
     case PLAN_KIND_CAPSULE:
       return "胶囊";
     default:
@@ -122,7 +122,7 @@ export function isCapsuleLocked(
   return calendarDaysUntilDue(dueAt, now) > 0;
 }
 
-/** 进入临期帖：须有截止日；胶囊 / 轮期不进临期窗（轮期到期当天再上首页打卡） */
+/** 进入临期提醒：须有截止日；胶囊 / 周期计划不进临期窗（周期计划到期当天再上首页打卡） */
 export function participatesInDueReminders(
   kind: string,
   dueAt: Date | null | undefined,

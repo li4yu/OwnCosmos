@@ -202,6 +202,7 @@ export function ModuleSideNav({
             <PoeticName
               name={collapsed ? "»" : "«"}
               tip={collapsed ? "展开左侧模块导航" : "收起左侧模块导航"}
+              nestInControl
             />
           </div>
         </div>
@@ -232,6 +233,7 @@ export function ModuleSideNav({
                   <PoeticName
                     name={sub.name.slice(0, 1)}
                     tip={`${sub.name}：${sub.tip}`}
+                    nestInControl
                   />
                 </div>
               );
@@ -261,6 +263,7 @@ export function ModuleSideNav({
                             ? `收起「${sub.name}」下的分区`
                             : `展开「${sub.name}」下的分区`
                         }
+                        nestInControl
                       />
                     </div>
                   ) : (
@@ -283,7 +286,7 @@ export function ModuleSideNav({
                     }
                   >
                     <span className="inline-flex flex-wrap items-center gap-1">
-                      <PoeticName name={sub.name} tip={sub.tip} />
+                      <PoeticName name={sub.name} tip={sub.tip} nestInControl />
                       {!sub.ready ? (
                         <span className="font-mono text-[9px] opacity-60">
                           稍后
@@ -317,7 +320,11 @@ export function ModuleSideNav({
                             }`}
                             aria-current={childActive ? "page" : undefined}
                           >
-                            <PoeticName name={child.name} tip={child.tip} />
+                            <PoeticName
+                              name={child.name}
+                              tip={child.tip}
+                              nestInControl
+                            />
                           </div>
                         </li>
                       );

@@ -15,7 +15,7 @@ type PrefKey =
   | "notifyDueReminder"
   | "anniversaryRemind";
 
-/** 通知与同年回望偏好；开启总开关时申请浏览器通知权限 */
+/** 通知与往年今日偏好；开启总开关时申请浏览器通知权限 */
 export function NotifyPreferenceForm({
   initialNotifyEnabled,
   initialNotifyDueReminder,
@@ -99,7 +99,7 @@ export function NotifyPreferenceForm({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs leading-5 text-[var(--mist)]">
-        开启后，在支持的浏览器中可弹出系统通知（临期 / 同年回望）。今时际页内轻提示仍受「同年回望」开关控制。
+        开启后，在支持的浏览器中可弹出系统通知（临期 / 往年今日）。今时际页内轻提示仍受「往年今日」开关控制。
       </p>
       <PrefRow
         label="启用桌面通知"
@@ -110,13 +110,13 @@ export function NotifyPreferenceForm({
       />
       <PrefRow
         label="临期提醒"
-        tip="有临期帖时弹出桌面通知（同会话每日至多一次）"
+        tip="有临期提醒时弹出桌面通知（同会话每日至多一次）"
         checked={notifyDue}
         disabled={pending !== null || !notifyEnabled}
         onChange={(v) => save("notifyDueReminder", v)}
       />
       <PrefRow
-        label="同年回望"
+        label="往年今日"
         tip="往年同日有归档时：今时际轻提示 + 可选桌面通知"
         checked={anniversary}
         disabled={pending !== null}

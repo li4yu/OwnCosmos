@@ -70,7 +70,7 @@ export function TopicArchiveButton({
       <ConfirmDialog
         open={open}
         title="归档整个专题？"
-        message={`将把专题「${folderName}」中的 ${activeCount} 篇随笔沉淀为一条「专题归档」夹进馆藏，并移除该专题夹。确定吗？`}
+        message={`将把专题「${folderName}」中的 ${activeCount} 篇随笔归档为一条「专题归档」夹进馆藏，并移除该专题夹。确定吗？`}
         confirmLabel="归档专题"
         cancelLabel="取消"
         pending={pending}

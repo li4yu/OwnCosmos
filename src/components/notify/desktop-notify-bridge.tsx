@@ -99,7 +99,7 @@ export function DesktopNotifyBridge({
       if (!alreadyShown(key)) {
         const hit = anniversaryHits[0];
         fire(
-          "自宇 · 同年回望",
+          "自宇 · 往年今日",
           anniversaryHits.length > 1
             ? `往年今日有 ${anniversaryHits.length} 条沉淀（如 ${hit.year}「${hit.title}」）`
             : `${hit.year} 年今日：${hit.title}`,

@@ -11,10 +11,10 @@ export function FutureQuickActions() {
         新建计划
       </Link>
       <Link href="/app/future/daily" className="ui-btn-ghost ui-btn-sm">
-        日课
+        每日打卡
       </Link>
       <Link href="/app/future/cycles" className="ui-btn-ghost ui-btn-sm">
-        轮期
+        周期计划
       </Link>
       <Link href="/app/future/capsule" className="ui-btn-ghost ui-btn-sm">
         时间胶囊

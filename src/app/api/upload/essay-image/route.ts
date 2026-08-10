@@ -12,7 +12,7 @@ const ALLOWED = new Map([
   ["image/gif", "gif"],
 ]);
 
-/** Phase 18: 流思笺插图 → public/uploads/essays */
+/** Phase 18: 随笔插图 → public/uploads/essays */
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({
     headers: await headers(),

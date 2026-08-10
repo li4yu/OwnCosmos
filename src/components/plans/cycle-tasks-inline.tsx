@@ -6,6 +6,7 @@ import {
   cancelPlanTaskCheckinAction,
   checkinPlanTaskAction,
 } from "@/app/app/future/actions";
+import { requestCheckinCheerBubble } from "@/lib/companion-client";
 
 export type CycleTaskInlineItem = {
   id: string;
@@ -22,7 +23,7 @@ type Props = {
   compact?: boolean;
 };
 
-/** 轮期下的子任务：展示次数，每日可打卡一次 */
+/** 周期计划下的子任务：展示次数，每日可打卡一次 */
 export function CycleTasksInline({ planId, tasks, compact }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -119,6 +120,7 @@ export function CycleTasksInline({ planId, tasks, compact }: Props) {
                         [task.id]: result.checkCount!,
                       }));
                       setDoneToday((prev) => ({ ...prev, [task.id]: true }));
+                      void requestCheckinCheerBubble(task.title);
                       router.refresh();
                     });
                   }}

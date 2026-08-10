@@ -22,16 +22,16 @@ export default async function DueRemindersPage() {
   return (
     <main className="flex flex-col gap-3">
       <PageHeader
-        title="临期帖"
+        title="临期提醒"
         backHref="/app/present"
         backLabel="返回今时际"
         description={
           <>
             <PoeticName
-              name="临期帖"
-              tip="来日途计划进入提醒窗口后的倒计时卡片：可完成、延期或缘想"
+              name="临期提醒"
+              tip="来日途计划进入提醒窗口后的倒计时卡片：可完成、延期或随想"
             />
-            · 完成归档；延期回写来日途；缘想生成流思笺
+            · 完成归档；延期回写来日途；随想生成随笔
           </>
         }
       />

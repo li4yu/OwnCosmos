@@ -14,7 +14,7 @@ export type DueReminderListItem = {
 
 type DueReminderSectionProps = {
   items: DueReminderListItem[];
-  /** 今时际首页用精简标题；临期帖子页可隐藏（外层已有 PageHeader） */
+  /** 今时际首页用精简标题；临期提醒子页可隐藏（外层已有 PageHeader） */
   showHeading?: boolean;
   /** 首页紧凑：缩小标题与空态 */
   compact?: boolean;
@@ -23,12 +23,12 @@ type DueReminderSectionProps = {
   variant?: "deck" | "list";
 };
 
-/** 临期帖（默认可翻阅方卡） */
+/** 临期提醒（默认可翻阅方卡） */
 export function DueReminderSection({
   items,
   showHeading = true,
   compact = false,
-  emptyHint = "当前没有临期提醒。在来日途·规划里设置截止日期与临期配后，进入窗口即会出现在这里。",
+  emptyHint = "当前没有临期提醒。在来日途·规划里设置截止日期与提前提醒后，进入窗口即会出现在这里。",
   variant = "deck",
 }: DueReminderSectionProps) {
   return (
@@ -46,13 +46,13 @@ export function DueReminderSection({
           <div>
             <h2>
               <PoeticName
-                name="临期帖"
+                name="临期提醒"
                 tip="来日途计划进入提醒窗口后的倒计时卡片"
               />
             </h2>
             {!compact ? (
               <p className="mt-1 text-sm text-[var(--mist)]">
-                提醒窗口内的计划 · 可完成、延期或缘想 · 左右翻阅
+                提醒窗口内的计划 · 可完成、延期或随想 · 左右翻阅
               </p>
             ) : null}
           </div>

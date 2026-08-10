@@ -7,19 +7,34 @@ type PoeticNameProps = {
   name: string;
   tip: string;
   className?: string;
+  /**
+   * 嵌在按钮/链接里时开启：加长延迟、按下立刻收起、不抢焦点，
+   * 避免悬停说明妨碍点击导航。
+   */
+  nestInControl?: boolean;
+  /** 悬停多久后显示（毫秒）；nestInControl 默认更长 */
+  delayMs?: number;
 };
 
-/** 悬停多久后才显示（毫秒） */
-const HOVER_DELAY_MS = 480;
+const DEFAULT_DELAY_MS = 520;
+const NESTED_DELAY_MS = 900;
 
 /** 雅名悬停提示：主题字体与色板（非浏览器原生 title） */
-export function PoeticName({ name, tip, className }: PoeticNameProps) {
+export function PoeticName({
+  name,
+  tip,
+  className,
+  nestInControl = false,
+  delayMs,
+}: PoeticNameProps) {
   const tipId = useId();
   const triggerRef = useRef<HTMLSpanElement>(null);
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0, placeAbove: false });
+  const waitMs =
+    delayMs ?? (nestInControl ? NESTED_DELAY_MS : DEFAULT_DELAY_MS);
 
   useEffect(() => {
     setMounted(true);
@@ -60,7 +75,7 @@ export function PoeticName({ name, tip, className }: PoeticNameProps) {
       place();
       setOpen(true);
       delayRef.current = null;
-    }, HOVER_DELAY_MS);
+    }, waitMs);
   }
 
   function hide() {
@@ -104,13 +119,21 @@ export function PoeticName({ name, tip, className }: PoeticNameProps) {
     <>
       <span
         ref={triggerRef}
-        tabIndex={0}
-        className={`ui-poetic-name cursor-help decoration-[var(--amber)]/50 underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none ${className ?? ""}`}
+        className={`ui-poetic-name ${
+          nestInControl
+            ? "cursor-inherit"
+            : "cursor-help decoration-[var(--amber)]/50 underline-offset-4 hover:underline"
+        } ${className ?? ""}`}
         aria-describedby={open ? tipId : undefined}
         onMouseEnter={scheduleShow}
         onMouseLeave={hide}
-        onFocus={scheduleShow}
-        onBlur={hide}
+        onPointerDown={hide}
+        {...(nestInControl
+          ? {}
+          : {
+              onFocus: scheduleShow,
+              onBlur: hide,
+            })}
       >
         {name}
       </span>

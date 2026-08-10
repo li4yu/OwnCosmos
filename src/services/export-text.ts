@@ -42,7 +42,7 @@ export async function buildOpenContentExportText(userId: string) {
   lines.push(`导出时间：${stamped}`);
   lines.push("");
 
-  lines.push("======== 流思笺（未归档） ========");
+  lines.push("======== 随笔（未归档） ========");
   if (essays.length === 0) {
     lines.push("（无）");
   } else {

@@ -15,7 +15,7 @@ export async function createTagAction(name: string) {
 export async function deactivateTagAction(tagId: string) {
   const session = await requireSession();
   const ok = await deactivateTag(session.user.id, tagId);
-  if (!ok) return { error: "绪签不存在" };
+  if (!ok) return { error: "标签不存在" };
   revalidatePath("/app");
   return {};
 }

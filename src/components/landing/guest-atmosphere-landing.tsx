@@ -311,7 +311,7 @@ export function GuestAtmosphereLanding({
                   </h3>
                   <p className="guest-landing__gate-lede">
                     {gateMode === "register"
-                      ? "注册后即可书写流思、规划来日、凝录专注——一切只属于你。"
+                      ? "注册后即可书写流思、规划来日、专注记录专注——一切只属于你。"
                       : "登录后继续你的过往、当下与未来。"}
                   </p>
                 </div>

@@ -13,7 +13,7 @@ export default async function EssayTopicsPage() {
       <PageHeader
         title="专题随笔"
         backHref="/app/present/essays"
-        backLabel="返回流思笺"
+        backLabel="返回随笔"
         description={
           <>
             先建

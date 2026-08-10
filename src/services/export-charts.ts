@@ -28,7 +28,7 @@ function formatStamp(d = new Date()) {
   }).format(d);
 }
 
-/** 聚合首页脉搏 + 昔时往沉淀一览，供设置页导出 */
+/** 聚合首页动态 + 昔时往沉淀一览，供设置页导出 */
 export async function buildChartExportPayload(
   userId: string,
 ): Promise<ChartExportPayload> {
@@ -103,7 +103,7 @@ export function buildChartExportSvg(payload: ChartExportPayload): string {
     1,
     ...checkins.map((d) => d.habitCount + d.cycleCount),
   );
-  blocks.push(sectionTitle(y, "近七日打卡（日课 + 轮期）"));
+  blocks.push(sectionTitle(y, "近七日打卡（每日打卡 + 周期计划）"));
   y += 18;
   for (const d of checkins) {
     const total = d.habitCount + d.cycleCount;
@@ -163,7 +163,7 @@ export function buildChartExportSvg(payload: ChartExportPayload): string {
 
   const moods = payload.pastHub.byMood;
   const moodMax = Math.max(1, ...moods.map((m) => m.count), 1);
-  blocks.push(sectionTitle(y, "绪印分布"));
+  blocks.push(sectionTitle(y, "情绪标记分布"));
   y += 18;
   if (moods.length === 0) {
     blocks.push(

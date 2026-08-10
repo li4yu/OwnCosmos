@@ -26,14 +26,14 @@ export default async function NewPlanPage({ searchParams }: Props) {
   return (
     <main className="flex flex-col gap-3">
       <PageHeader
-        title={isCycle ? "新建轮期" : "新建计划"}
+        title={isCycle ? "新建周期计划" : "新建计划"}
         backHref={isCycle ? "/app/future/cycles" : "/app/future/plans"}
-        backLabel={isCycle ? "返回轮期" : "返回规划"}
+        backLabel={isCycle ? "返回周期计划" : "返回规划"}
         guardLeave
         description={
           isCycle
             ? "周期单位、子任务与本期结束日"
-            : "单次 / 愿景：标题、日期、临期配与描述"
+            : "单次 / 愿景：标题、日期、提前提醒与描述"
         }
       />
       <div className="oc-sheet">

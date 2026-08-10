@@ -67,12 +67,12 @@ export default async function DailyEssaysPage({ searchParams }: Props) {
       <PageHeader
         title="每日随笔"
         backHref="/app/present/essays"
-        backLabel="返回流思笺"
+        backLabel="返回随笔"
         description={
           <>
             随手记当下灵感；超过设定小时数未编辑将自动
             <PoeticName
-              name="逾时沉淀"
+              name="自动归档"
               tip="久未改动的每日随笔会沉淀进昔时往；也可提前归档；小时数可在设置中修改"
               className="mx-1"
             />

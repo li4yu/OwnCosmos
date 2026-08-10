@@ -104,7 +104,7 @@ export async function completeFocusAction(
   return { archiveId: result.archiveId };
 }
 
-/** 专注中唤起流思笺：写入 source_focus_session_id，不结束计时 */
+/** 专注中唤起随笔：写入 source_focus_session_id，不结束计时 */
 export async function createFocusEssayAction(
   sessionId: string,
   title: string,

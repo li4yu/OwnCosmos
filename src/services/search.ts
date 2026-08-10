@@ -56,7 +56,7 @@ export async function searchAll(
       title: row.title,
       body: row.body,
       href: `/app/present/essays/${row.id}`,
-      meta: "流思笺",
+      meta: "随笔",
     });
   }
 
@@ -118,14 +118,14 @@ export async function searchAll(
       title: row.title,
       body: row.body,
       href: `/app/past/gallery/${row.id}`,
-      meta: "拾忆馆藏",
+      meta: "馆藏",
     });
   }
 
   return hits;
 }
 
-/** 借忆：仅搜馆藏 */
+/** 引用过往：仅搜馆藏 */
 export async function searchArchivesForBorrow(
   userId: string,
   rawQ: string,

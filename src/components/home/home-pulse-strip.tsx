@@ -17,7 +17,7 @@ type MixSlice = {
   tone: "habit" | "cycle" | "focus";
 };
 
-/** 首页脉搏：笺墨线形——细茎、墨迹折线、比例墨条（非仪表盘饼柱） */
+/** 首页动态：笺墨线形——细茎、墨迹折线、比例墨条（非仪表盘饼柱） */
 export function HomePulseStrip({
   checkinDays,
   focusDays,
@@ -33,13 +33,13 @@ export function HomePulseStrip({
   const focusTotalCount = focusDays.reduce((s, d) => s + d.count, 0);
 
   const mixSlices: MixSlice[] = [
-    { key: "habit", label: "日课", value: habitTotal, tone: "habit" },
-    { key: "cycle", label: "轮期", value: cycleTotal, tone: "cycle" },
+    { key: "habit", label: "每日打卡", value: habitTotal, tone: "habit" },
+    { key: "cycle", label: "周期计划", value: cycleTotal, tone: "cycle" },
     { key: "focus", label: "凝时", value: focusTotalCount, tone: "focus" },
   ];
 
   return (
-    <section className="home-v1__pulse" aria-label="今日脉搏">
+    <section className="home-v1__pulse" aria-label="今日动态">
       <div className="home-v1__pulse-block">
         <div className="home-v1__pulse-head">
           <p className="home-v1__pulse-label">近七日打卡</p>
@@ -47,7 +47,7 @@ export function HomePulseStrip({
             href="/app/future/daily"
             className="ui-hover-link-accent font-mono text-xs text-[var(--amber)]"
           >
-            日课 →
+            每日打卡 →
           </Link>
         </div>
         <CheckinInkChart days={checkinDays} onTip={setCheckinTip} />
@@ -56,11 +56,11 @@ export function HomePulseStrip({
             <>
               <span className="home-v1__pulse-legend">
                 <i className="home-v1__pulse-swatch home-v1__pulse-swatch--habit" />
-                日课
+                每日打卡
               </span>
               <span className="home-v1__pulse-legend">
                 <i className="home-v1__pulse-swatch home-v1__pulse-swatch--cycle" />
-                轮期
+                周期计划
               </span>
               <span className="font-mono">合计 {checkinTotal}</span>
             </>
@@ -133,7 +133,7 @@ function CheckinInkChart({
       viewBox={`0 0 ${w} ${h}`}
       className="home-v1__pulse-svg home-v1__pulse-svg--lg"
       role="img"
-      aria-label="近七日日课与轮期打卡"
+      aria-label="近七日每日打卡与周期计划打卡"
     >
       <line
         x1={padX}
@@ -156,7 +156,7 @@ function CheckinInkChart({
             key={d.key}
             className="home-v1__pulse-stem"
             onMouseEnter={() =>
-              onTip(`${d.label} · 日课 ${d.habitCount} · 轮期 ${d.cycleCount}`)
+              onTip(`${d.label} · 每日打卡 ${d.habitCount} · 周期计划 ${d.cycleCount}`)
             }
             onMouseLeave={() => onTip(null)}
           >
@@ -316,7 +316,7 @@ function CompositionInkBar({
   }
 
   return (
-    <div className="home-v1__pulse-mix" aria-label="近七日日课、轮期与凝时次数构成">
+    <div className="home-v1__pulse-mix" aria-label="近七日每日打卡、周期计划与凝时次数构成">
       <p className="home-v1__pulse-mix-total">
         <span className="home-v1__pulse-mix-num">{total}</span>
         <span className="home-v1__pulse-mix-unit">次</span>

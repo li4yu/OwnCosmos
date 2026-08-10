@@ -45,11 +45,11 @@ type ActiveSnapshot = {
 };
 
 type FocusTimerProps = {
-  /** 本页默认模式：顺钟 / 逆漏（已有进行中会话时以会话为准） */
+  /** 本页默认模式：正向计时 / 倒计时（已有进行中会话时以会话为准） */
   pageMode: typeof FOCUS_MODE_FORWARD | typeof FOCUS_MODE_COUNTDOWN;
   active: ActiveSnapshot | null;
   bindOptions: FocusBindPickerOption[];
-  /** Phase 16: 逆漏默认时长（毫秒） */
+  /** Phase 16: 倒计时默认时长（毫秒） */
   countdownDefaultMs?: number;
   /** Phase 16: 勿扰 — 到点不弹窗打断 */
   focusDnd?: boolean;
@@ -313,7 +313,7 @@ export function FocusTimer({
     isCountdown && targetMs != null
       ? Math.max(0, targetMs - displayMs)
       : null;
-  /** 空闲逆漏：表盘预览自定义目标时长 */
+  /** 空闲倒计时：表盘预览自定义目标时长 */
   const clockMs =
     !active && pageMode === FOCUS_MODE_COUNTDOWN
       ? draftTargetMs
@@ -454,24 +454,24 @@ export function FocusTimer({
         </Link>
         <div className="focus-chamber__brand">
           <p className="focus-chamber__eyebrow">
-            星宿 · {isCountdown ? "逆漏" : "顺钟"}
+            {isCountdown ? "倒计时" : "正向计时"}
           </p>
           <h1 className="focus-chamber__title">
             {isCountdown ? (
               <PoeticName
-                name="逆漏"
+                name="倒计时"
                 tip="设定时长倒数，到点提醒，适合限时任务"
               />
             ) : (
               <PoeticName
-                name="顺钟"
+                name="正向计时"
                 tip="正向累计专注时长，可暂停、继续、结束"
               />
             )}
           </h1>
         </div>
         <Link href="/app/focus/records" className="focus-chamber__nav-link">
-          凝录 →
+          专注记录 →
         </Link>
       </header>
 
@@ -498,7 +498,7 @@ export function FocusTimer({
               <p className="focus-sky__motto">{xiu.motto}</p>
               <p className="focus-sky__hint">
                 {targetReached
-                  ? "逆漏到点 · 可结束或继续加时"
+                  ? "倒计时到点 · 可结束或继续加时"
                   : isPaused
                     ? "星轨暂驻 · 心神可再启"
                     : "每满一分钟，换宿前行"}
@@ -694,7 +694,7 @@ export function FocusTimer({
                   href="/app/focus/records"
                   className="text-[var(--amber)] underline-offset-4 hover:underline"
                 >
-                  凝录列表
+                  专注记录列表
                 </Link>
               </p>
             ) : null}
@@ -705,7 +705,7 @@ export function FocusTimer({
                   href={`/app/present/essays/${essaySavedId}`}
                   className="text-[var(--teal)] underline-offset-4 hover:underline"
                 >
-                  打开流思笺
+                  打开随笔
                 </Link>
               </p>
             ) : null}
@@ -767,8 +767,8 @@ export function FocusTimer({
 
       <NoticeDialog
         open={arrivedOpen}
-        title="逆漏到点"
-        message="设定时长已到。可结束并生成凝录，或继续加时。"
+        title="倒计时到点"
+        message="设定时长已到。可结束并生成专注记录，或继续加时。"
         confirmLabel="知道了"
         onClose={() => setArrivedOpen(false)}
       />
@@ -780,7 +780,7 @@ export function FocusTimer({
             href={`/app/present/essays/${essaySavedId}`}
             className="text-[var(--teal)] underline-offset-4 hover:underline"
           >
-            打开流思笺
+            打开随笔
           </Link>
         </p>
       ) : null}
@@ -808,7 +808,7 @@ export function FocusTimer({
               凝时随记
             </h2>
             <p className="mt-2 text-sm leading-6 text-[var(--mist)]">
-              写入流思笺，计时不中断。可稍后到今时际继续改。
+              写入随笔，计时不中断。可稍后到今时际继续改。
             </p>
             <label className="mt-3 block text-sm text-[var(--mist)]">
               标题
@@ -853,7 +853,7 @@ export function FocusTimer({
                   )
                 }
               >
-                {pending ? "保存中…" : "收入流思笺"}
+                {pending ? "保存中…" : "收入随笔"}
               </button>
             </div>
           </div>
@@ -880,10 +880,10 @@ export function FocusTimer({
               id={titleId}
               className="text-lg tracking-[0.08em] text-[var(--paper)]"
             >
-              结束{isCountdown ? "逆漏" : "顺钟"}？
+              结束{isCountdown ? "倒计时" : "正向计时"}？
             </h2>
             <p className="mt-2 text-sm leading-6 text-[var(--mist)]">
-              将按累计时长生成凝录，沉淀入昔时往拾忆馆藏。心得可选填。
+              将按累计时长生成专注记录，沉淀入昔时往馆藏。心得可选填。
             </p>
             <label className="mt-4 block text-sm text-[var(--mist)]">
               心得（可选）
@@ -913,7 +913,7 @@ export function FocusTimer({
                   run(() => completeFocusAction(active.id, reflection));
                 }}
               >
-                {pending ? "提交中…" : "结束并生成凝录"}
+                {pending ? "提交中…" : "结束并生成专注记录"}
               </button>
             </div>
           </div>

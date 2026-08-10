@@ -7,13 +7,13 @@ import { remainingDaysLabel } from "@/lib/due-labels";
 
 type DueCardDeckProps = {
   items: DueReminderListItem[];
-  /** 方卡上是否显示完整操作（完成/延期/缘想） */
+  /** 方卡上是否显示完整操作（完成/延期/随想） */
   showActions?: boolean;
 };
 
 const PEEK = 2;
 
-/** 临期帖 · 方形层叠翻阅 */
+/** 临期提醒 · 方形层叠翻阅 */
 export function DueCardDeck({
   items,
   showActions = true,
@@ -128,7 +128,7 @@ export function DueCardDeck({
       </div>
 
       {items.length > 1 ? (
-        <div className="due-deck__dots" role="tablist" aria-label="临期帖翻页">
+        <div className="due-deck__dots" role="tablist" aria-label="临期提醒翻页">
           {items.map((item, i) => (
             <button
               key={item.id}

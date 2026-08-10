@@ -134,13 +134,13 @@ export function EssayListPanel({
           </label>
           {tagOptions.length > 0 ? (
             <label className="oc-filter__field">
-              绪签
+              标签
               <select
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
                 className="auth-field !py-1.5 text-sm text-[var(--paper)]"
               >
-                <option value="">绪签不限</option>
+                <option value="">标签不限</option>
                 {tagOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}

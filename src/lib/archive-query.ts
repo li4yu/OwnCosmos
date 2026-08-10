@@ -25,20 +25,20 @@ export type ArchiveTypeOption = {
 
 export const GALLERY_TYPE_OPTIONS: ArchiveTypeOption[] = [
   { value: "", label: "全部类型" },
-  { value: ARCHIVE_TYPE_ESSAY_SEDIMENT, label: "随笔沉淀" },
+  { value: ARCHIVE_TYPE_ESSAY_SEDIMENT, label: "随笔归档" },
   { value: ARCHIVE_TYPE_ESSAY_TOPIC, label: "专题归档" },
   { value: ARCHIVE_TYPE_PLAN_ARCHIVE, label: "规划归档" },
-  { value: ARCHIVE_TYPE_PLAN_CYCLE, label: "轮期归档" },
-  { value: ARCHIVE_TYPE_DAILY_CHECKIN, label: "日课归档" },
-  { value: ARCHIVE_TYPE_FOCUS_RECORD, label: "凝录" },
+  { value: ARCHIVE_TYPE_PLAN_CYCLE, label: "周期计划归档" },
+  { value: ARCHIVE_TYPE_DAILY_CHECKIN, label: "每日打卡归档" },
+  { value: ARCHIVE_TYPE_FOCUS_RECORD, label: "专注记录" },
   { value: ARCHIVE_TYPE_MEMORY_FRAGMENT, label: "记忆碎片" },
 ];
 
-/** 藏忆状态筛选：空=不限 */
+/** 进知识库状态筛选：空=不限 */
 export const GALLERY_KEPT_OPTIONS: ArchiveTypeOption[] = [
-  { value: "", label: "藏忆不限" },
-  { value: "1", label: "已藏忆" },
-  { value: "0", label: "未藏忆" },
+  { value: "", label: "进知识库不限" },
+  { value: "1", label: "已进知识库" },
+  { value: "0", label: "未进知识库" },
 ];
 
 const WIPE_TYPE_SET = new Set<string>(WIPE_ARCHIVE_TYPES);
@@ -53,11 +53,11 @@ export function isWipeArchiveType(type: string) {
 export type ArchiveListSearch = {
   q?: string;
   type?: string;
-  /** 1=已藏忆 0=未藏忆 空=不限 */
+  /** 1=已进知识库 0=未进知识库 空=不限 */
   kept?: string;
   from?: string;
   to?: string;
-  /** Phase 13: 绪签 id */
+  /** Phase 13: 标签 id */
   tag?: string;
   page?: string;
   size?: string;

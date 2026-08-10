@@ -60,7 +60,7 @@ export function ArchivePreferenceForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-1.5">
       <p className="text-xs leading-5 text-[var(--mist)]">
-        设定小时数内若无编辑，进站时自动沉淀入「随笔沉淀」。默认{" "}
+        设定小时数内若无编辑，进站时自动沉淀入「随笔归档」。默认{" "}
         {DEFAULT_ESSAY_IDLE_HOURS} 小时。
       </p>
       <label className="flex flex-col gap-1 text-xs text-[var(--mist)]">

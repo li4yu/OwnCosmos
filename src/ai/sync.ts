@@ -15,6 +15,8 @@ import {
 } from "@/ai/milvus";
 import { getDb } from "@/db";
 import {
+  ARCHIVE_TYPE_DAILY_CHECKIN,
+  ARCHIVE_TYPE_PLAN_CYCLE,
   RAG_CORPUS_PROJECT,
   RAG_CORPUS_USER,
   RAG_SOURCE_ARCHIVE,
@@ -25,6 +27,7 @@ import {
   archiveItem,
   ragDocument,
 } from "@/db/schema";
+import { formatDueDateInput } from "@/lib/plan-dates";
 
 function newId() {
   return randomBytes(16).toString("hex");
@@ -33,6 +36,42 @@ function newId() {
 function chunkPk(corpus: string, sourceId: string, index: number) {
   // Milvus VARCHAR PK；保持稳定便于覆盖写前先删
   return `${corpus}:${sourceId}:${index}`.slice(0, 128);
+}
+
+/** 写入向量正文前缀：分清创建 / 归档 / 计次边界，供召回模型使用 */
+function buildArchiveRagMeta(item: {
+  type: string;
+  title: string;
+  mood: string | null;
+  archivedAt: Date;
+  sourceCreatedAt: Date;
+  cycleCount: number | null;
+}): Record<string, string | null | undefined> {
+  const created = formatDueDateInput(item.sourceCreatedAt);
+  const archived = formatDueDateInput(item.archivedAt);
+  const isCountSeries =
+    item.type === ARCHIVE_TYPE_DAILY_CHECKIN ||
+    item.type === ARCHIVE_TYPE_PLAN_CYCLE;
+
+  const meta: Record<string, string | null | undefined> = {
+    type: item.type,
+    title: item.title,
+    created,
+    archived,
+    mood: item.mood,
+  };
+
+  if (isCountSeries) {
+    meta.kind = "count_series";
+    meta.count = String(item.cycleCount ?? 0);
+    meta.last = archived;
+    meta.note =
+      item.type === ARCHIVE_TYPE_DAILY_CHECKIN
+        ? "created=习惯起始;last=最近打卡写入;正文日期=各次打卡日"
+        : "created=系列起始;last=最近一期写入;正文日期=各期截止日";
+  }
+
+  return meta;
 }
 
 async function upsertReconcile(row: {
@@ -96,7 +135,7 @@ async function upsertReconcile(row: {
   return id;
 }
 
-/** 馆藏进向量；取消藏忆/无文本时请走 delete */
+/** 馆藏进向量；移出知识库/无文本时请走 delete */
 export async function upsertArchiveItemRag(
   userId: string,
   archiveItemId: string,
@@ -138,15 +177,16 @@ export async function upsertArchiveItemRag(
     );
 
     const pieces = chunkPlainText(plain);
-    const dated = item.archivedAt?.toISOString?.() ?? "";
     const texts = pieces.map((p) =>
       withMetaPrefix(
-        {
+        buildArchiveRagMeta({
           type: item.type,
-          date: dated.slice(0, 10),
-          mood: item.mood,
           title: item.title,
-        },
+          mood: item.mood,
+          archivedAt: item.archivedAt,
+          sourceCreatedAt: item.sourceCreatedAt,
+          cycleCount: item.cycleCount,
+        }),
         p.text,
       ),
     );
@@ -218,7 +258,7 @@ export async function deleteArchiveItemRag(
       status: RAG_STATUS_DELETED,
     });
   } catch {
-    // 抹忆主路径不应因向量失败而中断
+    // 删除归档主路径不应因向量失败而中断
   }
 }
 

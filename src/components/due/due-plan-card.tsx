@@ -88,7 +88,7 @@ export function DuePlanCard({
     setError(null);
     const result = await createYuanxiangAction(id, yuanxiangBody);
     if (result?.error || !result.essayId) {
-      setError(result?.error ?? "缘想失败");
+      setError(result?.error ?? "随想失败");
       setPending(false);
       return;
     }
@@ -118,7 +118,7 @@ export function DuePlanCard({
       {isSquare ? (
         <div className="due-deck__card-body">
           <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
-            临期帖
+            临期提醒
             {kindLabel ? ` · ${kindLabel}` : ""}
             {isToday ? " · 今日" : ""}
           </p>
@@ -170,7 +170,7 @@ export function DuePlanCard({
                   setYuanxiangOpen(true);
                 }}
               >
-                缘想
+                随想
               </button>
               <Link
                 href={`/app/future/plans/${id}`}
@@ -191,7 +191,7 @@ export function DuePlanCard({
           <div className="min-w-0 flex-1">
             {!isCompact ? (
               <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
-                临期帖 · 只读副本
+                临期提醒 · 只读副本
                 {kindLabel ? ` · ${kindLabel}` : ""}
                 {isToday ? " · 今日" : ""}
               </p>
@@ -255,7 +255,7 @@ export function DuePlanCard({
                   setYuanxiangOpen(true);
                 }}
               >
-                缘想
+                随想
               </button>
               {!isCompact ? (
                 <Link
@@ -279,7 +279,7 @@ export function DuePlanCard({
       <ConfirmDialog
         open={completeOpen}
         title="完成及归档？"
-        message="将标记完成并沉淀入昔时往拾忆馆藏（规划归档）；来日途「已完成」仍可查看。确定吗？"
+        message="将标记完成并沉淀入昔时往馆藏（规划归档）；来日途「已完成」仍可查看。确定吗？"
         confirmLabel="完成及归档"
         cancelLabel="取消"
         pending={pending}
@@ -315,7 +315,7 @@ export function DuePlanCard({
               延期
             </h2>
             <p className="mt-2 text-sm text-[var(--mist)]">
-              将回写来日途截止日期，临期帖按新窗口更新。
+              将回写来日途截止日期，临期提醒按新窗口更新。
             </p>
             <div className="mt-4">
               <DatePickerField
@@ -375,12 +375,12 @@ export function DuePlanCard({
               className="mt-1 text-lg tracking-[0.1em] text-[var(--paper)]"
             >
               <PoeticName
-                name="缘想"
+                name="随想"
                 tip="针对这条计划随手写下想法，会存成一条随笔"
               />
             </h2>
             <p className="mt-2 text-sm text-[var(--mist)]">
-              将生成一条独立流思笺，并关联本计划。
+              将生成一条独立随笔，并关联本计划。
             </p>
             <label className="mt-4 flex flex-col gap-1.5 text-sm text-[var(--mist)]">
               随想

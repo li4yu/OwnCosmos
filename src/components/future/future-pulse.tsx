@@ -36,7 +36,7 @@ export function FuturePulse({ stats }: FuturePulseProps) {
             href="/app/future/cycles"
             className="ui-hover-link text-[var(--mist)]"
           >
-            轮期{" "}
+            周期计划{" "}
             <span className="font-mono text-[var(--paper)]">
               {stats.cycleCount}
             </span>
@@ -47,7 +47,7 @@ export function FuturePulse({ stats }: FuturePulseProps) {
             href="/app/future/daily"
             className="ui-hover-link text-[var(--mist)]"
           >
-            日课{" "}
+            每日打卡{" "}
             <span className="font-mono text-[var(--paper)]">
               {stats.habitCount}
             </span>

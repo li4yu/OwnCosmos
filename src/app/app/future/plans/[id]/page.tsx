@@ -55,7 +55,7 @@ export default async function EditPlanPage({ params, searchParams }: Props) {
   return (
     <main>
       <PageHeader
-        title={kind === PLAN_KIND_CYCLE ? "编辑轮期" : "编辑计划"}
+        title={kind === PLAN_KIND_CYCLE ? "编辑周期计划" : "编辑计划"}
         backHref={listHref}
         backLabel="返回列表"
         guardLeave

@@ -18,12 +18,12 @@ export default async function FutureDailyPage() {
   return (
     <main className="flex flex-col gap-3">
       <PageHeader
-        title="日课"
+        title="每日打卡"
         backHref="/app/future"
         backLabel="返回来日途"
         description={
           <>
-            <PoeticName name="日课" tip="每日习惯打卡，可附一句心得" />
+            <PoeticName name="每日打卡" tip="每日习惯打卡，可附一句心得" />
             · 与规划表分离，专注日常自律
           </>
         }

@@ -6,13 +6,13 @@ type YearBriefPanelProps = {
   pairs: MoodTagPair[];
 };
 
-/** 岁简 + 绪因（结构化，无模型文案） */
+/** 年度摘要 + 情绪共现（结构化，无模型文案） */
 export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3">
         <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          岁简 · {brief.year}
+          年度摘要 · {brief.year}
         </p>
         <p className="mt-1 text-xs text-[var(--mist)]">
           规则汇总，不含生成文案
@@ -23,7 +23,7 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
             <dd className="mt-0.5 text-lg text-[var(--paper)]">{brief.total}</dd>
           </div>
           <div className="rounded border border-[var(--line)] px-2 py-1.5">
-            <dt className="font-mono text-[10px] text-[var(--mist)]">有绪印</dt>
+            <dt className="font-mono text-[10px] text-[var(--mist)]">有情绪标记</dt>
             <dd className="mt-0.5 text-lg text-[var(--paper)]">
               {brief.withMood}
             </dd>
@@ -35,7 +35,7 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
             </dd>
           </div>
           <div className="rounded border border-[var(--line)] px-2 py-1.5">
-            <dt className="font-mono text-[10px] text-[var(--mist)]">绪签种数</dt>
+            <dt className="font-mono text-[10px] text-[var(--mist)]">标签种数</dt>
             <dd className="mt-0.5 text-lg text-[var(--paper)]">
               {brief.topTags.length}
             </dd>
@@ -63,7 +63,7 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
         {brief.topTags.length > 0 ? (
           <div className="mt-3">
             <p className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
-              高频绪签
+              高频标签
             </p>
             <ul className="mt-1 flex flex-wrap gap-1.5 text-xs">
               {brief.topTags.map((t) => (
@@ -80,25 +80,25 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
 
         <div className="mt-3">
           <p className="mb-1.5 font-mono text-[10px] tracking-wide text-[var(--mist)]">
-            当年绪谱
+            当年情绪分布
           </p>
           <MoodBars
             items={brief.byMood}
-            emptyHint="该年尚无绪印数据。"
+            emptyHint="该年尚无情绪标记数据。"
           />
         </div>
       </section>
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3">
         <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          绪因 · 情绪 × 主题
+          情绪共现 · 情绪 × 主题
         </p>
         <p className="mt-1 text-xs text-[var(--mist)]">
-          共现次数统计（有绪印且带绪签的馆藏）
+          共现次数统计（有情绪标记且带标签的馆藏）
         </p>
         {pairs.length === 0 ? (
           <p className="mt-2 text-xs text-[var(--mist)]">
-            暂无共现。给馆藏补绪印与绪签后会出现在这里。
+            暂无共现。给馆藏补情绪标记与标签后会出现在这里。
           </p>
         ) : (
           <ul className="mt-2 flex flex-col gap-1">

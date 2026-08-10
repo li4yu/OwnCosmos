@@ -89,7 +89,7 @@ export async function ArchiveDetailView({
       <article className="oc-sheet oc-sheet--ruled">
         <p className="font-mono text-[9px] tracking-[0.18em] text-[var(--teal)]">
           {archiveTypeLabel(item.type)}
-          {item.inKnowledge ? " · 已藏忆" : ""}
+          {item.inKnowledge ? " · 已进知识库" : ""}
           {isFragment ? " · 可编辑" : " · 只读 · 不可编辑"}
         </p>
         <h1 className="mt-1 text-lg tracking-[0.08em] text-[var(--paper)]">
@@ -118,7 +118,7 @@ export async function ArchiveDetailView({
         <dl className="mt-2 grid gap-2 text-xs text-[var(--mist)] sm:grid-cols-2">
           <div>
             <dt className="font-mono text-[10px] tracking-wide opacity-70">
-              {isFragment ? "拾取时间" : "归档时间"}
+              {isFragment ? "上传时间" : "归档时间"}
             </dt>
             <dd className="mt-0.5">{formatWhen(item.archivedAt)}</dd>
           </div>
@@ -137,7 +137,7 @@ export async function ArchiveDetailView({
           {item.inKnowledge && item.keptAt ? (
             <div>
               <dt className="font-mono text-[10px] tracking-wide opacity-70">
-                藏忆时间
+                进知识库时间
               </dt>
               <dd className="mt-0.5">{formatWhen(item.keptAt)}</dd>
             </div>

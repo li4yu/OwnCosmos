@@ -467,7 +467,7 @@ export async function resolvePlanSourceLink(
   };
 }
 
-/** 临期帖：进入提醒窗、且未完成的未归档计划（排除胶囊与无截止） */
+/** 临期提醒：进入提醒窗、且未完成的未归档计划（排除胶囊与无截止） */
 export async function listDueReminderPlans(userId: string, now = new Date()) {
   const rows = await listOpenPlans(userId);
   const dueRows: Array<PlanRecord & { dueAt: Date; daysLeft: number }> = [];
@@ -492,7 +492,7 @@ export async function listDueReminderPlans(userId: string, now = new Date()) {
   });
 }
 
-/** 临期帖延期：回写 due_at */
+/** 临期提醒延期：回写 due_at */
 export async function postponeDuePlan(
   userId: string,
   planId: string,
@@ -541,7 +541,7 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
     title,
     body: input.body,
     dueAt,
-    // 轮期不使用临期配，存默认值即可
+    // 周期计划不使用提前提醒，存默认值即可
     remindDays:
       kind === PLAN_KIND_CYCLE
         ? DEFAULT_REMIND_DAYS
@@ -562,7 +562,7 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
   return id;
 }
 
-/** 流思笺提炼：预填标题正文，默认 once，截止默认今天（可再改） */
+/** 随笔提炼：预填标题正文，默认 once，截止默认今天（可再改） */
 export async function refineEssayToPlan(
   userId: string,
   essayId: string,
@@ -715,7 +715,7 @@ function buildCyclePeriodArchiveNote(
 }
 
 /**
- * 参照日课：子任务打卡后，把「名称 · 次数」同步进轮期系列馆藏（按打卡日改写该段）。
+ * 参照每日打卡：子任务打卡后，把「名称 · 次数」同步进周期计划系列馆藏（按打卡日改写该段）。
  * 不增加 cycle_count（计次仍只在完成本期 / 滚期时 +1）。
  */
 export async function syncCycleArchiveTaskSnapshot(
@@ -821,8 +821,8 @@ export async function syncCycleArchiveTaskSnapshot(
 }
 
 /**
- * 轮期系列计次归档：同 series 只保留一条馆藏，cycle_count +1；
- * 心得按本期截止日追加（日期在前），与日课一致；有子任务时附带次数快照
+ * 周期计划系列计次归档：同 series 只保留一条馆藏，cycle_count +1；
+ * 心得按本期截止日追加（日期在前），与每日打卡一致；有子任务时附带次数快照
  */
 async function upsertCycleSeriesArchive(
   row: PlanRecord,
@@ -918,7 +918,7 @@ async function upsertCycleSeriesArchive(
 
 /**
  * 完成并归档：写规划归档快照 + plan.archived_at + status=done
- * 轮期走系列计次并滚下一期（与首页打卡同一路径）
+ * 周期计划走系列计次并滚下一期（与首页打卡同一路径）
  */
 export async function completeAndArchivePlan(
   userId: string,
@@ -943,7 +943,7 @@ export async function completeAndArchivePlan(
   if (!row) return null;
   // 时间胶囊不走完成归档
   if (row.kind === PLAN_KIND_CAPSULE) return null;
-  // 轮期：到期当天起可完成；完成即滚下一期
+  // 周期计划：到期当天起可完成；完成即滚下一期
   if (row.kind === PLAN_KIND_CYCLE) {
     if (
       reason === ARCHIVE_REASON_PLAN_COMPLETE &&
@@ -993,7 +993,7 @@ export async function seriesHasArchivedPeriodOnDate(
 }
 
 /**
- * 每日轮期若被超前滚过（open 截止在未来，但今天尚未有归档期），把截止拉回今天
+ * 每日周期计划若被超前滚过（open 截止在未来，但今天尚未有归档期），把截止拉回今天
  */
 async function repairSkippedDailyCycles(userId: string, now = new Date()) {
   const today = localTodayNoon(now);
@@ -1017,7 +1017,7 @@ async function repairSkippedDailyCycles(userId: string, now = new Date()) {
 }
 
 /**
- * 轮期滚下一期：当期计次归档 + 同 series 开新一期
+ * 周期计划滚下一期：当期计次归档 + 同 series 开新一期
  * @param note 打卡心得（按本期截止日追加到系列馆藏正文）
  */
 export async function rolloverCyclePlan(
@@ -1123,7 +1123,7 @@ export async function checkinCyclePlan(
     )
     .limit(1);
   const row = rows[0];
-  if (!row) return { ok: false, error: "轮期不存在或已归档" };
+  if (!row) return { ok: false, error: "周期计划不存在或已归档" };
   if (!canCompleteCyclePeriod(row.dueAt)) {
     return {
       ok: false,
@@ -1131,14 +1131,14 @@ export async function checkinCyclePlan(
     };
   }
   const result = await rolloverCyclePlan(userId, planId, note);
-  if (!result) return { ok: false, error: "无法完成本期，请检查轮期设置" };
+  if (!result) return { ok: false, error: "无法完成本期，请检查周期计划设置" };
   return { ok: true, ...result };
 }
 
 /**
  * 进站补算：
- * - 轮期逾期 → 连续滚期直到不逾期（一次进站补齐多日）
- * - 每日轮期若被超前滚过今天 → 拉回今天
+ * - 周期计划逾期 → 连续滚期直到不逾期（一次进站补齐多日）
+ * - 每日周期计划若被超前滚过今天 → 拉回今天
  * - 胶囊不自动归档
  * - 其余有截止日且逾期 → 逾期归档
  *

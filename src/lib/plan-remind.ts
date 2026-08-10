@@ -7,7 +7,7 @@ export const DEFAULT_REMIND_DAYS = 1;
 export const REMIND_DAYS_HARD_MAX = 90;
 
 /**
- * 相对今天与截止日期，临期配允许的最大值：
+ * 相对今天与截止日期，提前提醒允许的最大值：
  * - 截止今天：最多 1
  * - 截止在未来：最多 = 距今天数
  */
@@ -60,9 +60,9 @@ export function validateRemindDays(
   if (raw > max) {
     const span = calendarDaysUntilDue(dueAt, now);
     if (span === 0) {
-      return "截止为今天时，临期配最多提前 1 天";
+      return "截止为今天时，提前提醒最多提前 1 天";
     }
-    return `截止日期距今 ${span} 天，临期配不能超过 ${max} 天`;
+    return `截止日期距今 ${span} 天，提前提醒不能超过 ${max} 天`;
   }
   return null;
 }

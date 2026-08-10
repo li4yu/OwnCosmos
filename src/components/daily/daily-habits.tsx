@@ -11,6 +11,7 @@ import {
 } from "@/app/app/future/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
+import { requestCheckinCheerBubble } from "@/lib/companion-client";
 
 export type HabitRow = {
   id: string;
@@ -67,7 +68,7 @@ export function DailyHabits({ habits, todayLabel }: Props) {
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
-          今日日课
+          今日每日打卡
           <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
             {doneCount}/{habits.length}
           </span>
@@ -84,7 +85,7 @@ export function DailyHabits({ habits, todayLabel }: Props) {
             className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
           >
             <label className="flex min-w-[10rem] flex-1 flex-col gap-1.5 text-sm text-[var(--mist)]">
-              新日课
+              新每日打卡
               <input
                 name="title"
                 value={title}
@@ -92,7 +93,7 @@ export function DailyHabits({ habits, todayLabel }: Props) {
                 className="auth-field"
                 placeholder="例如：晨间拉伸"
                 maxLength={80}
-                aria-label="日课名称"
+                aria-label="每日打卡名称"
               />
             </label>
             <label className="flex min-w-[10rem] flex-[1.2] flex-col gap-1.5 text-sm text-[var(--mist)]">
@@ -104,7 +105,7 @@ export function DailyHabits({ habits, todayLabel }: Props) {
                 className="auth-field"
                 placeholder="想坚持的事…"
                 maxLength={200}
-                aria-label="日课说明"
+                aria-label="每日打卡说明"
               />
             </label>
             <button
@@ -119,7 +120,7 @@ export function DailyHabits({ habits, todayLabel }: Props) {
 
         {habits.length === 0 ? (
           <li className="rounded-xl border border-dashed border-[var(--line)] px-4 py-5 text-center text-sm text-[var(--mist)]">
-            还没有日课。在上方添加一条后会出现在这里。
+            还没有每日打卡。在上方添加一条后会出现在这里。
           </li>
         ) : (
           habits.map((habit) => (
@@ -153,6 +154,7 @@ export function DailyHabits({ habits, todayLabel }: Props) {
                       setNotice({ title: "打卡失败", message: result.error });
                       return;
                     }
+                    void requestCheckinCheerBubble(habit.title);
                     router.refresh();
                   });
                 }}
@@ -221,7 +223,7 @@ export function DailyHabits({ habits, todayLabel }: Props) {
 
       <ConfirmDialog
         open={Boolean(removeId)}
-        title="停用这条日课？"
+        title="停用这条每日打卡？"
         message="停用后不再出现在今日列表；历史打卡仍保留。"
         confirmLabel="停用"
         cancelLabel="取消"

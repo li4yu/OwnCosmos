@@ -8,12 +8,56 @@ export type ChatMessage = {
   content: string;
 };
 
+export type ChatCompletionOptions = {
+  temperature?: number;
+  signal?: AbortSignal;
+};
+
+/**
+ * DashScope OpenAI 兼容非流式聊天（路由 / 摘要压缩）。
+ */
+export async function chatCompletion(
+  messages: ChatMessage[],
+  options: ChatCompletionOptions = {},
+): Promise<string> {
+  const apiKey = getDashScopeApiKey();
+  if (!apiKey) throw new Error("DASHSCOPE_API_KEY 未配置");
+
+  const res = await fetch(DASHSCOPE_CHAT_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: getLlmModel(),
+      messages,
+      stream: false,
+      temperature: options.temperature ?? 0.2,
+      enable_thinking: false,
+    }),
+    signal: options.signal,
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(errText.slice(0, 400) || `LLM HTTP ${res.status}`);
+  }
+
+  const json = (await res.json()) as {
+    choices?: { message?: { content?: string | null } }[];
+  };
+  const text = json.choices?.[0]?.message?.content;
+  if (typeof text !== "string") throw new Error("LLM 返回空内容");
+  return text;
+}
+
 /**
  * DashScope OpenAI 兼容流式聊天；yield 文本增量。
- * 国内 endpoint；关闭 thinking 以免测试页混入推理链。
  */
 export async function* streamChatCompletion(
   messages: ChatMessage[],
+  options: ChatCompletionOptions = {},
 ): AsyncGenerator<string, void, unknown> {
   const apiKey = getDashScopeApiKey();
   if (!apiKey) throw new Error("DASHSCOPE_API_KEY 未配置");
@@ -28,16 +72,15 @@ export async function* streamChatCompletion(
       model: getLlmModel(),
       messages,
       stream: true,
-      temperature: 0.4,
+      temperature: options.temperature ?? 0.4,
       enable_thinking: false,
     }),
+    signal: options.signal,
   });
 
   if (!res.ok || !res.body) {
     const errText = await res.text().catch(() => "");
-    throw new Error(
-      errText.slice(0, 400) || `LLM HTTP ${res.status}`,
-    );
+    throw new Error(errText.slice(0, 400) || `LLM HTTP ${res.status}`);
   }
 
   const reader = res.body.getReader();

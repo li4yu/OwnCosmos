@@ -92,7 +92,7 @@ const initialState: PlanActionState = {};
 
 const KIND_OPTIONS: { value: PlanKind; tip: string }[] = [
   { value: PLAN_KIND_ONCE, tip: "有明确截止日的单次事项" },
-  { value: PLAN_KIND_VISION, tip: "长期愿景，截止日可选；无截止则不进临期帖" },
+  { value: PLAN_KIND_VISION, tip: "长期愿景，截止日可选；无截止则不进临期提醒" },
   { value: PLAN_KIND_CYCLE, tip: "按周期滚动" },
 ];
 
@@ -133,7 +133,7 @@ export function PlanEditor(props: PlanEditorProps) {
   const [body, setBody] = useState(
     isEdit ? props.initialBody : (props.initialBody ?? ""),
   );
-  /** 新建轮期时的本地子任务草稿（创建后写入） */
+  /** 新建周期计划时的本地子任务草稿（创建后写入） */
   const [draftTasks, setDraftTasks] = useState<string[]>([]);
   const [draftTaskInput, setDraftTaskInput] = useState("");
   const [dueAt, setDueAt] = useState(() => {
@@ -180,7 +180,7 @@ export function PlanEditor(props: PlanEditorProps) {
 
   const capsuleLocked = isEdit && Boolean(props.capsuleLocked);
   const needsDue = kind !== PLAN_KIND_VISION;
-  /** 轮期 / 胶囊无临期配；轮期到期当天起出现在首页 */
+  /** 周期计划 / 胶囊无提前提醒；周期计划到期当天起出现在首页 */
   const showRemind =
     kind !== PLAN_KIND_CAPSULE &&
     kind !== PLAN_KIND_CYCLE &&
@@ -257,7 +257,7 @@ export function PlanEditor(props: PlanEditorProps) {
       setRemindDays(next);
       setRemindDraft(String(next));
       setNotice({
-        title: "临期配已调整",
+        title: "提前提醒已调整",
         message: `截止日期变更后，提前天数不能超过「今天 → 截止」的跨度，已改为提前 ${next} 天。`,
       });
     }
@@ -270,7 +270,7 @@ export function PlanEditor(props: PlanEditorProps) {
 
   function applyRemindDays(n: number) {
     if (!dueDate) {
-      showNotice("临期配", "请先选择截止日期");
+      showNotice("提前提醒", "请先选择截止日期");
       return;
     }
     const err = validateRemindDays(n, dueDate);
@@ -279,7 +279,7 @@ export function PlanEditor(props: PlanEditorProps) {
       setRemindDays(clamped);
       setRemindDraft(String(clamped));
       markDirty();
-      showNotice("临期配无效", `${err} 已为你调整为提前 ${clamped} 天。`);
+      showNotice("提前提醒无效", `${err} 已为你调整为提前 ${clamped} 天。`);
       return;
     }
     setRemindDays(n);
@@ -365,7 +365,7 @@ export function PlanEditor(props: PlanEditorProps) {
             >
               {props.sourceLink.title}
             </Link>
-            {props.sourceLink.archived ? "（馆藏）" : "（流思笺）"}
+            {props.sourceLink.archived ? "（馆藏）" : "（随笔）"}
           </p>
         ) : null}
 
@@ -467,7 +467,7 @@ export function PlanEditor(props: PlanEditorProps) {
         {kind === PLAN_KIND_CYCLE ? (
           <div className="flex flex-col gap-3">
             <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
-              轮期单位
+              周期计划单位
               <select
                 name="cycleUnit"
                 value={cycleUnit}
@@ -559,7 +559,7 @@ export function PlanEditor(props: PlanEditorProps) {
         {showRemind ? (
           <div className="flex flex-col gap-3 rounded-xl border border-[var(--line)] bg-[var(--field-bg)]/40 p-3 sm:p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-sm text-[var(--paper)]">临期配</p>
+              <p className="text-sm text-[var(--paper)]">提前提醒</p>
               <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
                 最多提前 {remindMax} 天（相对今天与截止日）
               </p>
@@ -572,7 +572,7 @@ export function PlanEditor(props: PlanEditorProps) {
               <div
                 className="flex flex-wrap gap-2"
                 role="group"
-                aria-label="临期配快捷"
+                aria-label="提前提醒快捷"
               >
                 {remindPresets.map((d) => {
                   const active = remindDays === d;
@@ -611,7 +611,7 @@ export function PlanEditor(props: PlanEditorProps) {
                     const parsed = parseRemindDaysInput(remindDraft);
                     if (parsed == null) {
                       setRemindDraft(String(remindDays));
-                      showNotice("临期配无效", "请输入正整数天数。");
+                      showNotice("提前提醒无效", "请输入正整数天数。");
                       return;
                     }
                     applyRemindDays(parsed);
@@ -753,7 +753,7 @@ export function PlanEditor(props: PlanEditorProps) {
           <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
             状态：{status === PLAN_STATUS_DONE ? "已完成" : "未完成"}
             <span className="ml-2 text-[var(--mist)]">
-              （完成会归档入馆藏，临期帖同步消失）
+              （完成会归档入馆藏，临期提醒同步消失）
             </span>
           </p>
         ) : null}
@@ -853,8 +853,8 @@ export function PlanEditor(props: PlanEditorProps) {
         title={kind === PLAN_KIND_CYCLE ? "完成本期？" : "完成及归档？"}
         message={
           kind === PLAN_KIND_CYCLE
-            ? "将计次写入拾忆馆藏·轮期归档，并开启下一期。子任务打卡次数会带到下一期。确定吗？"
-            : "将标记完成并沉淀入昔时往拾忆馆藏；来日途「已完成」仍可查看，今时际临期帖不再显示。确定吗？"
+            ? "将计次写入馆藏·周期计划归档，并开启下一期。子任务打卡次数会带到下一期。确定吗？"
+            : "将标记完成并沉淀入昔时往馆藏；来日途「已完成」仍可查看，今时际临期提醒不再显示。确定吗？"
         }
         confirmLabel={kind === PLAN_KIND_CYCLE ? "完成本期" : "完成及归档"}
         cancelLabel="取消"

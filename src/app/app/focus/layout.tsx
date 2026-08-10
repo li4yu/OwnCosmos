@@ -1,4 +1,4 @@
-/** 顺钟等沉浸页：不套模块栏 */
+/** 正向计时等沉浸页：不套模块栏 */
 export default function FocusRootLayout({
   children,
 }: {

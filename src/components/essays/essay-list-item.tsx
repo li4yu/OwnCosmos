@@ -123,7 +123,7 @@ export function EssayListItem({
         <ConfirmDialog
           open={archiveOpen}
           title="归档这条随笔？"
-          message="将沉淀入昔时往拾忆馆藏，今时际列表将不再显示。确定归档吗？"
+          message="将沉淀入昔时往馆藏，今时际列表将不再显示。确定归档吗？"
           confirmLabel="归档"
           cancelLabel="取消"
           pending={pending}

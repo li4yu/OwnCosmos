@@ -69,7 +69,7 @@ function localYmdParts(d = new Date()) {
   };
 }
 
-/** 往迹廊 · 岁轴：按年/月归档密度 */
+/** 时间线 · 年月密度：按年/月归档密度 */
 export async function getArchiveDensityByYearMonth(
   userId: string,
 ): Promise<YearMonthDensity[]> {
@@ -96,7 +96,7 @@ export async function getArchiveDensityByYearMonth(
   }));
 }
 
-/** 同年回望：往年同月同日有归档 */
+/** 往年今日：往年同月同日有归档 */
 export async function listAnniversaryHits(
   userId: string,
   now = new Date(),
@@ -131,7 +131,7 @@ export async function listAnniversaryHits(
   }));
 }
 
-/** 绪谱：有绪印的归档按心情计数 */
+/** 情绪分布：有情绪标记的归档按心情计数 */
 export async function getMoodSpectrum(
   userId: string,
   year?: number,
@@ -164,7 +164,7 @@ export async function getMoodSpectrum(
     }));
 }
 
-/** 岁简：某年结构化汇总（无 AI 文案） */
+/** 年度摘要：某年结构化汇总（无 AI 文案） */
 export async function getYearBrief(
   userId: string,
   year: number,
@@ -231,7 +231,7 @@ export async function getYearBrief(
   };
 }
 
-/** 绪因：情绪 × 主题共现（规则统计） */
+/** 情绪共现：情绪 × 主题共现（规则统计） */
 export async function getMoodTagCooccurrence(
   userId: string,
   year?: number,
@@ -289,7 +289,7 @@ export async function listArchiveYears(userId: string): Promise<number[]> {
   return rows.map((r) => Number(r.year));
 }
 
-/** 岁轴可选：某月条目（轻量列表） */
+/** 年月密度可选：某月条目（轻量列表） */
 export async function listArchiveTitlesInMonth(
   userId: string,
   year: number,

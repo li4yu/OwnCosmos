@@ -42,12 +42,12 @@ export function KeepArchiveButton({
         onClick={toggle}
         title={
           !canKeep && !isKept
-            ? "纯图无文字，无法藏忆进知识库"
+            ? "纯图无文字，无法进知识库"
             : undefined
         }
       >
         <PoeticName
-          name={isKept ? "取消藏忆" : "藏忆"}
+          name={isKept ? "移出知识库" : "进知识库"}
           tip={
             isKept
               ? "从知识库移出；条目仍留在馆藏"
@@ -57,7 +57,7 @@ export function KeepArchiveButton({
       </button>
       {!canKeep && !isKept ? (
         <p className="font-mono text-[10px] text-[var(--mist)]">
-          纯图无文字，不可藏忆
+          纯图无文字，不可进知识库
         </p>
       ) : null}
       {error ? (

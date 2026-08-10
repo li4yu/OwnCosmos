@@ -108,13 +108,13 @@ export default async function FutureCyclesPage({ searchParams }: Props) {
   return (
     <main className="flex flex-col gap-3">
       <PageHeader
-        title="轮期"
+        title="周期计划"
         backHref="/app/future"
         backLabel="返回来日途"
         description={
           <>
             <PoeticName
-              name="轮期"
+              name="周期计划"
               tip="按日/周/月/年/自定义天数滚动；子任务打卡只记次数，与完成本期无关"
             />
             · 馆藏按系列计次，不每期占一条
@@ -125,7 +125,7 @@ export default async function FutureCyclesPage({ searchParams }: Props) {
             href="/app/future/plans/new?kind=cycle"
             className="ui-btn-primary ui-btn-sm shrink-0"
           >
-            新建轮期
+            新建周期计划
           </Link>
         }
       />
@@ -142,8 +142,8 @@ export default async function FutureCyclesPage({ searchParams }: Props) {
         }}
         emptyHint={
           hasFilters
-            ? "没有符合条件的轮期，试试放宽筛选。"
-            : "暂无轮期。新建后，本期结束会自动计次并滚入下一期。"
+            ? "没有符合条件的周期计划，试试放宽筛选。"
+            : "暂无周期计划。新建后，本期结束会自动计次并滚入下一期。"
         }
       >
         <ul className="oc-scroll">{openRows}</ul>
@@ -161,7 +161,7 @@ export default async function FutureCyclesPage({ searchParams }: Props) {
             href="/app/past/gallery/plan-cycle"
             className="font-mono text-[10px] tracking-wide text-[var(--amber)] hover:underline"
           >
-            馆藏·轮期归档 →
+            馆藏·周期计划归档 →
           </Link>
         </div>
         {seriesArchives.length === 0 ? (

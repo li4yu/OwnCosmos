@@ -79,7 +79,7 @@ export function FocusPreferenceForm({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs leading-5 text-[var(--mist)]">
-        逆漏默认时长用于新开倒计时；勿扰开启后，专注中不弹桌面通知，逆漏到点仅暂停不弹窗打断。
+        倒计时默认时长用于新开倒计时；勿扰开启后，专注中不弹桌面通知，倒计时到点仅暂停不弹窗打断。
       </p>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
@@ -108,7 +108,7 @@ export function FocusPreferenceForm({
         </button>
       </div>
       <div>
-        <p className="text-xs text-[var(--paper)]">逆漏默认时长</p>
+        <p className="text-xs text-[var(--paper)]">倒计时默认时长</p>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {PRESETS.map((p) => (
             <button

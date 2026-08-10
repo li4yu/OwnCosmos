@@ -35,7 +35,7 @@ export async function completeDuePlanAction(
     ARCHIVE_REASON_PLAN_COMPLETE,
   );
   if (!archiveId) {
-    return { error: "计划不存在、已归档，或轮期尚未到期" };
+    return { error: "计划不存在、已归档，或周期计划尚未到期" };
   }
   revalidateDuePaths(planId);
   return {};
@@ -55,14 +55,14 @@ export async function postponeDuePlanAction(
   return {};
 }
 
-/** 缘想：生成独立流思笺并关联计划 */
+/** 随想：生成独立随笔并关联计划 */
 export async function createYuanxiangAction(
   planId: string,
   body: string,
 ): Promise<DueActionState> {
   const session = await requireSession();
   const essayId = await createYuanxiangEssay(session.user.id, planId, body);
-  if (!essayId) return { error: "请填写缘想内容，或检查计划是否仍有效" };
+  if (!essayId) return { error: "请填写随想内容，或检查计划是否仍有效" };
   revalidateDuePaths(planId);
   revalidatePath(`/app/present/essays/${essayId}`);
   return { essayId };

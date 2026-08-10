@@ -24,13 +24,13 @@ function formatEnded(d: Date) {
   }).format(d);
 }
 
-/** 凝时 · 最近凝录 */
+/** 凝时 · 最近专注记录 */
 export function FocusRecentSessions({ items }: FocusRecentSessionsProps) {
   return (
     <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
-          最近凝录
+          最近专注记录
         </h3>
         <Link
           href="/app/focus/records"
@@ -41,7 +41,7 @@ export function FocusRecentSessions({ items }: FocusRecentSessionsProps) {
       </div>
       {items.length === 0 ? (
         <p className="mt-2 text-xs text-[var(--mist)]">
-          尚无完成记录。开一段顺钟或逆漏，结束后会沉淀到这里与昔时往。
+          尚无完成记录。开一段正向计时或倒计时，结束后会沉淀到这里与昔时往。
         </p>
       ) : (
         <ul className="mt-2 flex flex-col gap-1.5">
@@ -60,7 +60,7 @@ export function FocusRecentSessions({ items }: FocusRecentSessionsProps) {
                       {item.title}
                     </span>
                     <span className="shrink-0 font-mono text-[9px] text-[var(--mist)]">
-                      {item.mode === "countdown" ? "逆漏" : "顺钟"}
+                      {item.mode === "countdown" ? "倒计时" : "正向计时"}
                     </span>
                   </div>
                   <p className="mt-0.5 font-mono text-[10px] text-[var(--amber)]">

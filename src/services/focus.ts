@@ -46,7 +46,7 @@ export type FocusBindKey = `plan:${string}` | `habit:${string}` | "";
 
 export type StartFocusInput = {
   mode: typeof FOCUS_MODE_FORWARD | typeof FOCUS_MODE_COUNTDOWN;
-  /** 逆漏必填 */
+  /** 倒计时必填 */
   targetMs?: number;
   /** `plan:id` | `habit:id` | 空 */
   bindKey?: string | null;
@@ -98,7 +98,7 @@ export async function getFocusSession(userId: string, sessionId: string) {
   return rows[0] ?? null;
 }
 
-/** 已完成凝录（模块内列表） */
+/** 已完成专注记录（模块内列表） */
 export async function listCompletedFocusSessions(userId: string, limit = 50) {
   const sessions = await getDb()
     .select()
@@ -168,13 +168,13 @@ async function resolveFocusBind(userId: string, bindKey?: string | null) {
   if (parsed.habitId) {
     const habits = await listActiveHabits(userId);
     const habit = habits.find((h) => h.id === parsed.habitId);
-    if (!habit) return { error: "绑定的日课不存在或已停用" as const };
+    if (!habit) return { error: "绑定的每日打卡不存在或已停用" as const };
     const checkin = await getCheckinForDate(
       userId,
       habit.id,
       localCheckinDate(),
     );
-    if (checkin) return { error: "该日课今日已完成，请换未完成的日课" as const };
+    if (checkin) return { error: "该每日打卡今日已完成，请换未完成的每日打卡" as const };
     return { planId: null, habitId: habit.id };
   }
 
@@ -185,7 +185,7 @@ async function resolveFocusBind(userId: string, bindKey?: string | null) {
     }
     if (row.kind === PLAN_KIND_CYCLE) {
       if (!row.dueAt || !canCompleteCyclePeriod(row.dueAt)) {
-        return { error: "仅可绑定今日可完成的轮期" as const };
+        return { error: "仅可绑定今日可完成的周期计划" as const };
       }
       return { planId: row.id, habitId: null };
     }
@@ -212,10 +212,10 @@ export async function startFocusSession(userId: string, input: StartFocusInput) 
   if (mode === FOCUS_MODE_COUNTDOWN) {
     const raw = Math.floor(input.targetMs ?? 0);
     if (!Number.isFinite(raw) || raw < 1_000) {
-      return { error: "逆漏目标时长至少 1 秒" as const };
+      return { error: "倒计时目标时长至少 1 秒" as const };
     }
     if (raw > 12 * 60 * 60 * 1000) {
-      return { error: "逆漏目标时长不能超过 12 小时" as const };
+      return { error: "倒计时目标时长不能超过 12 小时" as const };
     }
     targetMs = raw;
   }
@@ -282,7 +282,7 @@ export async function resumeFocusSession(userId: string, sessionId: string) {
 }
 
 /**
- * 结束专注 → 写馆藏凝录 + completed
+ * 结束专注 → 写馆藏专注记录 + completed
  */
 export async function completeFocusSession(
   userId: string,
@@ -422,8 +422,8 @@ export type FocusBindOption = {
 };
 
 /**
- * 可绑目标：未完成日课、未完成规划、今日可完成的轮期
- *（不含胶囊、非今日轮期、已打卡日课）
+ * 可绑目标：未完成每日打卡、未完成规划、今日可完成的周期计划
+ *（不含胶囊、非今日周期计划、已打卡每日打卡）
  */
 export async function listFocusBindOptions(
   userId: string,

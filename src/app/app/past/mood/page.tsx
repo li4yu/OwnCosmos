@@ -37,19 +37,19 @@ export default async function PastMoodPage({ searchParams }: Props) {
   return (
     <main className="flex flex-col gap-3">
       <PageHeader
-        title="心绪鉴"
+        title="情绪复盘"
         eyebrow="MOOD"
-        description="绪谱、岁简与绪因——规则统计，无模型文案"
+        description="情绪分布、年度摘要与情绪共现——规则统计，无模型文案"
         backHref="/app/past"
         backLabel="返回昔时往"
       />
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3">
         <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          绪谱 · 全部
+          情绪分布 · 全部
         </p>
         <p className="mt-0.5 mb-2 text-xs text-[var(--mist)]">
-          馆藏中带绪印的条目分布；可在详情页补改
+          馆藏中带情绪标记的条目分布；可在详情页补改
         </p>
         <MoodBars items={allMoods} />
       </section>

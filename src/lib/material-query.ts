@@ -20,7 +20,7 @@ export const MATERIAL_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 export const MATERIAL_SOURCE_OPTIONS = [
   { value: "", label: "全部来源" },
   { value: MATERIAL_SOURCE_MANUAL, label: "手动" },
-  { value: MATERIAL_SOURCE_ESSAY, label: "流思笺" },
+  { value: MATERIAL_SOURCE_ESSAY, label: "随笔" },
   { value: MATERIAL_SOURCE_ARCHIVE, label: "馆藏" },
   { value: MATERIAL_SOURCE_PLAN, label: "规划" },
 ] as const;

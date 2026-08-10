@@ -8,6 +8,7 @@ import {
   createPlanTaskAction,
   deletePlanTaskAction,
 } from "@/app/app/future/actions";
+import { requestCheckinCheerBubble } from "@/lib/companion-client";
 
 export type PlanTaskItem = {
   id: string;
@@ -168,6 +169,7 @@ export function PlanTaskPanel({ planId, tasks, readOnly }: Props) {
                                   : t,
                               ),
                             );
+                            void requestCheckinCheerBubble(task.title);
                             refresh();
                           });
                         }}

@@ -8,7 +8,7 @@ export type SubfeatureDef = {
   href: string;
   name: string;
   tip: string;
-  /** Phase 3 仅流思笺为 true，其余占位 */
+  /** Phase 3 仅随笔为 true，其余占位 */
   ready: boolean;
 };
 
@@ -44,21 +44,21 @@ export const APP_MODULES: readonly AppModuleDef[] = [
       {
         id: "gallery",
         href: "/app/past/gallery",
-        name: "拾忆馆藏",
+        name: "馆藏",
         tip: "统一收纳流入的随笔、规划归档、专注记录，以及你上传的照片与文字回忆",
         ready: true,
       },
       {
         id: "corridor",
         href: "/app/past/corridor",
-        name: "往迹廊",
+        name: "时间线",
         tip: "以时间为线索，回看你完整的思绪轨迹与记录密度",
         ready: true,
       },
       {
         id: "mood",
         href: "/app/past/mood",
-        name: "心绪鉴",
+        name: "情绪复盘",
         tip: "追踪情绪与心态变化，观察自己的成长规律",
         ready: true,
       },
@@ -75,14 +75,14 @@ export const APP_MODULES: readonly AppModuleDef[] = [
       {
         id: "essays",
         href: "/app/present/essays",
-        name: "流思笺",
+        name: "随笔",
         tip: "每日随笔随手记；专题随笔按主题建夹写多篇",
         ready: true,
       },
       {
         id: "due",
         href: "/app/present/due",
-        name: "临期帖",
+        name: "临期提醒",
         tip: "展示即将到来的目标与日子，可完成并归档",
         ready: true,
       },
@@ -106,7 +106,7 @@ export const APP_MODULES: readonly AppModuleDef[] = [
       {
         id: "cycles",
         href: "/app/future/cycles",
-        name: "轮期",
+        name: "周期计划",
         tip: "按周期滚动；可挂子任务打卡记次（与完成本期无关）",
         ready: true,
       },
@@ -120,7 +120,7 @@ export const APP_MODULES: readonly AppModuleDef[] = [
       {
         id: "daily",
         href: "/app/future/daily",
-        name: "日课",
+        name: "每日打卡",
         tip: "给今天的自律计划打个卡，可写一句心得",
         ready: true,
       },
@@ -130,28 +130,28 @@ export const APP_MODULES: readonly AppModuleDef[] = [
     id: "focus",
     href: "/app/focus",
     name: "凝时",
-    tip: "专注计时：正计时或倒计时，把心神收在当下",
+    tip: "专注计时：正向计时或倒计时，把心神收在当下",
     eyebrow: "FOCUS",
     ready: true,
     subfeatures: [
       {
         id: "forward",
         href: "/app/focus/forward",
-        name: "顺钟",
+        name: "正向计时",
         tip: "正向累计专注时长，可暂停、继续、结束",
         ready: true,
       },
       {
         id: "countdown",
         href: "/app/focus/countdown",
-        name: "逆漏",
+        name: "倒计时",
         tip: "设定时长倒数，到点提醒，适合限时任务",
         ready: true,
       },
       {
         id: "records",
         href: "/app/focus/records",
-        name: "凝录",
+        name: "专注记录",
         tip: "记下这段专注的收获与心情；结束后会沉淀进昔时往",
         ready: true,
       },

@@ -36,7 +36,7 @@ export async function listAllTags(userId: string) {
  */
 export async function ensureTag(userId: string, rawName: string) {
   const name = rawName.trim().slice(0, 32);
-  if (!name) return { error: "请填写绪签名称" as const };
+  if (!name) return { error: "请填写标签名称" as const };
 
   const existing = await getDb()
     .select()
@@ -122,7 +122,7 @@ export async function listEssayTags(userId: string, essayId: string) {
     .orderBy(asc(tag.name));
 }
 
-/** 批量取多条随笔的绪签名（列表页用） */
+/** 批量取多条随笔的标签名（列表页用） */
 export async function mapEssayTagNames(
   userId: string,
   essayIds: string[],
@@ -161,7 +161,7 @@ export async function listPlanTags(userId: string, planId: string) {
     .orderBy(asc(tag.name));
 }
 
-/** 批量取多条计划的绪签名 */
+/** 批量取多条计划的标签名 */
 export async function mapPlanTagNames(
   userId: string,
   planIds: string[],
@@ -185,7 +185,7 @@ export async function mapPlanTagNames(
   return map;
 }
 
-/** 全量替换随笔绪签（仅允许挂当前用户的 active 签，或已挂过的签） */
+/** 全量替换随笔标签（仅允许挂当前用户的 active 签，或已挂过的签） */
 export async function setEssayTags(
   userId: string,
   essayId: string,
@@ -198,7 +198,7 @@ export async function setEssayTags(
       .from(tag)
       .where(and(eq(tag.userId, userId), inArray(tag.id, unique)));
     if (owned.length !== unique.length) {
-      return { error: "含有无效绪签" as const };
+      return { error: "含有无效标签" as const };
     }
   }
   await getDb()
@@ -228,7 +228,7 @@ export async function setPlanTags(
       .from(tag)
       .where(and(eq(tag.userId, userId), inArray(tag.id, unique)));
     if (owned.length !== unique.length) {
-      return { error: "含有无效绪签" as const };
+      return { error: "含有无效标签" as const };
     }
   }
   await getDb()
@@ -246,7 +246,7 @@ export async function setPlanTags(
   return { ok: true as const };
 }
 
-/** 归档时：把多篇随笔绪签去重合并进馆藏父条 */
+/** 归档时：把多篇随笔标签去重合并进馆藏父条 */
 export async function mergeEssayTagsToArchive(
   userId: string,
   essayIds: string[],
@@ -279,7 +279,7 @@ export async function mergeEssayTagsToArchive(
   );
 }
 
-/** 归档时：把随笔绪签复制进馆藏（含 name_snapshot） */
+/** 归档时：把随笔标签复制进馆藏（含 name_snapshot） */
 export async function copyEssayTagsToArchive(
   userId: string,
   essayId: string,
@@ -305,7 +305,7 @@ export async function copyEssayTagsToArchive(
   );
 }
 
-/** 归档时：把计划绪签复制进馆藏 */
+/** 归档时：把计划标签复制进馆藏 */
 export async function copyPlanTagsToArchive(
   userId: string,
   planId: string,

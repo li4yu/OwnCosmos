@@ -62,15 +62,15 @@ export type HomeCheckinItem = {
   title: string;
   subtitle: string;
   checkedIn: boolean;
-  /** 是否可点打卡/完成本期（轮期未到期为 false） */
+  /** 是否可点打卡/完成本期（周期计划未到期为 false） */
   canCheckin: boolean;
   note: string;
   href: string;
-  /** 子任务所属轮期计划 id（kind=task） */
+  /** 子任务所属周期计划 id（kind=task） */
   planId?: string;
   /** 子任务累计打卡次数 */
   checkCount?: number;
-  /** 轮期条目下挂载的子任务（首页嵌套展示） */
+  /** 周期计划条目下挂载的子任务（首页嵌套展示） */
   childTasks?: HomeCheckinChildTask[];
 };
 
@@ -98,7 +98,7 @@ export type HomeSummary = {
 
 /**
  * 首页今日摘要：只读聚合，不落第二份本体
- * - 临期 / 随笔 / 专注 / 日课+轮期打卡 + 轮期子任务（记次）
+ * - 临期 / 随笔 / 专注 / 每日打卡+周期计划打卡 + 周期计划子任务（记次）
  */
 export async function getHomeSummary(
   userId: string,
@@ -142,7 +142,7 @@ export async function getHomeSummary(
       kind: "daily" as const,
       id: h.id,
       title: h.title,
-      subtitle: "日课",
+      subtitle: "每日打卡",
       checkedIn: Boolean(c),
       canCheckin: true,
       note: c?.note ?? "",
@@ -150,7 +150,7 @@ export async function getHomeSummary(
     };
   });
 
-  // 轮期：到期可完成本期；有子任务时即使未到期也上首页（便于打卡记次）
+  // 周期计划：到期可完成本期；有子任务时即使未到期也上首页（便于打卡记次）
   const todayKey = formatDueDateInput(now);
   const tasksByPlan = new Map<string, typeof cycleTasks>();
   for (const t of cycleTasks) {
@@ -184,7 +184,7 @@ export async function getHomeSummary(
       kind: "cycle",
       id: p.id,
       title: p.title,
-      subtitle: `轮期 · ${cycleUnitLabel(p.cycleUnit, p.cycleEveryDays)}${
+      subtitle: `周期计划 · ${cycleUnitLabel(p.cycleUnit, p.cycleEveryDays)}${
         p.dueAt ? ` · 本期至 ${formatDueDateInput(p.dueAt)}` : ""
       }${doneToday && !canCheckin ? " · 今日已完成" : ""}${taskSummary}`,
       checkedIn: doneToday && !canCheckin,

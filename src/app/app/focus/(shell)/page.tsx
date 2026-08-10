@@ -33,7 +33,7 @@ export default async function FocusHubPage() {
       <FocusRecentSessions
         items={recent.map((s) => ({
           id: s.id,
-          title: s.title || "凝录",
+          title: s.title || "专注记录",
           mode: s.mode,
           accumulatedMs: s.accumulatedMs,
           endedAt: s.endedAt,

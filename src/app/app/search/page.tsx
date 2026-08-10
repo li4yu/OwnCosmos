@@ -18,7 +18,7 @@ export default async function GlobalSearchPage({ searchParams }: Props) {
       <PageHeader
         title="全局检索"
         eyebrow="SEARCH"
-        description="同时检索流思笺、来日途与拾忆馆藏（关键词）"
+        description="同时检索随笔、来日途与馆藏（关键词）"
         backHref="/app"
         backLabel="返回首页"
       />

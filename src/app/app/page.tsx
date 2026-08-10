@@ -66,13 +66,13 @@ export default async function AppHomePage() {
             新建计划
           </Link>
           <Link href="/app/future/daily" className="home-v1__action">
-            日课
+            每日打卡
           </Link>
           <Link
             href="/app/focus/forward"
             className="home-v1__action home-v1__action--primary"
           >
-            开顺钟
+            正向计时
           </Link>
         </div>
       </section>
@@ -80,7 +80,7 @@ export default async function AppHomePage() {
       <section className="home-v1__summary" aria-label="今日摘要">
         <div className="home-v1__summary-head">
           <h2>今日摘要</h2>
-          <p>临期 · 随笔 · 专注 · 日课</p>
+          <p>临期 · 随笔 · 专注 · 每日打卡</p>
         </div>
         <ul className="home-v1__metrics">
           <li>
@@ -107,7 +107,7 @@ export default async function AppHomePage() {
           </li>
           <li>
             <Link href="/app/future/daily" className="home-v1__metric">
-              <span className="home-v1__metric-label">日课</span>
+              <span className="home-v1__metric-label">每日打卡</span>
               <span className="home-v1__metric-value home-v1__metric-value--text">
                 {summary.dailyTotal > 0
                   ? `${summary.dailyDone}/${summary.dailyTotal}`
@@ -119,11 +119,11 @@ export default async function AppHomePage() {
       </section>
 
       <div className="home-v1__split">
-        <section className="home-v1__due" aria-label="临期帖">
+        <section className="home-v1__due" aria-label="临期提醒">
           <DueReminderSection
             items={summary.dueItems}
             compact
-            emptyHint="暂无临期。设置截止日期与临期配后会出现在这里。"
+            emptyHint="暂无临期。设置截止日期与提前提醒后会出现在这里。"
           />
         </section>
 

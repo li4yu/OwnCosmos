@@ -27,7 +27,7 @@ function groupByYear(density: YearMonthDensity[]): YearBlock[] {
   return [...map.values()].sort((a, b) => b.year - a.year);
 }
 
-/** 往迹廊 · 岁轴（年 / 月密度） */
+/** 时间线 · 年月密度（年 / 月密度） */
 export function YearAxis({
   density,
   selectedYear,
@@ -39,7 +39,7 @@ export function YearAxis({
   if (years.length === 0) {
     return (
       <p className="text-xs text-[var(--mist)]">
-        尚无馆藏记录。随笔沉淀、规划归档等流入后，这里会按年月显示密度。
+        尚无馆藏记录。随笔归档、规划归档等流入后，这里会按年月显示密度。
       </p>
     );
   }

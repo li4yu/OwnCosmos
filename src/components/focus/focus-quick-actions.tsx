@@ -8,13 +8,13 @@ export function FocusQuickActions() {
         href="/app/focus/forward"
         className="ui-btn-primary ui-btn-sm !w-auto"
       >
-        开顺钟
+        正向计时
       </Link>
       <Link href="/app/focus/countdown" className="ui-btn-ghost ui-btn-sm">
-        开逆漏
+        倒计时
       </Link>
       <Link href="/app/focus/records" className="ui-btn-ghost ui-btn-sm">
-        凝录
+        专注记录
       </Link>
     </div>
   );

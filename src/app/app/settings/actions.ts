@@ -22,7 +22,7 @@ export async function exportOpenContentAction(): Promise<
   }
 }
 
-/** 图表导出：首页脉搏 + 昔时往沉淀一览 */
+/** 图表导出：首页动态 + 昔时往沉淀一览 */
 export async function exportChartsAction(): Promise<
   | {
       ok: true;

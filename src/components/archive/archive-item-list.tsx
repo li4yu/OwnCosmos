@@ -67,7 +67,7 @@ export function ArchiveItemList({
             <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] tracking-wide text-[var(--teal)]">
               {showTypeChip ? <span>{archiveTypeLabel(item.type)}</span> : null}
               <span>{archiveReasonLabel(item.archiveReason)}</span>
-              {item.inKnowledge ? <span>已藏忆</span> : null}
+              {item.inKnowledge ? <span>已进知识库</span> : null}
               {item.type === ARCHIVE_TYPE_PLAN_CYCLE ||
               item.type === ARCHIVE_TYPE_DAILY_CHECKIN ? (
                 <>
@@ -114,12 +114,12 @@ export function GalleryIntro() {
     <div>
       <h2 className="text-lg tracking-[0.12em] text-[var(--paper)]">
         <PoeticName
-          name="拾忆馆藏"
+          name="馆藏"
           tip="统一收纳流入的随笔、规划归档、专注记录，以及你上传的照片与文字回忆"
         />
       </h2>
       <p className="mt-2 text-sm text-[var(--mist)]">
-        总库按归档时间倒序；可藏忆进知识库。流入类只读；记忆碎片可编辑删除。
+        总库按归档时间倒序；可进知识库。流入类只读；记忆碎片可编辑删除。
       </p>
     </div>
   );

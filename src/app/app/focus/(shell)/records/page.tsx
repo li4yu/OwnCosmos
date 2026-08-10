@@ -24,13 +24,13 @@ export default async function FocusRecordsPage() {
   return (
     <main className="flex flex-col gap-3">
       <PageHeader
-        title="凝录"
+        title="专注记录"
         backHref="/app/focus"
         backLabel="返回凝时"
         description={
           <>
             <PoeticName
-              name="凝录"
+              name="专注记录"
               tip="记下这段专注的收获与心情；结束后会沉淀进昔时往"
             />
             · 完整结束后的记录；详情只读见馆藏
@@ -41,14 +41,14 @@ export default async function FocusRecordsPage() {
             href="/app/focus/forward"
             className="ui-btn-primary ui-btn-sm shrink-0"
           >
-            开顺钟
+            正向计时
           </Link>
         }
       />
 
       {records.length === 0 ? (
         <div className="rounded-md border border-dashed border-[var(--line)] px-3 py-5 text-center text-sm text-[var(--mist)]">
-          尚无凝录。完成一次顺钟后会出现在这里，并同步进入拾忆馆藏。
+          尚无专注记录。完成一次正向计时后会出现在这里，并同步进入馆藏。
         </div>
       ) : (
         <ul className="flex flex-col gap-1.5">
@@ -64,7 +64,7 @@ export default async function FocusRecordsPage() {
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <h3 className="text-sm text-[var(--paper)]">
-                      {item.title || "凝录"}
+                      {item.title || "专注记录"}
                     </h3>
                     <div className="flex shrink-0 flex-col items-end gap-0.5 font-mono text-[10px] tracking-wide text-[var(--mist)]">
                       <span>{formatFocusDurationMs(item.elapsedMs)}</span>

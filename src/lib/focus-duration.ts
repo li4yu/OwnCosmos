@@ -22,8 +22,8 @@ function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
 
-/** 凝录默认标题 */
+/** 专注记录默认标题 */
 export function defaultFocusTitle(mode: string, ms: number) {
-  const modeLabel = mode === "countdown" ? "逆漏" : "顺钟";
+  const modeLabel = mode === "countdown" ? "倒计时" : "正向计时";
   return `${modeLabel} · ${formatFocusDurationMs(ms)}`;
 }

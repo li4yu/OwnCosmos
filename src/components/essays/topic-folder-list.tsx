@@ -151,7 +151,7 @@ export function TopicFolderList({ folders }: { folders: Folder[] }) {
         title="归档整个专题？"
         message={
           archiveTarget
-            ? `将把专题「${archiveTarget.name}」中的 ${archiveTarget.activeCount} 篇随笔沉淀为一条「专题归档」夹进馆藏，并移除该专题夹。单篇不可单独归档。确定吗？`
+            ? `将把专题「${archiveTarget.name}」中的 ${archiveTarget.activeCount} 篇随笔归档为一条「专题归档」夹进馆藏，并移除该专题夹。单篇不可单独归档。确定吗？`
             : ""
         }
         confirmLabel="归档专题"

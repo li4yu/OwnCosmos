@@ -141,7 +141,7 @@ export async function archiveEssayAction(
   return {};
 }
 
-/** 流思笺提炼 → 来日途单次计划（预填标题正文，截止默认今天） */
+/** 随笔提炼 → 来日途单次计划（预填标题正文，截止默认今天） */
 export async function refineEssayAction(
   essayId: string,
 ): Promise<EssayActionState> {

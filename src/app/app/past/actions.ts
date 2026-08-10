@@ -124,7 +124,7 @@ export async function deleteFragmentAction(
   return { ok: true };
 }
 
-/** Phase 15: 馆藏补改绪印 */
+/** Phase 15: 馆藏补改情绪标记 */
 export async function setArchiveMoodAction(
   itemId: string,
   mood: string | null,

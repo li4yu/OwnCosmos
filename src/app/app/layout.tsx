@@ -1,4 +1,5 @@
 import { CapsuleUnlockOrb } from "@/components/capsule/capsule-unlock-orb";
+import { CompanionShell } from "@/components/companion/companion-shell";
 import { DesktopNotifyBridge } from "@/components/notify/desktop-notify-bridge";
 import { AppChrome } from "@/components/shell/app-chrome";
 import { formatDueDateInput } from "@/lib/plan-dates";
@@ -91,6 +92,7 @@ export default async function AppAreaLayout({
           }))}
         />
       ) : null}
+      <CompanionShell userName={session.user.name} />
     </div>
   );
 }

@@ -17,7 +17,7 @@ import {
 } from "@/db/schema";
 import { stripToPlainText } from "@/lib/rich-text";
 
-/** 知识库只收文本；纯图或仅占位标题「无标题」不可藏忆 */
+/** 知识库只收文本；纯图或仅占位标题「无标题」不可进知识库 */
 export function archiveHasKeepableText(item: {
   title: string;
   body: string;
@@ -30,17 +30,17 @@ export function archiveHasKeepableText(item: {
 export function archiveTypeLabel(type: string) {
   switch (type) {
     case ARCHIVE_TYPE_ESSAY_SEDIMENT:
-      return "随笔沉淀";
+      return "随笔归档";
     case ARCHIVE_TYPE_ESSAY_TOPIC:
       return "专题归档";
     case ARCHIVE_TYPE_PLAN_ARCHIVE:
       return "规划归档";
     case ARCHIVE_TYPE_PLAN_CYCLE:
-      return "轮期归档";
+      return "周期计划归档";
     case ARCHIVE_TYPE_DAILY_CHECKIN:
-      return "日课归档";
+      return "每日打卡归档";
     case ARCHIVE_TYPE_FOCUS_RECORD:
-      return "凝录";
+      return "专注记录";
     case ARCHIVE_TYPE_MEMORY_FRAGMENT:
       return "记忆碎片";
     default:
@@ -74,13 +74,13 @@ export function archiveReasonLabel(reason: string) {
     case ARCHIVE_REASON_PLAN_OVERDUE:
       return "逾期自动归档";
     case ARCHIVE_REASON_PLAN_CYCLE_ROLLOVER:
-      return "轮期滚期计次";
+      return "周期计划滚期计次";
     case ARCHIVE_REASON_DAILY_CHECKIN:
-      return "日课打卡";
+      return "每日打卡";
     case ARCHIVE_REASON_FOCUS_COMPLETE:
-      return "专注结束凝录";
+      return "专注完成";
     case ARCHIVE_REASON_USER_UPLOAD:
-      return "主动拾取上传";
+      return "用户上传";
     default:
       return reason;
   }

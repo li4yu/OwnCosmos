@@ -178,7 +178,7 @@ export function RagRecallPanel() {
             value={corpus}
             onChange={(e) => setCorpus(e.target.value as Corpus)}
           >
-            <option value="user">user · 已藏忆馆藏 → 过往召回</option>
+            <option value="user">user · 已进知识库馆藏 → 过往召回</option>
             <option value="project">project · 操作手册 → 产品用法</option>
           </select>
         </label>
@@ -199,7 +199,7 @@ export function RagRecallPanel() {
         查询
         <textarea
           className="min-h-[72px] rounded border border-[var(--line)] bg-[var(--bg)] px-2 py-1.5"
-          placeholder="例如：临期帖是什么 / 我写过焦虑吗"
+          placeholder="例如：临期提醒是什么 / 我写过焦虑吗"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

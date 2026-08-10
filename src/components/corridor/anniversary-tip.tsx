@@ -6,7 +6,7 @@ type AnniversaryTipProps = {
   hits: AnniversaryHit[];
 };
 
-/** 今时际 · 同年回望轻提示 */
+/** 今时际 · 往年今日轻提示 */
 export function AnniversaryTip({ hits }: AnniversaryTipProps) {
   if (hits.length === 0) return null;
 
@@ -16,7 +16,7 @@ export function AnniversaryTip({ hits }: AnniversaryTipProps) {
         <div>
           <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
             <PoeticName
-              name="同年回望"
+              name="往年今日"
               tip="往年同一天留下的馆藏痕迹"
             />
           </h2>
@@ -28,7 +28,7 @@ export function AnniversaryTip({ hits }: AnniversaryTipProps) {
           href="/app/past/corridor"
           className="ui-hover-link-accent font-mono text-[10px] tracking-wide text-[var(--amber)]"
         >
-          往迹廊 →
+          时间线 →
         </Link>
       </div>
       <ul className="mt-2 flex flex-col gap-1">

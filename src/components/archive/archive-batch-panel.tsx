@@ -64,7 +64,7 @@ type ArchiveBatchPanelProps = {
   typeOptions?: ArchiveTypeOption[];
   tagOptions?: ArchiveTypeOption[];
   emptyHint: string;
-  /** 当前分区是否允许抹忆 */
+  /** 当前分区是否允许删除归档 */
   allowWipe?: boolean;
   showTypeChip?: boolean;
 };
@@ -170,7 +170,7 @@ export function ArchiveBatchPanel({
       return;
     }
     if (kind === "wipe" && wipeableSelected.length === 0) {
-      setError("所选条目不可抹忆或不存在");
+      setError("所选条目不可删除或不存在");
       return;
     }
     setError(null);
@@ -204,10 +204,10 @@ export function ArchiveBatchPanel({
       const n = result.count ?? ids.length;
       setFlash(
         batchKind === "keep"
-          ? `已藏忆 ${n} 条`
+          ? `已进知识库 ${n} 条`
           : batchKind === "unkeep"
-            ? `已取消藏忆 ${n} 条`
-            : `已抹忆 ${n} 条`,
+            ? `已移出知识库 ${n} 条`
+            : `已删除 ${n} 条`,
       );
       router.refresh();
     });
@@ -215,16 +215,16 @@ export function ArchiveBatchPanel({
 
   const confirmTitle =
     batchKind === "keep"
-      ? "确认藏忆"
+      ? "确认进知识库"
       : batchKind === "unkeep"
-        ? "确认取消藏忆"
-        : "确认抹忆";
+        ? "确认移出知识库"
+        : "确认删除";
   const confirmMessage =
     batchKind === "keep"
       ? `将所选 ${selected.size} 条纳入知识库（图片仍不进入向量侧）。是否继续？`
       : batchKind === "unkeep"
         ? `将把所选 ${selected.size} 条移出知识库（仍保留在馆藏）。是否继续？`
-        : `将永久删除所选中可抹的 ${wipeableSelected.length} 条馆藏（含轮期/日课归档、碎片等）。若含规划归档，会同步从来日途「已完成」中删除对应计划；不删除未完成的计划与日课本体。打卡次数请用「取消打卡」回退。此操作不可恢复。`;
+        : `将永久删除所选中可抹的 ${wipeableSelected.length} 条馆藏（含周期计划/每日打卡归档、碎片等）。若含规划归档，会同步从来日途「已完成」中删除对应计划；不删除未完成的计划与每日打卡本体。打卡次数请用「取消打卡」回退。此操作不可恢复。`;
 
   return (
     <div className="flex flex-col gap-2">
@@ -293,7 +293,7 @@ export function ArchiveBatchPanel({
             </label>
           ) : null}
           <label className="oc-filter__field">
-            是否藏忆
+            是否进知识库
             <select
               value={kept}
               onChange={(e) => setKept(e.target.value)}
@@ -308,13 +308,13 @@ export function ArchiveBatchPanel({
           </label>
           {tagOptions && tagOptions.length > 0 ? (
             <label className="oc-filter__field">
-              绪签
+              标签
               <select
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
                 className="auth-field !py-1.5 text-sm text-[var(--paper)]"
               >
-                <option value="">绪签不限</option>
+                <option value="">标签不限</option>
                 {tagOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
@@ -371,7 +371,7 @@ export function ArchiveBatchPanel({
             onClick={() => openBatch("keep")}
           >
             <PoeticName
-              name="藏忆所选"
+              name="所选进知识库"
               tip="将所选文本纳入知识库"
             />
             {selected.size > 0 ? `（${selected.size}）` : ""}
@@ -383,7 +383,7 @@ export function ArchiveBatchPanel({
             onClick={() => openBatch("unkeep")}
           >
             <PoeticName
-              name="取消藏忆"
+              name="移出知识库"
               tip="从知识库移出；条目仍留在馆藏"
             />
           </button>
@@ -395,8 +395,8 @@ export function ArchiveBatchPanel({
               onClick={() => openBatch("wipe")}
             >
               <PoeticName
-                name="抹忆所选"
-                tip="永久删除馆藏条目；规划归档会同步清掉「已完成」对应计划，不删未完成计划与日课本体"
+                name="删除所选"
+                tip="永久删除馆藏条目；规划归档会同步清掉「已完成」对应计划，不删未完成计划与每日打卡本体"
               />
             </button>
           ) : null}
@@ -438,7 +438,7 @@ export function ArchiveBatchPanel({
                     <span>{archiveTypeLabel(item.type)}</span>
                   ) : null}
                   <span>{archiveReasonLabel(item.archiveReason)}</span>
-                  {item.inKnowledge ? <span>已藏忆</span> : <span>未藏忆</span>}
+                  {item.inKnowledge ? <span>已进知识库</span> : <span>未进知识库</span>}
                   {item.type === ARCHIVE_TYPE_ESSAY_TOPIC ? (
                     <span>共 {item.cycleCount ?? 0} 篇</span>
                   ) : null}
@@ -480,10 +480,10 @@ export function ArchiveBatchPanel({
         message={confirmMessage}
         confirmLabel={
           batchKind === "wipe"
-            ? "确认抹忆"
+            ? "确认删除"
             : batchKind === "unkeep"
-              ? "取消藏忆"
-              : "确认藏忆"
+              ? "移出知识库"
+              : "确认进知识库"
         }
         tone={batchKind === "wipe" ? "danger" : "default"}
         pending={pending}

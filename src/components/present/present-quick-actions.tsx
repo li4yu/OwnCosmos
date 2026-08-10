@@ -20,7 +20,7 @@ export function PresentQuickActions() {
         href="/app/present/due"
         className="ui-btn-ghost ui-btn-sm"
       >
-        临期帖
+        临期提醒
       </Link>
     </div>
   );

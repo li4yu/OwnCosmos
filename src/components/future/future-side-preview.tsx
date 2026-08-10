@@ -19,7 +19,7 @@ type FutureSidePreviewProps = {
   cycles: FutureCyclePreviewItem[];
 };
 
-/** 来日途 · 胶囊可开 + 轮期快览 */
+/** 来日途 · 胶囊可开 + 周期计划快览 */
 export function FutureSidePreview({
   capsules,
   cycles,
@@ -82,7 +82,7 @@ export function FutureSidePreview({
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
-            进行中轮期
+            进行中周期计划
           </h3>
           <Link
             href="/app/future/cycles"
@@ -92,7 +92,7 @@ export function FutureSidePreview({
           </Link>
         </div>
         {cycles.length === 0 ? (
-          <p className="mt-2 text-xs text-[var(--mist)]">暂无轮期。</p>
+          <p className="mt-2 text-xs text-[var(--mist)]">暂无周期计划。</p>
         ) : (
           <ul className="mt-2 flex flex-col gap-1.5">
             {cycles.map((c) => (

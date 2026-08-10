@@ -303,7 +303,7 @@ export type ArchiveQueryOpts = {
   titleQ?: string;
   archivedFrom?: Date;
   archivedTo?: Date;
-  /** Phase 13: 按馆藏绪签筛选 */
+  /** Phase 13: 按馆藏标签筛选 */
   tagId?: string;
   page?: number;
   pageSize?: number;
@@ -352,7 +352,7 @@ function buildArchiveConditions(
   return and(...conditions);
 }
 
-/** 馆藏分页查询（藏忆 / 抹忆共用） */
+/** 馆藏分页查询（进知识库 / 删除归档共用） */
 export async function queryArchiveItems(
   userId: string,
   opts: ArchiveQueryOpts = {},
@@ -389,7 +389,7 @@ export async function getArchiveItem(userId: string, itemId: string) {
   return rows[0] ?? null;
 }
 
-/** 藏忆 / 取消藏忆；纯图无正文的碎片不可藏忆 */
+/** 进知识库 / 移出知识库；纯图无正文的碎片不可进知识库 */
 export async function setArchiveKept(
   userId: string,
   itemId: string,
@@ -399,7 +399,7 @@ export async function setArchiveKept(
   if (!item) return { ok: false, error: "条目不存在" };
   if (kept) {
     if (!archiveHasKeepableText(item)) {
-      return { ok: false, error: "纯图无文字，无法藏忆进知识库" };
+      return { ok: false, error: "纯图无文字，无法进知识库" };
     }
   }
   const now = new Date();
@@ -416,7 +416,7 @@ export async function setArchiveKept(
   return { ok: true };
 }
 
-/** 批量藏忆 / 取消藏忆 */
+/** 批量进知识库 / 移出知识库 */
 export async function setArchiveKeptMany(
   userId: string,
   itemIds: string[],
@@ -436,7 +436,7 @@ export async function setArchiveKeptMany(
   if (kept) {
     targetIds = rows.filter(archiveHasKeepableText).map((r) => r.id);
     if (targetIds.length === 0) {
-      return { ok: false, error: "所选条目均无可用文本，无法藏忆" };
+      return { ok: false, error: "所选条目均无可用文本，无法进知识库" };
     }
   }
 
@@ -488,7 +488,7 @@ async function hardDeleteArchiveRows(
     rows.map((r) => r.id),
   );
 
-  /** 规划归档抹忆时，同步清掉来日途「已完成」里对应计划 */
+  /** 规划归档删除归档时，同步清掉来日途「已完成」里对应计划 */
   const completedPlanIds = [
     ...new Set(
       rows
@@ -528,7 +528,7 @@ async function hardDeleteArchiveRows(
 }
 
 /**
- * 抹忆：按归档时间范围硬删（WIPE_ARCHIVE_TYPES，含轮期/日课归档）
+ * 删除归档：按归档时间范围硬删（WIPE_ARCHIVE_TYPES，含周期计划/每日打卡归档）
  */
 export async function wipeInflowArchives(
   userId: string,
@@ -559,7 +559,7 @@ export async function wipeInflowArchives(
   return { ok: true as const, count: deleted };
 }
 
-/** 抹忆：按选中 id 硬删（流入类 + 记忆碎片） */
+/** 删除归档：按选中 id 硬删（流入类 + 记忆碎片） */
 export async function wipeInflowArchivesByIds(
   userId: string,
   itemIds: string[],
@@ -584,7 +584,7 @@ export async function wipeInflowArchivesByIds(
       ),
     );
   if (rows.length === 0) {
-    return { ok: false as const, error: "所选条目不可抹忆或不存在", count: 0 };
+    return { ok: false as const, error: "所选条目不可删除或不存在", count: 0 };
   }
   const deleted = await hardDeleteArchiveRows(userId, rows);
   return { ok: true as const, count: deleted };
@@ -696,7 +696,7 @@ export async function deleteMemoryFragment(userId: string, itemId: string) {
   return true;
 }
 
-/** Phase 15: 馆藏补改绪印（只改 mood，不改只读正文） */
+/** Phase 15: 馆藏补改情绪标记（只改 mood，不改只读正文） */
 export async function setArchiveMood(
   userId: string,
   itemId: string,

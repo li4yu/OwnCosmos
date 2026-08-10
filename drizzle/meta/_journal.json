@@ -204,6 +204,20 @@
       "when": 1785872483312,
       "tag": "0028_wet_joystick",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1785880302311,
+      "tag": "0029_chunky_lily_hollister",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1786343259806,
+      "tag": "0030_silent_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }

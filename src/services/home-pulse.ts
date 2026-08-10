@@ -47,7 +47,7 @@ function lastNDays(dayCount: number, now = new Date()): HomePulseDay[] {
   return out;
 }
 
-/** 近 N 日：日课打卡次数 + 轮期完成本期次数 */
+/** 近 N 日：每日打卡次数 + 周期计划完成本期次数 */
 export async function getRecentCheckinDayCounts(
   userId: string,
   dayCount = 7,

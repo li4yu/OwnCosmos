@@ -6,10 +6,10 @@ type MoodBarsProps = {
   emptyHint?: string;
 };
 
-/** 绪谱 · emoji + 横条 + 占比 */
+/** 情绪分布 · emoji + 横条 + 占比 */
 export function MoodBars({
   items,
-  emptyHint = "尚无带绪印的馆藏。归档时可选心情，或在馆藏详情补改。",
+  emptyHint = "尚无带情绪标记的馆藏。归档时可选心情，或在馆藏详情补改。",
 }: MoodBarsProps) {
   if (items.length === 0) {
     return <p className="text-xs text-[var(--mist)]">{emptyHint}</p>;

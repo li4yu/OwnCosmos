@@ -47,7 +47,7 @@ export function DensityRangePanel({
           href="/app/past/corridor"
           className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
         >
-          往迹廊 →
+          时间线 →
         </Link>
       </div>
 

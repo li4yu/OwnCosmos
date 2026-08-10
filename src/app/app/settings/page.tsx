@@ -4,6 +4,7 @@ import {
 } from "@/components/settings/account-security-forms";
 import { AppearanceForm } from "@/components/settings/appearance-form";
 import { ArchivePreferenceForm } from "@/components/settings/archive-preference-form";
+import { CompanionPreferenceForm } from "@/components/settings/companion-preference-form";
 import { ExportChartsPanel } from "@/components/settings/export-charts-panel";
 import { ExportOpenContent } from "@/components/settings/export-open-content";
 import { FocusPreferenceForm } from "@/components/settings/focus-preference-form";
@@ -31,7 +32,7 @@ export default async function SettingsPage() {
       <PageHeader
         title="设置"
         eyebrow="SETTINGS"
-        description="外观、归档、通知、凝时、账号与数据导出"
+        description="外观、归档、通知、凝时、伴读、账号与数据导出"
         backHref="/app"
         backLabel="返回首页"
       />
@@ -47,11 +48,11 @@ export default async function SettingsPage() {
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
         <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          流思笺 · 归档
+          随笔 · 归档
         </p>
         <p className="mt-0.5 text-xs text-[var(--mist)]">
           <PoeticName
-            name="逾时沉淀"
+            name="自动归档"
             tip="久未改动的随笔会沉淀进昔时往；也可提前归档；小时数可在此修改"
           />
           的自动小时数
@@ -114,10 +115,22 @@ export default async function SettingsPage() {
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
         <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+          伴读桌宠
+        </p>
+        <p className="mt-0.5 text-xs text-[var(--mist)]">
+          称呼与语气、主动气泡频控与勿扰；对话总闸仍为环境变量 AI_ENABLED。
+        </p>
+        <div className="mt-1.5">
+          <CompanionPreferenceForm />
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
+        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
           AI 开发
         </p>
         <p className="mt-0.5 text-xs text-[var(--mist)]">
-          Phase 19 临时入口，用于检查语义召回；不进顶栏。
+          伴读桌宠在登录后右下角；此处保留召回测试入口。
         </p>
         <Link
           href="/app/ai/recall"

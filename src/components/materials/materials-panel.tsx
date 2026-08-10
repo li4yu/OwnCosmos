@@ -35,7 +35,7 @@ type MaterialsPanelProps = {
 
 const SOURCE_LABEL: Record<string, string> = {
   manual: "手动",
-  essay: "流思笺",
+  essay: "随笔",
   archive_item: "馆藏",
   plan: "规划",
 };

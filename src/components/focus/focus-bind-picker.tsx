@@ -15,9 +15,9 @@ type FocusBindPickerProps = {
 };
 
 const GROUP_LABEL: Record<FocusBindPickerOption["group"], string> = {
-  habit: "未完成日课",
+  habit: "未完成每日打卡",
   plan: "未完成规划",
-  cycle: "今日轮期",
+  cycle: "今日周期计划",
 };
 
 /** 凝时绑定目标：主题下拉（避免系统原生 select 白底） */

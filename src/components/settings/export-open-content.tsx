@@ -37,7 +37,7 @@ export function ExportOpenContent() {
   return (
     <div className="flex flex-col gap-1.5">
       <p className="text-xs leading-5 text-[var(--mist)]">
-        导出当前未归档的流思笺，以及进行中的规划正文为纯文本文件。
+        导出当前未归档的随笔，以及进行中的规划正文为纯文本文件。
       </p>
       <button
         type="button"

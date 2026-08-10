@@ -8,7 +8,7 @@ type AnniversaryToggleProps = {
   initialEnabled: boolean;
 };
 
-/** 同年回望开关（写入 user.anniversary_remind） */
+/** 往年今日开关（写入 user.anniversary_remind） */
 export function AnniversaryToggle({ initialEnabled }: AnniversaryToggleProps) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(initialEnabled);
@@ -40,7 +40,7 @@ export function AnniversaryToggle({ initialEnabled }: AnniversaryToggleProps) {
     <div className="flex flex-col gap-1">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-sm text-[var(--paper)]">同年回望</p>
+          <p className="text-sm text-[var(--paper)]">往年今日</p>
           <p className="mt-0.5 text-xs text-[var(--mist)]">
             开启后，今时际会在往年同日有归档时给出轻提示（非桌面推送）。
           </p>

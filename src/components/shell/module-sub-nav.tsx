@@ -58,7 +58,7 @@ export function ModuleSubNav({ module }: ModuleSubNavProps) {
               }`}
               aria-current={isActive ? "page" : undefined}
             >
-              <PoeticName name={sub.name} tip={sub.tip} />
+              <PoeticName name={sub.name} tip={sub.tip} nestInControl />
               {!sub.ready ? (
                 <span className="ml-1.5 font-mono text-[9px] tracking-wide opacity-60">
                   稍后

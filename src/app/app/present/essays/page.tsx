@@ -24,13 +24,13 @@ export default async function EssaysHubPage() {
   return (
     <main className="flex flex-col gap-3">
       <PageHeader
-        title="流思笺"
+        title="随笔"
         backHref="/app/present"
         backLabel="返回今时际"
         description={
           <>
             <PoeticName
-              name="流思笺"
+              name="随笔"
               tip="快速记下当下灵感与草稿，未归档前可随时改"
             />
             · 分「每日」与「专题」两处写

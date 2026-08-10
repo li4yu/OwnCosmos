@@ -13,7 +13,7 @@ type BorrowMemoryPanelProps = {
   onInsert: (text: string) => void;
 };
 
-/** 借忆：关键词搜馆藏并复制插入正文 */
+/** 引用过往：关键词搜馆藏并复制插入正文 */
 export function BorrowMemoryPanel({ onInsert }: BorrowMemoryPanelProps) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -41,7 +41,7 @@ export function BorrowMemoryPanel({ onInsert }: BorrowMemoryPanelProps) {
         className="ui-btn-ghost ui-btn-sm"
         onClick={() => setOpen(true)}
       >
-        借忆
+        引用过往
       </button>
     );
   }
@@ -50,7 +50,7 @@ export function BorrowMemoryPanel({ onInsert }: BorrowMemoryPanelProps) {
     <div className="rounded-md border border-[var(--line)] bg-[var(--field-bg)]/40 p-2.5">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-[var(--mist)]">
-          借忆 · 检索昔时往并复制插入（原文不动）
+          引用过往 · 检索昔时往并复制插入（原文不动）
         </p>
         <button
           type="button"
