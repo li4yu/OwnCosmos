@@ -42,7 +42,7 @@ export default async function EditEssayPage({ params, searchParams }: Props) {
     } else {
       sourcePlanLink = {
         title: "原计划（已归档）",
-        href: "/app/past/gallery/plan-archive",
+        href: "/app/past/gallery?type=plan_archive",
       };
     }
   }

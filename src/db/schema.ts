@@ -30,6 +30,7 @@ import {
  * Phase 17: 邮箱验证 / 重置改密 / 注销（复用 email_verified + verification）。
  * Phase 18: 随笔富文本 HTML + essay_image；图片本地 uploads（暂不 S3）。
  * Phase 19: AI/RAG — user.ai_enabled；rag_document 对账（向量在 Milvus）。
+ * Phase 20: AI 自省 — 缩影会话 / 报告 / 观察笔记；归档类型 reflect_report。
  * Phase 21: AI 伴读 — 会话 / 消息 / 桌宠偏好 / 主动气泡事件。
  */
 
@@ -137,6 +138,104 @@ export const AI_PROACTIVE_CHECKIN_NUDGE = "checkin_nudge" as const;
 export const AI_PROACTIVE_CHECKIN_CHEER = "checkin_cheer" as const;
 export const AI_PROACTIVE_CHAT_INVITE = "chat_invite" as const;
 export const DEFAULT_DAILY_BUBBLE_CAP = 5;
+
+/** Phase 20: 自省报告类型 */
+export const REFLECT_KIND_PERIOD = "period" as const;
+export const REFLECT_KIND_DUAL = "dual" as const;
+export const REFLECT_KINDS = [
+  REFLECT_KIND_PERIOD,
+  REFLECT_KIND_DUAL,
+] as const;
+export type ReflectKind = (typeof REFLECT_KINDS)[number];
+
+/** Phase 20: 自省对话会话 */
+export const aiReflectConversation = pgTable(
+  "ai_reflect_conversation",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title"),
+    summary: text("summary"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    closedAt: timestamp("closed_at"),
+  },
+  (t) => [
+    index("ai_reflect_conversation_user_updated_idx").on(
+      t.userId,
+      t.updatedAt,
+    ),
+  ],
+);
+
+/** Phase 20: 自省消息 */
+export const aiReflectMessage = pgTable(
+  "ai_reflect_message",
+  {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => aiReflectConversation.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    content: text("content").notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("ai_reflect_message_conversation_created_idx").on(
+      t.conversationId,
+      t.createdAt,
+    ),
+  ],
+);
+
+/** Phase 20: 自省报告 */
+export const aiReflectReport = pgTable(
+  "ai_reflect_report",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    /** period | dual */
+    kind: text("kind").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull().default(""),
+    rangeStart: timestamp("range_start"),
+    rangeEnd: timestamp("range_end"),
+    pastArchiveId: text("past_archive_id").references(
+      (): AnyPgColumn => archiveItem.id,
+      { onDelete: "set null" },
+    ),
+    presentNote: text("present_note"),
+    links: jsonb("links").$type<Record<string, unknown> | null>(),
+    conversationId: text("conversation_id").references(
+      () => aiReflectConversation.id,
+      { onDelete: "set null" },
+    ),
+    archiveItemId: text("archive_item_id").references(
+      (): AnyPgColumn => archiveItem.id,
+      { onDelete: "set null" },
+    ),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("ai_reflect_report_user_created_idx").on(t.userId, t.createdAt),
+  ],
+);
+
+/** Phase 20: 缩影观察笔记（1:1） */
+export const aiReflectProfile = pgTable("ai_reflect_profile", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  toneNotes: text("tone_notes"),
+  habitNotes: text("habit_notes"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 
 /** Phase 21: 伴读对话会话（勿与 Better Auth 的 session 混淆） */
 export const aiConversation = pgTable(
@@ -393,6 +492,8 @@ export const ARCHIVE_TYPE_DAILY_CHECKIN = "daily_checkin_archive" as const;
 export const ARCHIVE_TYPE_FOCUS_RECORD = "focus_record" as const;
 /** Phase 12: 用户上传的记忆碎片 */
 export const ARCHIVE_TYPE_MEMORY_FRAGMENT = "memory_fragment" as const;
+/** Phase 20: 自省报告归档 */
+export const ARCHIVE_TYPE_REFLECT_REPORT = "reflect_report" as const;
 export const ARCHIVE_REASON_MANUAL = "manual" as const;
 export const ARCHIVE_REASON_AUTO_48H = "auto_48h" as const;
 /** Phase 7: 临期提醒完成归档 */
@@ -407,6 +508,8 @@ export const ARCHIVE_REASON_DAILY_CHECKIN = "daily_checkin" as const;
 export const ARCHIVE_REASON_FOCUS_COMPLETE = "focus_complete" as const;
 /** Phase 12: 记忆碎片上传 */
 export const ARCHIVE_REASON_USER_UPLOAD = "user_upload" as const;
+/** Phase 20: 自省报告手动归档 */
+export const ARCHIVE_REASON_REFLECT_ARCHIVE = "reflect_archive" as const;
 
 /**
  * 删除归档可删类型（硬删馆藏行）。
@@ -421,6 +524,7 @@ export const WIPE_ARCHIVE_TYPES = [
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_CYCLE,
   ARCHIVE_TYPE_DAILY_CHECKIN,
+  ARCHIVE_TYPE_REFLECT_REPORT,
 ] as const;
 
 export const archiveItem = pgTable(
@@ -430,7 +534,7 @@ export const archiveItem = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    /** essay_sediment | essay_topic_archive | plan_archive | plan_cycle_archive | daily_checkin_archive | focus_record | memory_fragment */
+    /** essay_sediment | essay_topic_archive | plan_archive | plan_cycle_archive | daily_checkin_archive | focus_record | memory_fragment | reflect_report */
     type: text("type").notNull(),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
@@ -1095,6 +1199,52 @@ export const aiConversationRelations = relations(
       references: [user.id],
     }),
     messages: many(aiMessage),
+  }),
+);
+
+export const aiReflectConversationRelations = relations(
+  aiReflectConversation,
+  ({ one, many }) => ({
+    user: one(user, {
+      fields: [aiReflectConversation.userId],
+      references: [user.id],
+    }),
+    messages: many(aiReflectMessage),
+    reports: many(aiReflectReport),
+  }),
+);
+
+export const aiReflectMessageRelations = relations(
+  aiReflectMessage,
+  ({ one }) => ({
+    conversation: one(aiReflectConversation, {
+      fields: [aiReflectMessage.conversationId],
+      references: [aiReflectConversation.id],
+    }),
+  }),
+);
+
+export const aiReflectReportRelations = relations(
+  aiReflectReport,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [aiReflectReport.userId],
+      references: [user.id],
+    }),
+    conversation: one(aiReflectConversation, {
+      fields: [aiReflectReport.conversationId],
+      references: [aiReflectConversation.id],
+    }),
+  }),
+);
+
+export const aiReflectProfileRelations = relations(
+  aiReflectProfile,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [aiReflectProfile.userId],
+      references: [user.id],
+    }),
   }),
 );
 

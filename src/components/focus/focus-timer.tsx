@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconArrowLeft, IconChevronRight } from "@/components/ui/icon-glyphs";
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import {
   completeFocusAction,
@@ -449,9 +451,14 @@ export function FocusTimer({
       {shifting ? <div className="focus-chamber__flare" aria-hidden="true" /> : null}
 
       <header className="focus-chamber__chrome">
-        <Link href="/app/focus" className="focus-chamber__nav-link">
-          ← 凝时
-        </Link>
+        <IconActionLink
+          href="/app/focus"
+          label="返回凝时"
+          className="focus-chamber__nav-link focus-chamber__nav-link--back"
+        >
+          <IconArrowLeft size={18} />
+          <span>返回</span>
+        </IconActionLink>
         <div className="focus-chamber__brand">
           <p className="focus-chamber__eyebrow">
             {isCountdown ? "倒计时" : "正向计时"}
@@ -470,9 +477,14 @@ export function FocusTimer({
             )}
           </h1>
         </div>
-        <Link href="/app/focus/records" className="focus-chamber__nav-link">
-          专注记录 →
-        </Link>
+        <IconActionLink
+          href="/app/focus/records"
+          label="专注记录"
+          className="focus-chamber__nav-link focus-chamber__nav-link--next"
+        >
+          <span>记录</span>
+          <IconChevronRight size={16} />
+        </IconActionLink>
       </header>
 
       <div className="focus-sky" aria-hidden={!engaged}>
@@ -684,7 +696,7 @@ export function FocusTimer({
               <p className="focus-chamber__msg">
                 星光已凝成录。{" "}
                 <Link
-                  href={galleryDetailHref(doneArchiveId, "focus-record")}
+                  href={galleryDetailHref(doneArchiveId)}
                   className="text-[var(--teal)] underline-offset-4 hover:underline"
                 >
                   看馆藏

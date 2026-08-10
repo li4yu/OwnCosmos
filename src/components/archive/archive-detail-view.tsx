@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconArrowLeft } from "@/components/ui/icon-glyphs";
 import {
   archiveHasKeepableText,
   archiveReasonLabel,
@@ -70,9 +72,13 @@ export async function ArchiveDetailView({
   return (
     <main className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link href={backHref} className="ui-btn-ghost ui-btn-sm w-fit">
-          ← {backLabel}
-        </Link>
+        <IconActionLink
+          href={backHref}
+          label={backLabel}
+          className="oc-back"
+        >
+          <IconArrowLeft size={15} />
+        </IconActionLink>
         <div className="flex flex-col items-end gap-1.5">
           <div className="flex flex-wrap items-center justify-end gap-1.5">
             <KeepArchiveButton
@@ -87,7 +93,7 @@ export async function ArchiveDetailView({
       </div>
 
       <article className="oc-sheet oc-sheet--ruled">
-        <p className="font-mono text-[9px] tracking-[0.18em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.18em] text-[var(--teal)]">
           {archiveTypeLabel(item.type)}
           {item.inKnowledge ? " · 已进知识库" : ""}
           {isFragment ? " · 可编辑" : " · 只读 · 不可编辑"}
@@ -117,26 +123,26 @@ export async function ArchiveDetailView({
         ) : null}
         <dl className="mt-2 grid gap-2 text-xs text-[var(--mist)] sm:grid-cols-2">
           <div>
-            <dt className="font-mono text-[10px] tracking-wide opacity-70">
+            <dt className="font-mono text-xs tracking-wide opacity-70">
               {isFragment ? "上传时间" : "归档时间"}
             </dt>
             <dd className="mt-0.5">{formatWhen(item.archivedAt)}</dd>
           </div>
           <div>
-            <dt className="font-mono text-[10px] tracking-wide opacity-70">
+            <dt className="font-mono text-xs tracking-wide opacity-70">
               归档方式
             </dt>
             <dd className="mt-0.5">{archiveReasonLabel(item.archiveReason)}</dd>
           </div>
           <div>
-            <dt className="font-mono text-[10px] tracking-wide opacity-70">
+            <dt className="font-mono text-xs tracking-wide opacity-70">
               来源
             </dt>
             <dd className="mt-0.5">{sourceModuleLabel(item.sourceModule)}</dd>
           </div>
           {item.inKnowledge && item.keptAt ? (
             <div>
-              <dt className="font-mono text-[10px] tracking-wide opacity-70">
+              <dt className="font-mono text-xs tracking-wide opacity-70">
                 进知识库时间
               </dt>
               <dd className="mt-0.5">{formatWhen(item.keptAt)}</dd>
@@ -145,7 +151,7 @@ export async function ArchiveDetailView({
           {isTopic ? (
             <>
               <div>
-                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                <dt className="font-mono text-xs tracking-wide opacity-70">
                   夹内篇数
                 </dt>
                 <dd className="mt-0.5 text-[var(--paper)]">
@@ -153,7 +159,7 @@ export async function ArchiveDetailView({
                 </dd>
               </div>
               <div>
-                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                <dt className="font-mono text-xs tracking-wide opacity-70">
                   专题建立
                 </dt>
                 <dd className="mt-0.5">{formatWhen(item.sourceCreatedAt)}</dd>
@@ -163,7 +169,7 @@ export async function ArchiveDetailView({
             item.type === ARCHIVE_TYPE_DAILY_CHECKIN ? (
             <>
               <div>
-                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                <dt className="font-mono text-xs tracking-wide opacity-70">
                   累计完成
                 </dt>
                 <dd className="mt-0.5 text-[var(--paper)]">
@@ -174,13 +180,13 @@ export async function ArchiveDetailView({
                 </dd>
               </div>
               <div>
-                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                <dt className="font-mono text-xs tracking-wide opacity-70">
                   最近一次
                 </dt>
                 <dd className="mt-0.5">{formatWhen(item.archivedAt)}</dd>
               </div>
               <div>
-                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                <dt className="font-mono text-xs tracking-wide opacity-70">
                   {item.type === ARCHIVE_TYPE_DAILY_CHECKIN
                     ? "习惯起始"
                     : "系列起始"}
@@ -191,7 +197,7 @@ export async function ArchiveDetailView({
           ) : item.type === ARCHIVE_TYPE_FOCUS_RECORD ? (
             <>
               <div>
-                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                <dt className="font-mono text-xs tracking-wide opacity-70">
                   专注时长
                 </dt>
                 <dd className="mt-0.5">
@@ -199,13 +205,13 @@ export async function ArchiveDetailView({
                 </dd>
               </div>
               <div>
-                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                <dt className="font-mono text-xs tracking-wide opacity-70">
                   开始时间
                 </dt>
                 <dd className="mt-0.5">{formatWhen(item.sourceCreatedAt)}</dd>
               </div>
               <div>
-                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                <dt className="font-mono text-xs tracking-wide opacity-70">
                   结束时间
                 </dt>
                 <dd className="mt-0.5">{formatWhen(item.sourceUpdatedAt)}</dd>
@@ -213,19 +219,19 @@ export async function ArchiveDetailView({
             </>
           ) : isFragment ? (
             <div>
-              <dt className="font-mono text-[10px] tracking-wide opacity-70">
+              <dt className="font-mono text-xs tracking-wide opacity-70">
                 最后编辑
               </dt>
               <dd className="mt-0.5">{formatWhen(item.updatedAt)}</dd>
             </div>
           ) : (
             <div>
-              <dt className="font-mono text-[10px] tracking-wide opacity-70">
+              <dt className="font-mono text-xs tracking-wide opacity-70">
                 停留时长
               </dt>
               <dd className="mt-0.5">
                 {formatDwell(item.sourceCreatedAt, item.archivedAt)}
-                <span className="ml-2 font-mono text-[10px] opacity-60">
+                <span className="ml-2 font-mono text-xs opacity-60">
                   （创建 → 归档）
                 </span>
               </dd>
@@ -234,13 +240,13 @@ export async function ArchiveDetailView({
           {item.type === ARCHIVE_TYPE_ESSAY_SEDIMENT ? (
             <>
               <div>
-                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                <dt className="font-mono text-xs tracking-wide opacity-70">
                   原创建时间
                 </dt>
                 <dd className="mt-0.5">{formatWhen(item.sourceCreatedAt)}</dd>
               </div>
               <div>
-                <dt className="font-mono text-[10px] tracking-wide opacity-70">
+                <dt className="font-mono text-xs tracking-wide opacity-70">
                   原最后编辑
                 </dt>
                 <dd className="mt-0.5">{formatWhen(item.sourceUpdatedAt)}</dd>
@@ -291,7 +297,7 @@ export async function ArchiveDetailView({
                 <li key={entry.id}>
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <h3 className="oc-scroll__title text-[1rem]">
-                      <span className="mr-1.5 font-mono text-[10px] text-[var(--mist)]">
+                      <span className="mr-1.5 font-mono text-xs text-[var(--mist)]">
                         {index + 1}.
                       </span>
                       {entry.title}

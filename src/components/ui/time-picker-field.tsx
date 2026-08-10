@@ -174,12 +174,12 @@ export function TimePickerField({
                 : { top: 0, left: 0, visibility: "hidden" }
             }
           >
-            <p className="mb-2 px-0.5 font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+            <p className="mb-2 px-0.5 font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
               TIME
             </p>
             <div className="grid grid-cols-2 gap-1.5">
               <div>
-                <p className="mb-1 text-center text-[10px] text-[var(--mist)]">
+                <p className="mb-1 text-center text-xs text-[var(--mist)]">
                   时
                 </p>
                 <div
@@ -206,7 +206,7 @@ export function TimePickerField({
                 </div>
               </div>
               <div>
-                <p className="mb-1 text-center text-[10px] text-[var(--mist)]">
+                <p className="mb-1 text-center text-xs text-[var(--mist)]">
                   分
                 </p>
                 <div

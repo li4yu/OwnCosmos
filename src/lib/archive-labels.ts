@@ -6,6 +6,7 @@ import {
   ARCHIVE_REASON_PLAN_COMPLETE,
   ARCHIVE_REASON_PLAN_CYCLE_ROLLOVER,
   ARCHIVE_REASON_PLAN_OVERDUE,
+  ARCHIVE_REASON_REFLECT_ARCHIVE,
   ARCHIVE_REASON_USER_UPLOAD,
   ARCHIVE_TYPE_DAILY_CHECKIN,
   ARCHIVE_TYPE_ESSAY_SEDIMENT,
@@ -14,6 +15,7 @@ import {
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
+  ARCHIVE_TYPE_REFLECT_REPORT,
 } from "@/db/schema";
 import { stripToPlainText } from "@/lib/rich-text";
 
@@ -43,6 +45,8 @@ export function archiveTypeLabel(type: string) {
       return "专注记录";
     case ARCHIVE_TYPE_MEMORY_FRAGMENT:
       return "记忆碎片";
+    case ARCHIVE_TYPE_REFLECT_REPORT:
+      return "自省报告";
     default:
       return type;
   }
@@ -58,6 +62,8 @@ export function sourceModuleLabel(module: string) {
       return "凝时";
     case "past":
       return "昔时往";
+    case "reflect":
+      return "自省";
     default:
       return module;
   }
@@ -81,6 +87,8 @@ export function archiveReasonLabel(reason: string) {
       return "专注完成";
     case ARCHIVE_REASON_USER_UPLOAD:
       return "用户上传";
+    case ARCHIVE_REASON_REFLECT_ARCHIVE:
+      return "自省归档";
     default:
       return reason;
   }

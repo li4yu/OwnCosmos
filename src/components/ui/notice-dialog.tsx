@@ -50,7 +50,7 @@ export function NoticeDialog({
         aria-labelledby={titleId}
         className="relative z-10 w-full max-w-[360px] rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-[var(--dialog-shadow)]"
       >
-        <p className="font-mono text-[10px] tracking-[0.2em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.2em] text-[var(--teal)]">
           NOTICE
         </p>
         <h2

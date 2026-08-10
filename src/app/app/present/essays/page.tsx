@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/shell/page-header";
+import { HoverTip } from "@/components/ui/hover-tip";
+import { IconChevronRight } from "@/components/ui/icon-glyphs";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { requireSession } from "@/lib/session";
 
@@ -8,13 +10,11 @@ const entries = [
     href: "/app/present/essays/daily",
     name: "每日随笔",
     tip: "随手记下当下灵感；久未改动会自动沉淀进馆藏",
-    cta: "进入 →",
   },
   {
     href: "/app/present/essays/topics",
     name: "专题随笔",
     tip: "按主题建夹写多篇；整专题归档进馆藏，单篇不可单独归档",
-    cta: "进入 →",
   },
 ] as const;
 
@@ -48,9 +48,16 @@ export default async function EssaysHubPage() {
                 </h2>
                 <p className="oc-scroll__body line-clamp-1">{entry.tip}</p>
               </div>
-              <span className="shrink-0 text-xs tracking-[0.08em] text-[var(--amber)]">
-                {entry.cta}
-              </span>
+              <HoverTip
+                tip="进入"
+                variant="hint"
+                nestInControl
+                className="inline-flex shrink-0"
+              >
+                <span className="text-[var(--amber)]" aria-hidden>
+                  <IconChevronRight size={16} />
+                </span>
+              </HoverTip>
             </Link>
           </li>
         ))}

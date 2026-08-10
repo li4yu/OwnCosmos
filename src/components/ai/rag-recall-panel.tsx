@@ -233,7 +233,7 @@ export function RagRecallPanel() {
           {streaming ? "生成中…" : "检索并流式回答"}
         </button>
         {result || llmModel ? (
-          <span className="font-mono text-[10px] text-[var(--mist)]">
+          <span className="font-mono text-xs text-[var(--mist)]">
             {result ? `${result.elapsedMs}ms · ` : null}
             {agent ? `agent=${agent} · ` : null}
             {llmModel ?? result?.embeddingModel}
@@ -256,7 +256,7 @@ export function RagRecallPanel() {
 
       {(answer || streaming) && (
         <section className="rounded border border-[var(--teal)] bg-[var(--panel)] p-2.5">
-          <p className="font-mono text-[9px] tracking-[0.14em] text-[var(--teal)]">
+          <p className="font-mono text-xs tracking-[0.14em] text-[var(--teal)]">
             ANSWER · stream{streaming ? " · …" : ""}
           </p>
           <div className="mt-1.5 whitespace-pre-wrap break-words text-sm text-[var(--paper)]">
@@ -267,7 +267,7 @@ export function RagRecallPanel() {
 
       {result ? (
         <div className="flex flex-col gap-2">
-          <p className="font-mono text-[9px] tracking-[0.14em] text-[var(--teal)]">
+          <p className="font-mono text-xs tracking-[0.14em] text-[var(--teal)]">
             HITS · {result.hits.length} · corpus={result.corpus}
           </p>
           {result.hits.length === 0 ? (
@@ -306,7 +306,7 @@ export function RagRecallPanel() {
                       打开馆藏
                     </Link>
                   ) : (
-                    <p className="mt-1 font-mono text-[10px] text-[var(--mist)]">
+                    <p className="mt-1 font-mono text-xs text-[var(--mist)]">
                       source={h.sourceId}
                     </p>
                   )}

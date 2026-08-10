@@ -26,7 +26,7 @@ export function FragmentActions({ itemId }: FragmentActionsProps) {
         setOpen(false);
         return;
       }
-      router.push("/app/past/gallery/memory-fragment");
+      router.push("/app/past/gallery");
       router.refresh();
     });
   }

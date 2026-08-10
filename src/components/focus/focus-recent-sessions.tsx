@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconChevronRight } from "@/components/ui/icon-glyphs";
 import { formatFocusDurationMs } from "@/lib/focus-duration";
 import { galleryDetailHref } from "@/lib/gallery-sections";
 
@@ -32,12 +34,13 @@ export function FocusRecentSessions({ items }: FocusRecentSessionsProps) {
         <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
           最近专注记录
         </h3>
-        <Link
+        <IconActionLink
           href="/app/focus/records"
-          className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
+          label="全部"
+          className="oc-icon-action--accent"
         >
-          全部 →
-        </Link>
+          <IconChevronRight size={14} />
+        </IconActionLink>
       </div>
       {items.length === 0 ? (
         <p className="mt-2 text-xs text-[var(--mist)]">
@@ -47,7 +50,7 @@ export function FocusRecentSessions({ items }: FocusRecentSessionsProps) {
         <ul className="mt-2 flex flex-col gap-1.5">
           {items.map((item) => {
             const href = item.archiveItemId
-              ? galleryDetailHref(item.archiveItemId, "focus-record")
+              ? galleryDetailHref(item.archiveItemId)
               : "/app/focus/records";
             return (
               <li key={item.id}>
@@ -59,11 +62,11 @@ export function FocusRecentSessions({ items }: FocusRecentSessionsProps) {
                     <span className="truncate text-xs text-[var(--paper)]">
                       {item.title}
                     </span>
-                    <span className="shrink-0 font-mono text-[9px] text-[var(--mist)]">
+                    <span className="shrink-0 font-mono text-xs text-[var(--mist)]">
                       {item.mode === "countdown" ? "倒计时" : "正向计时"}
                     </span>
                   </div>
-                  <p className="mt-0.5 font-mono text-[10px] text-[var(--amber)]">
+                  <p className="mt-0.5 font-mono text-xs text-[var(--amber)]">
                     {formatFocusDurationMs(item.accumulatedMs)}
                     {item.endedAt ? (
                       <span className="ml-2 text-[var(--mist)]">

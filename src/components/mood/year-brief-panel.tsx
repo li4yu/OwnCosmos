@@ -11,7 +11,7 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
           年度摘要 · {brief.year}
         </p>
         <p className="mt-1 text-xs text-[var(--mist)]">
@@ -19,23 +19,23 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
         </p>
         <dl className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
           <div className="rounded border border-[var(--line)] px-2 py-1.5">
-            <dt className="font-mono text-[10px] text-[var(--mist)]">归档</dt>
+            <dt className="font-mono text-xs text-[var(--mist)]">归档</dt>
             <dd className="mt-0.5 text-lg text-[var(--paper)]">{brief.total}</dd>
           </div>
           <div className="rounded border border-[var(--line)] px-2 py-1.5">
-            <dt className="font-mono text-[10px] text-[var(--mist)]">有情绪标记</dt>
+            <dt className="font-mono text-xs text-[var(--mist)]">有情绪标记</dt>
             <dd className="mt-0.5 text-lg text-[var(--paper)]">
               {brief.withMood}
             </dd>
           </div>
           <div className="rounded border border-[var(--line)] px-2 py-1.5">
-            <dt className="font-mono text-[10px] text-[var(--mist)]">类型种数</dt>
+            <dt className="font-mono text-xs text-[var(--mist)]">类型种数</dt>
             <dd className="mt-0.5 text-lg text-[var(--paper)]">
               {brief.byType.length}
             </dd>
           </div>
           <div className="rounded border border-[var(--line)] px-2 py-1.5">
-            <dt className="font-mono text-[10px] text-[var(--mist)]">标签种数</dt>
+            <dt className="font-mono text-xs text-[var(--mist)]">标签种数</dt>
             <dd className="mt-0.5 text-lg text-[var(--paper)]">
               {brief.topTags.length}
             </dd>
@@ -44,7 +44,7 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
 
         {brief.byType.length > 0 ? (
           <div className="mt-3">
-            <p className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
+            <p className="font-mono text-xs tracking-wide text-[var(--mist)]">
               按类型
             </p>
             <ul className="mt-1 flex flex-wrap gap-1.5 text-xs">
@@ -62,7 +62,7 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
 
         {brief.topTags.length > 0 ? (
           <div className="mt-3">
-            <p className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
+            <p className="font-mono text-xs tracking-wide text-[var(--mist)]">
               高频标签
             </p>
             <ul className="mt-1 flex flex-wrap gap-1.5 text-xs">
@@ -79,7 +79,7 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
         ) : null}
 
         <div className="mt-3">
-          <p className="mb-1.5 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+          <p className="mb-1.5 font-mono text-xs tracking-wide text-[var(--mist)]">
             当年情绪分布
           </p>
           <MoodBars
@@ -90,7 +90,7 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
       </section>
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
           情绪共现 · 情绪 × 主题
         </p>
         <p className="mt-1 text-xs text-[var(--mist)]">
@@ -112,7 +112,7 @@ export function YearBriefPanel({ brief, pairs }: YearBriefPanelProps) {
                   <span className="mx-1 text-[var(--mist)]">×</span>
                   {p.tagName}
                 </span>
-                <span className="font-mono text-[10px] text-[var(--mist)]">
+                <span className="font-mono text-xs text-[var(--mist)]">
                   {p.count}
                 </span>
               </li>

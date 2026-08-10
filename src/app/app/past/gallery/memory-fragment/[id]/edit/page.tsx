@@ -20,7 +20,7 @@ export default async function EditMemoryFragmentPage({ params }: Props) {
     <main className="flex flex-col gap-3">
       <PageHeader
         title="编辑记忆碎片"
-        backHref={galleryDetailHref(item.id, "memory-fragment")}
+        backHref={galleryDetailHref(item.id)}
         backLabel="返回详情"
         description="标题、文字或图片至少填一项；图片永不纳入知识库"
       />

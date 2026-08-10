@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconChevronRight } from "@/components/ui/icon-glyphs";
 import { formatFocusDurationMs } from "@/lib/focus-duration";
 import type { HomeCheckinDay, HomeFocusDay } from "@/services/home-pulse";
 
@@ -43,12 +44,13 @@ export function HomePulseStrip({
       <div className="home-v1__pulse-block">
         <div className="home-v1__pulse-head">
           <p className="home-v1__pulse-label">近七日打卡</p>
-          <Link
+          <IconActionLink
             href="/app/future/daily"
-            className="ui-hover-link-accent font-mono text-xs text-[var(--amber)]"
+            label="每日打卡"
+            className="oc-icon-action--accent"
           >
-            每日打卡 →
-          </Link>
+            <IconChevronRight size={14} />
+          </IconActionLink>
         </div>
         <CheckinInkChart days={checkinDays} onTip={setCheckinTip} />
         <p className="home-v1__pulse-foot">
@@ -71,12 +73,13 @@ export function HomePulseStrip({
       <div className="home-v1__pulse-block">
         <div className="home-v1__pulse-head">
           <p className="home-v1__pulse-label">近七日凝时</p>
-          <Link
+          <IconActionLink
             href="/app/focus"
-            className="ui-hover-link-accent font-mono text-xs text-[var(--amber)]"
+            label="凝时"
+            className="oc-icon-action--accent"
           >
-            凝时 →
-          </Link>
+            <IconChevronRight size={14} />
+          </IconActionLink>
         </div>
         <FocusInkChart days={focusDays} onTip={setFocusTip} />
         <p className="home-v1__pulse-foot">

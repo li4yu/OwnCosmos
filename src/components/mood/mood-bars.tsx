@@ -32,7 +32,7 @@ export function MoodBars({
             >
               {emoji || "·"}
             </span>
-            <span className="w-8 shrink-0 text-[11px] text-[var(--paper)]">
+            <span className="w-8 shrink-0 text-[13px] text-[var(--paper)]">
               {name}
             </span>
             <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-sm bg-[var(--line)]/50">
@@ -42,10 +42,10 @@ export function MoodBars({
                 title={`${name} · ${item.count} 条 · ${pct}%`}
               />
             </div>
-            <span className="w-10 shrink-0 text-right font-mono text-[10px] text-[var(--mist)] transition group-hover:text-[var(--amber)]">
+            <span className="w-10 shrink-0 text-right font-mono text-xs text-[var(--mist)] transition group-hover:text-[var(--amber)]">
               {pct}%
             </span>
-            <span className="w-5 shrink-0 text-right font-mono text-[9px] text-[var(--mist)]/80">
+            <span className="w-5 shrink-0 text-right font-mono text-xs text-[var(--mist)]/80">
               {item.count}
             </span>
           </li>

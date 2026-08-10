@@ -136,7 +136,7 @@ export function CycleListPanel({
 
       <h2 className="oc-section-label">
         进行中
-        <span className="ml-2 font-mono text-[10px] text-[var(--mist)] font-normal tracking-normal normal-case">
+        <span className="ml-2 font-mono text-xs text-[var(--mist)] font-normal tracking-normal normal-case">
           {total}
         </span>
       </h2>

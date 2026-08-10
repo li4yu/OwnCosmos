@@ -45,7 +45,7 @@ export default async function PastMoodPage({ searchParams }: Props) {
       />
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
           情绪分布 · 全部
         </p>
         <p className="mt-0.5 mb-2 text-xs text-[var(--mist)]">
@@ -56,7 +56,7 @@ export default async function PastMoodPage({ searchParams }: Props) {
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+          <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
             年份
           </p>
           <div className="flex flex-wrap gap-1">
@@ -66,7 +66,7 @@ export default async function PastMoodPage({ searchParams }: Props) {
                 <Link
                   key={y}
                   href={`/app/past/mood?year=${y}`}
-                  className={`rounded border px-2 py-0.5 font-mono text-[11px] transition ${
+                  className={`rounded border px-2 py-0.5 font-mono text-[13px] transition ${
                     active
                       ? "border-[var(--amber)] bg-[var(--amber)]/15 text-[var(--paper)]"
                       : "ui-hover-chip border-[var(--line)] text-[var(--mist)]"

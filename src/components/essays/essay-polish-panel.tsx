@@ -172,7 +172,7 @@ export function EssayPolishPanel({
         <header className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-3 py-2.5">
           <div>
             <p className="text-sm font-medium text-[var(--paper)]">AI 润色</p>
-            <p className="text-[10px] text-[var(--mist)]">
+            <p className="text-xs text-[var(--mist)]">
               预览后点采纳才写回；不采纳则正文不变
             </p>
           </div>
@@ -254,7 +254,7 @@ export function EssayPolishPanel({
                   />
                   <span>
                     <span className="text-[var(--paper)]">{opt.label}</span>
-                    <span className="mt-0.5 block text-[10px] text-[var(--mist)]">
+                    <span className="mt-0.5 block text-xs text-[var(--mist)]">
                       {opt.hint}
                     </span>
                   </span>
@@ -264,7 +264,7 @@ export function EssayPolishPanel({
           </fieldset>
 
           {scope === "full" ? (
-            <p className="text-[10px] leading-relaxed text-[var(--mist)]">
+            <p className="text-xs leading-relaxed text-[var(--mist)]">
               全文采纳后以段落纯文本写回，插图与复杂格式会丢失；保插图请用选区润色。
             </p>
           ) : null}

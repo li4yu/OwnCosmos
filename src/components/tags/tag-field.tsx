@@ -111,7 +111,7 @@ export function TagField({
                 </button>
                 <button
                   type="button"
-                  className="border-l border-[var(--line)] px-1.5 py-1 text-[10px] opacity-70 hover:opacity-100"
+                  className="border-l border-[var(--line)] px-1.5 py-1 text-xs opacity-70 hover:opacity-100"
                   title="停用此标签"
                   disabled={pending}
                   onClick={() => deactivate(t.id)}

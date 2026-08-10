@@ -114,7 +114,7 @@ export function DueCardDeck({
         >
           上一帖
         </button>
-        <p className="due-deck__pager font-mono text-[10px] text-[var(--mist)]">
+        <p className="due-deck__pager font-mono text-xs text-[var(--mist)]">
           {index + 1} / {items.length}
         </p>
         <button

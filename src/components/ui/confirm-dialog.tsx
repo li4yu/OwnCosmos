@@ -66,7 +66,7 @@ export function ConfirmDialog({
         aria-labelledby={titleId}
         className="relative z-10 w-full max-w-[360px] rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-[var(--dialog-shadow)]"
       >
-        <p className="font-mono text-[10px] tracking-[0.2em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.2em] text-[var(--teal)]">
           CONFIRM
         </p>
         <h2 id={titleId} className="mt-1 text-lg tracking-[0.1em] text-[var(--paper)]">

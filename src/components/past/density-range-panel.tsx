@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconChevronRight } from "@/components/ui/icon-glyphs";
 import type { DensityPoint } from "@/services/review";
 
 export type DensityRange = "7d" | "30d" | "1y";
@@ -43,12 +44,13 @@ export function DensityRangePanel({
         <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
           归档密度
         </h3>
-        <Link
+        <IconActionLink
           href="/app/past/corridor"
-          className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
+          label="时间线"
+          className="oc-icon-action--accent"
         >
-          时间线 →
-        </Link>
+          <IconChevronRight size={14} />
+        </IconActionLink>
       </div>
 
       <div className="mt-1.5 flex shrink-0 gap-0.5">
@@ -62,7 +64,7 @@ export function DensityRangePanel({
                 setRange(r.id);
                 setTip(null);
               }}
-              className={`rounded border px-1.5 py-0.5 font-mono text-[10px] ${
+              className={`rounded border px-1.5 py-0.5 font-mono text-xs ${
                 active
                   ? "border-[var(--amber)] bg-[var(--amber)]/15 text-[var(--amber)]"
                   : "ui-hover-chip border-transparent text-[var(--mist)]"
@@ -128,7 +130,7 @@ export function DensityRangePanel({
           })}
         </div>
       )}
-      <p className="mt-1 shrink-0 font-mono text-[9px] text-[var(--mist)]">
+      <p className="mt-1 shrink-0 font-mono text-xs text-[var(--mist)]">
         {tip ?? `${axisHint} · 合计 ${sum}`}
       </p>
     </article>

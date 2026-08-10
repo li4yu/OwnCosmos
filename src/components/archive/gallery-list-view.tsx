@@ -3,10 +3,6 @@ import {
   GALLERY_TYPE_OPTIONS,
   parseGalleryListSearch,
 } from "@/lib/archive-query";
-import {
-  getGallerySection,
-  type GallerySectionId,
-} from "@/lib/gallery-sections";
 import { queryArchiveItems } from "@/services/archive";
 import { listAllTags } from "@/services/tags";
 
@@ -21,21 +17,18 @@ type SearchParams = {
   size?: string;
 };
 
-export async function GallerySectionView({
+/** 馆藏单页列表：类型等筛选都在面板内完成 */
+export async function GalleryListView({
   userId,
-  sectionId,
   searchParams,
 }: {
   userId: string;
-  sectionId: GallerySectionId;
   searchParams: SearchParams;
 }) {
-  const section = getGallerySection(sectionId)!;
   const parsed = parseGalleryListSearch(searchParams);
-  const lockedType = section.filterType;
   const [result, tags] = await Promise.all([
     queryArchiveItems(userId, {
-      type: lockedType ?? parsed.type,
+      type: parsed.type,
       inKnowledge: parsed.inKnowledge,
       titleQ: parsed.titleQ,
       archivedFrom: parsed.archivedFrom,
@@ -49,8 +42,7 @@ export async function GallerySectionView({
 
   return (
     <ArchiveBatchPanel
-      basePath={section.href}
-      sectionId={sectionId}
+      basePath="/app/past/gallery"
       items={result.items}
       total={result.total}
       page={result.page}
@@ -58,7 +50,7 @@ export async function GallerySectionView({
       totalPages={result.totalPages}
       filters={{
         q: parsed.titleQ ?? "",
-        type: lockedType ? "" : parsed.typeInput,
+        type: parsed.typeInput,
         kept: parsed.keptInput,
         from: parsed.fromInput,
         to: parsed.toInput,
@@ -70,10 +62,10 @@ export async function GallerySectionView({
           value: t.id,
           label: t.name,
         }))}
-      typeOptions={lockedType ? undefined : GALLERY_TYPE_OPTIONS}
-      emptyHint={section.emptyHint}
+      typeOptions={GALLERY_TYPE_OPTIONS}
+      emptyHint="馆藏尚空。可在随笔中手动归档，或等待超过设定小时数未编辑后自动沉淀；亦可上传记忆碎片。"
       allowWipe
-      showTypeChip={!lockedType}
+      showTypeChip
     />
   );
 }

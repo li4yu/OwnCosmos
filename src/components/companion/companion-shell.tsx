@@ -21,6 +21,7 @@ import {
   DEFAULT_PET_SHEET_URL,
 } from "@/components/companion/pet-sprite";
 import { CompanionPersonaSetup } from "@/components/companion/companion-persona-setup";
+import { HoverTip } from "@/components/ui/hover-tip";
 import { RECOMMENDED_QUESTIONS } from "@/ai/recommended-questions";
 import {
   DEFAULT_COMPANION_NAME,
@@ -650,14 +651,16 @@ export function CompanionShell({ userName }: { userName: string }) {
             </div>
             <div className="flex items-center gap-1.5">
               {pref.personaReady ? (
-                <button
-                  type="button"
-                  className="companion-chat__tool"
-                  onClick={() => void toggleDnd()}
-                  title="勿扰：关闭主动气泡"
-                >
-                  {pref.dnd ? "勿扰开" : "勿扰"}
-                </button>
+                <HoverTip tip="勿扰：关闭主动气泡" variant="hint" nestInControl>
+                  <button
+                    type="button"
+                    className="companion-chat__tool"
+                    onClick={() => void toggleDnd()}
+                    aria-label="勿扰：关闭主动气泡"
+                  >
+                    {pref.dnd ? "勿扰开" : "勿扰"}
+                  </button>
+                </HoverTip>
               ) : null}
               {pref.personaReady ? (
                 <button
@@ -801,10 +804,16 @@ export function CompanionShell({ userName }: { userName: string }) {
       ) : null}
       </div>
 
+      <HoverTip
+        tip="左键开窗 · 右键动作 · 拖动移动"
+        variant="hint"
+        nestInControl
+        className="pointer-events-auto"
+      >
       <button
         type="button"
         aria-label={`打开伴读桌宠 ${pref.activePetManifest.displayName}（左键开窗，右键动作，可拖动）`}
-        className="companion-pet-btn pointer-events-auto relative touch-none"
+        className="companion-pet-btn relative touch-none"
         onPointerDown={onPetPointerDown}
         onPointerMove={onPetPointerMove}
         onPointerUp={onPetPointerUp}
@@ -822,7 +831,6 @@ export function CompanionShell({ userName }: { userName: string }) {
           manifest={pref.activePetManifest}
           sheetUrl={pref.activePetSheetUrl}
           className="companion-pet-btn__sprite"
-          title="左键开窗 · 右键动作 · 拖动移动"
           onOneShotEnd={() => {
             setWaveOnce(false);
             if (manualAnim === "wave" || manualAnim === "jump") {
@@ -831,6 +839,7 @@ export function CompanionShell({ userName }: { userName: string }) {
           }}
         />
       </button>
+      </HoverTip>
     </div>
 
     {menu && typeof document !== "undefined"

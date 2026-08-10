@@ -24,8 +24,6 @@ function revalidateGallery(itemId?: string) {
   revalidatePath("/app/past");
   revalidatePath("/app/past/gallery");
   revalidatePath("/app/past/keep");
-  revalidatePath("/app/past/gallery/knowledge");
-  revalidatePath("/app/past/gallery/memory-fragment");
   revalidatePath("/app/past/wipe");
   if (itemId) revalidatePath(`/app/past/gallery/${itemId}`);
 }
@@ -86,7 +84,7 @@ export async function createFragmentAction(
   });
   if (!id) return { error: "请填写标题、文字或上传图片" };
   revalidateGallery(id);
-  redirect(`/app/past/gallery/${id}?section=memory-fragment`);
+  redirect(`/app/past/gallery/${id}`);
 }
 
 export async function updateFragmentAction(
@@ -111,7 +109,7 @@ export async function updateFragmentAction(
   });
   if (!id) return { error: "无法更新：请保留标题、文字或图片" };
   revalidateGallery(itemId);
-  redirect(`/app/past/gallery/${itemId}?section=memory-fragment`);
+  redirect(`/app/past/gallery/${itemId}`);
 }
 
 export async function deleteFragmentAction(

@@ -172,7 +172,7 @@ export function ProfileForm({
                 清除头像
               </button>
             )}
-            <p className="text-[10px] text-[var(--mist)]/80">
+            <p className="text-xs text-[var(--mist)]/80">
               未上传显示昵称首字母 · JPG/PNG/WebP/GIF · 最大 2MB
             </p>
           </div>

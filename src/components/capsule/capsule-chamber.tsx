@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconArrowLeft } from "@/components/ui/icon-glyphs";
 import {
   useEffect,
   useId,
@@ -261,9 +262,14 @@ export function CapsuleChamber({
       </div>
 
       <header className="capsule-chamber__chrome">
-        <Link href="/app/future" className="capsule-chamber__nav">
-          ← 来日途
-        </Link>
+        <IconActionLink
+          href="/app/future"
+          label="返回来日途"
+          className="capsule-chamber__nav capsule-chamber__nav--back"
+        >
+          <IconArrowLeft size={18} />
+          <span>返回</span>
+        </IconActionLink>
         <div className="capsule-chamber__brand">
           <p className="capsule-chamber__eyebrow">来日途 · 时间胶囊</p>
           <h1 className="capsule-chamber__title">
@@ -491,7 +497,7 @@ export function CapsuleChamber({
               <h2 id={titleId} className="capsule-chamber__panel-title">
                 {active.title}
               </h2>
-              <p className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
+              <p className="font-mono text-xs tracking-wide text-[var(--mist)]">
                 解锁日 {active.dueLabel}
               </p>
             </div>

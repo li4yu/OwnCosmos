@@ -1,23 +1,8 @@
-import { GallerySectionView } from "@/components/archive/gallery-section-view";
-import { requireSession } from "@/lib/session";
+import { redirect } from "next/navigation";
+import { ARCHIVE_TYPE_FOCUS_RECORD } from "@/db/schema";
 
-type Props = {
-  searchParams: Promise<{
-    q?: string;
-    from?: string;
-    to?: string;
-    page?: string;
-    size?: string;
-  }>;
-};
-
-export default async function GalleryFocusRecordPage({ searchParams }: Props) {
-  const session = await requireSession();
-  return (
-    <GallerySectionView
-      userId={session.user.id}
-      sectionId="focus-record"
-      searchParams={await searchParams}
-    />
+export default function GalleryFocusRecordRedirect() {
+  redirect(
+    `/app/past/gallery?type=${encodeURIComponent(ARCHIVE_TYPE_FOCUS_RECORD)}`,
   );
 }

@@ -144,6 +144,68 @@ export async function listCompletedFocusSessions(userId: string, limit = 50) {
   }));
 }
 
+/**
+ * 批量删除已完成专注：删会话 + 对应馆藏；馆藏若在知识库则一并清向量。
+ */
+export async function deleteCompletedFocusSessionsByIds(
+  userId: string,
+  sessionIds: string[],
+) {
+  const ids = [...new Set(sessionIds.map((id) => id.trim()).filter(Boolean))];
+  if (ids.length === 0) {
+    return { ok: false as const, error: "请先选择记录", count: 0 };
+  }
+
+  const sessions = await getDb()
+    .select({ id: focusSession.id })
+    .from(focusSession)
+    .where(
+      and(
+        eq(focusSession.userId, userId),
+        eq(focusSession.status, FOCUS_STATUS_COMPLETED),
+        inArray(focusSession.id, ids),
+      ),
+    );
+  if (sessions.length === 0) {
+    return { ok: false as const, error: "所选记录不存在或不可删除", count: 0 };
+  }
+  const ownedIds = sessions.map((s) => s.id);
+
+  const archives = await getDb()
+    .select({ id: archiveItem.id })
+    .from(archiveItem)
+    .where(
+      and(
+        eq(archiveItem.userId, userId),
+        eq(archiveItem.type, ARCHIVE_TYPE_FOCUS_RECORD),
+        inArray(archiveItem.sourceFocusSessionId, ownedIds),
+      ),
+    );
+
+  if (archives.length > 0) {
+    const { wipeInflowArchivesByIds } = await import("@/services/archive");
+    const wiped = await wipeInflowArchivesByIds(
+      userId,
+      archives.map((a) => a.id),
+    );
+    if (!wiped.ok) {
+      return { ok: false as const, error: wiped.error, count: 0 };
+    }
+  }
+
+  await getDb()
+    .delete(focusSession)
+    .where(
+      and(
+        eq(focusSession.userId, userId),
+        eq(focusSession.status, FOCUS_STATUS_COMPLETED),
+        inArray(focusSession.id, ownedIds),
+      ),
+    );
+
+  return { ok: true as const, count: ownedIds.length };
+}
+
 function parseBindKey(raw?: string | null): {
   planId?: string;
   habitId?: string;

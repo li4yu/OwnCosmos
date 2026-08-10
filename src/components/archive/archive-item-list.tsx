@@ -12,10 +12,7 @@ import {
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_CYCLE,
 } from "@/db/schema";
-import {
-  galleryDetailHref,
-  type GallerySectionId,
-} from "@/lib/gallery-sections";
+import { galleryDetailHref } from "@/lib/gallery-sections";
 import { cycleUnitLabel } from "@/lib/plan-kinds";
 import { PoeticName } from "@/components/ui/poetic-name";
 
@@ -32,14 +29,12 @@ function formatWhen(d: Date) {
 type ArchiveListProps = {
   items: Awaited<ReturnType<typeof listArchiveItems>>;
   emptyHint: string;
-  sectionId?: GallerySectionId;
   showTypeChip?: boolean;
 };
 
 export function ArchiveItemList({
   items,
   emptyHint,
-  sectionId = "all",
   showTypeChip = true,
 }: ArchiveListProps) {
   if (items.length === 0) {
@@ -55,16 +50,16 @@ export function ArchiveItemList({
       {items.map((item) => (
         <li key={item.id}>
           <Link
-            href={galleryDetailHref(item.id, sectionId)}
+            href={galleryDetailHref(item.id)}
             className="block rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4 transition hover:border-[var(--amber)]"
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <h3 className="text-base text-[var(--paper)]">{item.title}</h3>
-              <time className="shrink-0 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+              <time className="shrink-0 font-mono text-xs tracking-wide text-[var(--mist)]">
                 {formatWhen(item.archivedAt)}
               </time>
             </div>
-            <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] tracking-wide text-[var(--teal)]">
+            <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-xs tracking-wide text-[var(--teal)]">
               {showTypeChip ? <span>{archiveTypeLabel(item.type)}</span> : null}
               <span>{archiveReasonLabel(item.archiveReason)}</span>
               {item.inKnowledge ? <span>已进知识库</span> : null}

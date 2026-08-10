@@ -8,6 +8,7 @@ import {
   type CompanionTone,
 } from "@/db/schema";
 import { TONE_OPTIONS } from "@/lib/companion-persona";
+import { notifyCompanionPrefChanged } from "@/lib/companion-client";
 
 export type CompanionPersonaFields = {
   companionName: string;
@@ -74,6 +75,7 @@ export function CompanionPersonaSetup({
         userAddress: data.pref.userAddress,
         personaReady: data.pref.personaReady,
       });
+      notifyCompanionPrefChanged();
     } catch {
       setError("保存失败，请稍后重试");
     } finally {
@@ -133,7 +135,7 @@ export function CompanionPersonaSetup({
               />
               <span>
                 <span className="text-[var(--paper)]">{opt.label}</span>
-                <span className="mt-0.5 block text-[10px] text-[var(--mist)]">
+                <span className="mt-0.5 block text-xs text-[var(--mist)]">
                   {opt.hint}
                 </span>
               </span>

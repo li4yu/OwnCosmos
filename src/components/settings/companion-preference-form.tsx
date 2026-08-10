@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { CompanionPersonaSetup } from "@/components/companion/companion-persona-setup";
 import { NoticeDialog } from "@/components/ui/notice-dialog";
+import { SelectField } from "@/components/ui/select-field";
 import { TimePickerField } from "@/components/ui/time-picker-field";
 import type { CompanionTone } from "@/db/schema";
-import { COMPANION_PET_CHANGED } from "@/lib/companion-client";
+import { COMPANION_PET_CHANGED, notifyCompanionPrefChanged } from "@/lib/companion-client";
 import { TONE_OPTIONS } from "@/lib/companion-persona";
 
 type Pref = {
@@ -89,6 +90,7 @@ export function CompanionPreferenceForm() {
 
   function notifyPetChanged() {
     window.dispatchEvent(new Event(COMPANION_PET_CHANGED));
+    notifyCompanionPrefChanged();
   }
 
   async function uploadPetZip(file: File) {
@@ -245,6 +247,7 @@ export function CompanionPreferenceForm() {
       setTone(data.pref.tone);
       setUserAddress(data.pref.userAddress);
       setMessage("已保存");
+      notifyCompanionPrefChanged();
     } catch {
       setNotice({
         title: "保存失败",
@@ -302,7 +305,7 @@ export function CompanionPreferenceForm() {
             恢复默认
           </button>
         </div>
-        <p className="text-[10px] text-[var(--mist)]">
+        <p className="text-xs text-[var(--mist)]">
           需含 pet.json 与 spritesheet.webp（或 png），体积 ≤ 8MB。标准表为
           8×9 或 8×11 格；上传后按实际像素切分。
         </p>
@@ -325,25 +328,20 @@ export function CompanionPreferenceForm() {
             }}
           />
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-[var(--mist)]">语气</span>
-          <select
-            className="rounded border border-[var(--line)] bg-[var(--bg)] px-2 py-1"
-            value={tone}
-            disabled={pending}
-            onChange={(e) => {
-              const next = e.target.value as CompanionTone;
-              setTone(next);
-              void save({ tone: next });
-            }}
-          >
-            {TONE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SelectField
+          label="语气"
+          value={tone}
+          disabled={pending}
+          options={TONE_OPTIONS.map((opt) => ({
+            value: opt.value,
+            label: opt.label,
+            hint: opt.hint,
+          }))}
+          onChange={(next) => {
+            setTone(next);
+            void save({ tone: next });
+          }}
+        />
         <label className="flex flex-col gap-1">
           <span className="text-xs text-[var(--mist)]">它对你的称呼</span>
           <input
@@ -427,7 +425,7 @@ export function CompanionPreferenceForm() {
           onCommit={(next) => void save({ quietStart, quietEnd: next })}
         />
       </div>
-      <p className="text-[10px] text-[var(--mist)]">
+      <p className="text-xs text-[var(--mist)]">
         静默时段内不弹主动气泡；两端都空表示不限。跨午夜可用如 23:00–07:00。
       </p>
 

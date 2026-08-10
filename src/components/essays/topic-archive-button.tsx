@@ -34,7 +34,7 @@ export function TopicArchiveButton({
       return;
     }
     setOpen(false);
-    router.push("/app/past/gallery/essay-topic");
+    router.push("/app/past/gallery?type=essay_topic_archive");
     router.refresh();
   }
 

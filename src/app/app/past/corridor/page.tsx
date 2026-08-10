@@ -51,7 +51,7 @@ export default async function PastCorridorPage({ searchParams }: Props) {
         />
         {anniversaryHits.length > 0 ? (
           <div className="mt-3 border-t border-[var(--line)] pt-2">
-            <p className="font-mono text-[10px] text-[var(--mist)]">
+            <p className="font-mono text-xs text-[var(--mist)]">
               往年今日 · {anniversaryHits.length} 条
             </p>
             <ul className="mt-1 flex flex-col gap-0.5">
@@ -75,7 +75,7 @@ export default async function PastCorridorPage({ searchParams }: Props) {
       </section>
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
           年月密度
         </p>
         <p className="mt-0.5 mb-3 text-xs text-[var(--mist)]">
@@ -91,12 +91,12 @@ export default async function PastCorridorPage({ searchParams }: Props) {
       {validYear != null && validMonth != null ? (
         <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+            <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
               {validYear} 年 {validMonth} 月
             </p>
             <Link
               href="/app/past/corridor"
-              className="ui-hover-link font-mono text-[10px] text-[var(--mist)]"
+              className="ui-hover-link font-mono text-xs text-[var(--mist)]"
             >
               清除筛选
             </Link>
@@ -112,7 +112,7 @@ export default async function PastCorridorPage({ searchParams }: Props) {
                     className="ui-hover-card flex flex-wrap items-baseline justify-between gap-2 rounded border border-[var(--line)] px-2 py-1.5 text-xs"
                   >
                     <span className="text-[var(--paper)]">{item.title}</span>
-                    <span className="font-mono text-[10px] text-[var(--mist)]">
+                    <span className="font-mono text-xs text-[var(--mist)]">
                       {archiveTypeLabel(item.type)}
                       {item.mood ? ` · ${moodDisplay(item.mood)}` : ""}
                     </span>

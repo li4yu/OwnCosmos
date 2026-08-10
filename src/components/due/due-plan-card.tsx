@@ -117,7 +117,7 @@ export function DuePlanCard({
     >
       {isSquare ? (
         <div className="due-deck__card-body">
-          <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
+          <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
             临期提醒
             {kindLabel ? ` · ${kindLabel}` : ""}
             {isToday ? " · 今日" : ""}
@@ -130,7 +130,7 @@ export function DuePlanCard({
           >
             {remainingDaysLabel(daysLeft)}
           </p>
-          <p className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
+          <p className="font-mono text-xs tracking-wide text-[var(--mist)]">
             截止 {formatDueDateInput(dueAt)}
             {` · 提前 ${remindDays} 天`}
           </p>
@@ -190,13 +190,13 @@ export function DuePlanCard({
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {!isCompact ? (
-              <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
+              <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
                 临期提醒 · 只读副本
                 {kindLabel ? ` · ${kindLabel}` : ""}
                 {isToday ? " · 今日" : ""}
               </p>
             ) : isToday ? (
-              <p className="font-mono text-[10px] tracking-wide text-[var(--amber)]">
+              <p className="font-mono text-xs tracking-wide text-[var(--amber)]">
                 今日
               </p>
             ) : null}
@@ -214,7 +214,7 @@ export function DuePlanCard({
             >
               {remainingDaysLabel(daysLeft)}
             </p>
-            <p className="mt-0.5 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+            <p className="mt-0.5 font-mono text-xs tracking-wide text-[var(--mist)]">
               截止 {formatDueDateInput(dueAt)}
               {isCompact ? null : ` · 提前 ${remindDays} 天提醒`}
             </p>
@@ -367,7 +367,7 @@ export function DuePlanCard({
             aria-labelledby={yuanxiangTitleId}
             className="relative z-10 w-full max-w-[400px] rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-[var(--dialog-shadow)]"
           >
-            <p className="font-mono text-[10px] tracking-[0.2em] text-[var(--teal)]">
+            <p className="font-mono text-xs tracking-[0.2em] text-[var(--teal)]">
               YUANXIANG
             </p>
             <h2

@@ -204,8 +204,8 @@ export function PlanCompletedListItem({
   kindLabel,
 }: PlanCompletedItemProps) {
   const href = archiveId
-    ? galleryDetailHref(archiveId, "plan-archive")
-    : "/app/past/gallery/plan-archive";
+    ? galleryDetailHref(archiveId)
+    : "/app/past/gallery?type=plan_archive";
 
   return (
     <li>

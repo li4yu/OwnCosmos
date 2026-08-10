@@ -38,7 +38,7 @@ export function BorrowMemoryPanel({ onInsert }: BorrowMemoryPanelProps) {
     return (
       <button
         type="button"
-        className="ui-btn-ghost ui-btn-sm"
+        className="ui-btn-ghost ui-btn-sm !w-auto shrink-0 self-start"
         onClick={() => setOpen(true)}
       >
         引用过往
@@ -47,14 +47,12 @@ export function BorrowMemoryPanel({ onInsert }: BorrowMemoryPanelProps) {
   }
 
   return (
-    <div className="rounded-md border border-[var(--line)] bg-[var(--field-bg)]/40 p-2.5">
+    <div className="basis-full max-w-md rounded-md border border-[var(--line)] bg-[var(--field-bg)]/40 p-2.5">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-[var(--mist)]">
-          引用过往 · 检索昔时往并复制插入（原文不动）
-        </p>
+        <p className="text-xs text-[var(--mist)]">检索昔时往并插入（原文不动）</p>
         <button
           type="button"
-          className="ui-btn-ghost ui-btn-sm"
+          className="ui-btn-ghost ui-btn-sm !w-auto"
           onClick={() => setOpen(false)}
         >
           收起
@@ -71,11 +69,11 @@ export function BorrowMemoryPanel({ onInsert }: BorrowMemoryPanelProps) {
             }
           }}
           placeholder="关键词"
-          className="auth-field !py-1.5 max-w-xs flex-1 text-sm text-[var(--paper)]"
+          className="auth-field !w-auto !max-w-[12rem] !flex-1 !py-1.5 text-sm text-[var(--paper)]"
         />
         <button
           type="button"
-          className="ui-btn-primary ui-btn-sm"
+          className="ui-btn-primary ui-btn-sm !w-auto"
           disabled={pending || !q.trim()}
           onClick={runSearch}
         >

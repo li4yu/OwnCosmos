@@ -84,7 +84,7 @@ export function FocusPreferenceForm({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-xs text-[var(--paper)]">勿扰</p>
-          <p className="text-[11px] text-[var(--mist)]">
+          <p className="text-[13px] text-[var(--mist)]">
             专注页弱化打断类提示
           </p>
         </div>
@@ -116,7 +116,7 @@ export function FocusPreferenceForm({
               type="button"
               disabled={pending !== null}
               onClick={() => saveDefaultMs(p.ms)}
-              className={`rounded-full border px-2.5 py-1 text-[11px] tracking-wide transition disabled:opacity-40 ${
+              className={`rounded-full border px-2.5 py-1 text-[13px] tracking-wide transition disabled:opacity-40 ${
                 defaultMs === p.ms
                   ? "border-[var(--amber)] bg-[var(--amber)] text-[var(--on-amber)]"
                   : "border-[var(--line)] text-[var(--mist)] hover:border-[var(--amber)] hover:text-[var(--amber)]"

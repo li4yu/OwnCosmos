@@ -278,7 +278,23 @@ export async function queryCompletedPlanningPlans(
     }
     if (!prev.archiveId && next.archiveId) byPlanId.set(next.id, next);
   }
-  const all = [...byPlanId.values()];
+
+  // 馆藏已删的「已完成」不再展示；顺带清掉无馆藏却带 archivedAt 的残留计划
+  const orphanIds = [...byPlanId.values()]
+    .filter((p) => !p.archiveId && p.archivedAt)
+    .map((p) => p.id);
+  if (orphanIds.length > 0) {
+    await getDb()
+      .delete(plan)
+      .where(and(eq(plan.userId, userId), inArray(plan.id, orphanIds)));
+    for (const id of orphanIds) byPlanId.delete(id);
+  }
+
+  const all = [...byPlanId.values()].filter(
+    (p) =>
+      Boolean(p.archiveId) ||
+      (!p.archivedAt && p.status === PLAN_STATUS_DONE),
+  );
   const total = all.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -364,7 +380,22 @@ export async function listCompletedPlans(
       byPlanId.set(next.id, next);
     }
   }
-  return [...byPlanId.values()];
+
+  const orphanIds = [...byPlanId.values()]
+    .filter((p) => !p.archiveId && p.archivedAt)
+    .map((p) => p.id);
+  if (orphanIds.length > 0) {
+    await getDb()
+      .delete(plan)
+      .where(and(eq(plan.userId, userId), inArray(plan.id, orphanIds)));
+    for (const id of orphanIds) byPlanId.delete(id);
+  }
+
+  return [...byPlanId.values()].filter(
+    (p) =>
+      Boolean(p.archiveId) ||
+      (!p.archivedAt && p.status === PLAN_STATUS_DONE),
+  );
 }
 
 /** @deprecated 使用 listOpenPlans；保留给补算等需要「未归档含 done」的场景 */
@@ -461,8 +492,8 @@ export async function resolvePlanSourceLink(
     essayId: e.id,
     title: e.title,
     href: arch
-      ? `/app/past/gallery/${arch.id}?section=essay-sediment`
-      : "/app/past/gallery/essay-sediment",
+      ? `/app/past/gallery/${arch.id}`
+      : "/app/past/gallery?type=essay_sediment",
     archived: true,
   };
 }

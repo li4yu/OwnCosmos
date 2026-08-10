@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconChevronRight } from "@/components/ui/icon-glyphs";
 import { DensityRangePanel } from "@/components/past/density-range-panel";
 import { MoodBars } from "@/components/mood/mood-bars";
 import type { PastHubSnapshot } from "@/services/review";
@@ -16,10 +18,10 @@ export function PastHubCharts({ snapshot }: PastHubChartsProps) {
   return (
     <section className="flex flex-col gap-2">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
           沉淀一览
         </p>
-        <p className="font-mono text-[10px] text-[var(--mist)]">
+        <p className="font-mono text-xs text-[var(--mist)]">
           馆藏合计 {total} 条
         </p>
       </div>
@@ -36,12 +38,13 @@ export function PastHubCharts({ snapshot }: PastHubChartsProps) {
             <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
               馆藏类型
             </h3>
-            <Link
+            <IconActionLink
               href="/app/past/gallery"
-              className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
+              label="馆藏"
+              className="oc-icon-action--accent"
             >
-              馆藏 →
-            </Link>
+              <IconChevronRight size={14} />
+            </IconActionLink>
           </div>
           {byType.length === 0 ? (
             <p className="mt-2 text-xs text-[var(--mist)]">
@@ -51,11 +54,11 @@ export function PastHubCharts({ snapshot }: PastHubChartsProps) {
             <ul className="mt-2 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
               {byType.map((t) => (
                 <li key={t.type} className="flex flex-col gap-0.5">
-                  <div className="flex items-baseline justify-between gap-2 text-[11px]">
+                  <div className="flex items-baseline justify-between gap-2 text-[13px]">
                     <span className="truncate text-[var(--paper)]">
                       {t.label}
                     </span>
-                    <span className="shrink-0 font-mono text-[10px] text-[var(--mist)]">
+                    <span className="shrink-0 font-mono text-xs text-[var(--mist)]">
                       {t.count}
                     </span>
                   </div>
@@ -78,12 +81,13 @@ export function PastHubCharts({ snapshot }: PastHubChartsProps) {
             <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
               情绪标记分布
             </h3>
-            <Link
+            <IconActionLink
               href="/app/past/mood"
-              className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
+              label="情绪复盘"
+              className="oc-icon-action--accent"
             >
-              情绪复盘 →
-            </Link>
+              <IconChevronRight size={14} />
+            </IconActionLink>
           </div>
           <div className="mt-2 min-h-0 flex-1 overflow-y-auto pr-0.5">
             <MoodBars

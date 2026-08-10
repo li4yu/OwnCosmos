@@ -20,14 +20,12 @@ import {
   type ArchiveTypeOption,
 } from "@/lib/archive-query";
 import {
+  archiveHasKeepableText,
   archiveReasonLabel,
   archiveTypeLabel,
 } from "@/lib/archive-labels";
 import { stripToPlainText } from "@/lib/rich-text";
-import {
-  galleryDetailHref,
-  type GallerySectionId,
-} from "@/lib/gallery-sections";
+import { galleryDetailHref } from "@/lib/gallery-sections";
 import { ARCHIVE_TYPE_ESSAY_TOPIC } from "@/db/schema";
 
 type Item = {
@@ -46,7 +44,6 @@ type BatchKind = "keep" | "unkeep" | "wipe";
 
 type ArchiveBatchPanelProps = {
   basePath: string;
-  sectionId: GallerySectionId;
   items: Item[];
   total: number;
   page: number;
@@ -60,11 +57,10 @@ type ArchiveBatchPanelProps = {
     to: string;
     tag: string;
   };
-  /** 仅「全部」分区显示类型下拉 */
   typeOptions?: ArchiveTypeOption[];
   tagOptions?: ArchiveTypeOption[];
   emptyHint: string;
-  /** 当前分区是否允许删除归档 */
+  /** 是否允许删除归档 */
   allowWipe?: boolean;
   showTypeChip?: boolean;
 };
@@ -82,7 +78,6 @@ function formatWhen(d: Date | string) {
 
 export function ArchiveBatchPanel({
   basePath,
-  sectionId,
   items,
   total,
   page,
@@ -119,6 +114,12 @@ export function ArchiveBatchPanel({
   const wipeableSelected = selectedItems.filter((i) =>
     isWipeArchiveType(i.type),
   );
+  /** 未进库且有可进文本 → 可「进知识库」 */
+  const keepableSelected = selectedItems.filter(
+    (i) => !i.inKnowledge && archiveHasKeepableText(i),
+  );
+  /** 已进库 → 可「移出知识库」 */
+  const unkeepableSelected = selectedItems.filter((i) => i.inKnowledge);
   const rangeErr = useMemo(
     () => archiveDateRangeError(from, to),
     [from, to],
@@ -173,6 +174,14 @@ export function ArchiveBatchPanel({
       setError("所选条目不可删除或不存在");
       return;
     }
+    if (kind === "keep" && keepableSelected.length === 0) {
+      setError("所选条目均已进知识库，或无可进文本（如纯图）");
+      return;
+    }
+    if (kind === "unkeep" && unkeepableSelected.length === 0) {
+      setError("所选条目均未进知识库，无需移出");
+      return;
+    }
     setError(null);
     setBatchKind(kind);
   }
@@ -182,9 +191,17 @@ export function ArchiveBatchPanel({
     const ids =
       batchKind === "wipe"
         ? wipeableSelected.map((i) => i.id)
-        : [...selected];
+        : batchKind === "keep"
+          ? keepableSelected.map((i) => i.id)
+          : unkeepableSelected.map((i) => i.id);
     if (ids.length === 0) {
-      setError("请先勾选条目");
+      setError(
+        batchKind === "keep"
+          ? "没有可进知识库的条目"
+          : batchKind === "unkeep"
+            ? "没有可移出知识库的条目"
+            : "请先勾选条目",
+      );
       setBatchKind(null);
       return;
     }
@@ -221,9 +238,9 @@ export function ArchiveBatchPanel({
         : "确认删除";
   const confirmMessage =
     batchKind === "keep"
-      ? `将所选 ${selected.size} 条纳入知识库（图片仍不进入向量侧）。是否继续？`
+      ? `将把其中 ${keepableSelected.length} 条未进知识库且有文本的条目纳入知识库（已进库的会跳过；图片仍不进入向量侧）。是否继续？`
       : batchKind === "unkeep"
-        ? `将把所选 ${selected.size} 条移出知识库（仍保留在馆藏）。是否继续？`
+        ? `将把其中 ${unkeepableSelected.length} 条已进知识库的条目移出（未进库的会跳过；仍保留在馆藏）。是否继续？`
         : `将永久删除所选中可抹的 ${wipeableSelected.length} 条馆藏（含周期计划/每日打卡归档、碎片等）。若含规划归档，会同步从来日途「已完成」中删除对应计划；不删除未完成的计划与每日打卡本体。打卡次数请用「取消打卡」回退。此操作不可恢复。`;
 
   return (
@@ -258,7 +275,7 @@ export function ArchiveBatchPanel({
           </div>
         </div>
         <div
-          className={`oc-filter__grid sm:grid-cols-2 ${
+          className={`oc-filter__grid grid-cols-1 sm:grid-cols-2 ${
             typeOptions
               ? "lg:grid-cols-3 xl:grid-cols-6"
               : "lg:grid-cols-3 xl:grid-cols-5"
@@ -367,25 +384,44 @@ export function ArchiveBatchPanel({
           <button
             type="button"
             className="ui-btn-primary ui-btn-sm"
-            disabled={pending || selected.size === 0}
+            disabled={pending || keepableSelected.length === 0}
             onClick={() => openBatch("keep")}
           >
             <PoeticName
               name="所选进知识库"
-              tip="将所选文本纳入知识库"
+              tip={
+                keepableSelected.length > 0
+                  ? `将 ${keepableSelected.length} 条未进库文本纳入知识库`
+                  : selected.size > 0
+                    ? "所选均已进知识库或无可进文本"
+                    : "勾选未进知识库的文本条目后再操作"
+              }
+              nestInControl
             />
-            {selected.size > 0 ? `（${selected.size}）` : ""}
+            {keepableSelected.length > 0
+              ? `（${keepableSelected.length}）`
+              : ""}
           </button>
           <button
             type="button"
             className="ui-btn-ghost ui-btn-sm"
-            disabled={pending || selected.size === 0}
+            disabled={pending || unkeepableSelected.length === 0}
             onClick={() => openBatch("unkeep")}
           >
             <PoeticName
               name="移出知识库"
-              tip="从知识库移出；条目仍留在馆藏"
+              tip={
+                unkeepableSelected.length > 0
+                  ? `将 ${unkeepableSelected.length} 条从知识库移出；条目仍留在馆藏`
+                  : selected.size > 0
+                    ? "所选均未进知识库，无需移出"
+                    : "勾选已进知识库的条目后再操作"
+              }
+              nestInControl
             />
+            {unkeepableSelected.length > 0
+              ? `（${unkeepableSelected.length}）`
+              : ""}
           </button>
           {allowWipe ? (
             <button
@@ -397,6 +433,7 @@ export function ArchiveBatchPanel({
               <PoeticName
                 name="删除所选"
                 tip="永久删除馆藏条目；规划归档会同步清掉「已完成」对应计划，不删未完成计划与每日打卡本体"
+                nestInControl
               />
             </button>
           ) : null}
@@ -424,7 +461,7 @@ export function ArchiveBatchPanel({
                 aria-label={`选择 ${item.title}`}
               />
               <Link
-                href={galleryDetailHref(item.id, sectionId)}
+                href={galleryDetailHref(item.id)}
                 className="min-w-0 flex-1"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -433,7 +470,7 @@ export function ArchiveBatchPanel({
                     {formatWhen(item.archivedAt)}
                   </time>
                 </div>
-                <p className="mt-0.5 flex flex-wrap gap-x-2.5 font-mono text-[11px] text-[var(--teal)]">
+                <p className="mt-0.5 flex flex-wrap gap-x-2.5 font-mono text-[13px] text-[var(--teal)]">
                   {showTypeChip ? (
                     <span>{archiveTypeLabel(item.type)}</span>
                   ) : null}

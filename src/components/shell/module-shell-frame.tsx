@@ -20,7 +20,7 @@ export function ModuleShellFrame({ module, children }: ModuleShellFrameProps) {
   return (
     <div className="flex flex-col gap-2">
       <header className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
-        <p className="font-mono text-[9px] tracking-[0.18em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.18em] text-[var(--teal)]">
           {module.eyebrow}
         </p>
         <h1 className="text-lg font-semibold tracking-[0.12em] text-[var(--paper)]">

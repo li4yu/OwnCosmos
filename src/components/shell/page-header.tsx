@@ -1,6 +1,7 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { GuardedBackLink } from "@/components/ui/guarded-back-link";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconArrowLeft } from "@/components/ui/icon-glyphs";
 
 type PageHeaderProps = {
   title: string;
@@ -29,9 +30,13 @@ export function PageHeader({
           guardLeave ? (
             <GuardedBackLink href={backHref} label={backLabel} />
           ) : (
-            <Link href={backHref} className="oc-back">
-              ← {backLabel}
-            </Link>
+            <IconActionLink
+              href={backHref}
+              label={backLabel}
+              className="oc-back"
+            >
+              <IconArrowLeft size={15} />
+            </IconActionLink>
           )
         ) : null}
         {eyebrow ? <p className="oc-page-head__eyebrow">{eyebrow}</p> : null}

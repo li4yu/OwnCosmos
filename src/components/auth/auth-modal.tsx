@@ -52,7 +52,7 @@ export function AuthModal({ open, mode, onModeChange, onClose }: AuthModalProps)
       >
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
-            <p className="font-mono text-[10px] tracking-[0.2em] text-[var(--teal)]">
+            <p className="font-mono text-xs tracking-[0.2em] text-[var(--teal)]">
               {mode === "login" ? "SIGN IN" : "SIGN UP"}
             </p>
             <h2 id={titleId} className="mt-1 text-xl tracking-[0.14em] text-[var(--paper)]">

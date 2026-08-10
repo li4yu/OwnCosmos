@@ -11,6 +11,7 @@ import { requireSession } from "@/lib/session";
 import { createEssay } from "@/services/essays";
 import {
   completeFocusSession,
+  deleteCompletedFocusSessionsByIds,
   getFocusSession,
   pauseFocusSession,
   resumeFocusSession,
@@ -135,4 +136,18 @@ export async function createFocusEssayAction(
   revalidatePath("/app/present/essays/daily");
   revalidatePath(`/app/present/essays/${essayId}`);
   return { essayId };
+}
+
+/** 批量删除已完成专注记录（含馆藏；知识库条目清向量） */
+export async function deleteFocusRecordsBatchAction(
+  sessionIds: string[],
+): Promise<FocusActionState & { count?: number }> {
+  const session = await requireSession();
+  const result = await deleteCompletedFocusSessionsByIds(
+    session.user.id,
+    sessionIds,
+  );
+  if (!result.ok) return { error: result.error };
+  revalidateFocus();
+  return { count: result.count };
 }

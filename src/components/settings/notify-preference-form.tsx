@@ -123,7 +123,7 @@ export function NotifyPreferenceForm({
         onChange={(v) => save("anniversaryRemind", v)}
       />
       {permHint ? (
-        <p className="text-[11px] text-[var(--amber)]" role="status">
+        <p className="text-[13px] text-[var(--amber)]" role="status">
           {permHint}
         </p>
       ) : null}
@@ -158,7 +158,7 @@ function PrefRow({
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div>
         <p className="text-xs text-[var(--paper)]">{label}</p>
-        <p className="text-[11px] text-[var(--mist)]">{tip}</p>
+        <p className="text-[13px] text-[var(--mist)]">{tip}</p>
       </div>
       <button
         type="button"

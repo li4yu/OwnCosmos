@@ -16,15 +16,19 @@ export default function GalleryLayout({
               tip="统一收纳流入的随笔、规划归档、专注记录，以及你上传的照片与文字回忆"
             />
           </h2>
-          <p className="mt-0.5 text-[11px] text-[var(--mist)]">
-            左侧切分区；可筛可批量进知识库 / 删除归档。
+          <p className="mt-0.5 text-[13px] text-[var(--mist)]">
+            可按类型筛选；支持批量进知识库 / 删除归档。
           </p>
         </div>
         <Link
           href="/app/past/gallery/memory-fragment/new"
           className="ui-btn-primary ui-btn-sm shrink-0"
         >
-          <PoeticName name="上传碎片" tip="上传照片或文字回忆，收入馆藏" />
+          <PoeticName
+            name="上传碎片"
+            tip="上传照片或文字回忆，收入馆藏"
+            nestInControl
+          />
         </Link>
       </div>
       {children}

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconChevronRight } from "@/components/ui/icon-glyphs";
 import type { AnniversaryHit } from "@/services/review";
 import { PoeticName } from "@/components/ui/poetic-name";
 
@@ -24,12 +26,13 @@ export function AnniversaryTip({ hits }: AnniversaryTipProps) {
             往年今日，你曾留下这些记录
           </p>
         </div>
-        <Link
+        <IconActionLink
           href="/app/past/corridor"
-          className="ui-hover-link-accent font-mono text-[10px] tracking-wide text-[var(--amber)]"
+          label="时间线"
+          className="oc-icon-action--accent"
         >
-          时间线 →
-        </Link>
+          <IconChevronRight size={14} />
+        </IconActionLink>
       </div>
       <ul className="mt-2 flex flex-col gap-1">
         {hits.map((h) => (
@@ -39,7 +42,7 @@ export function AnniversaryTip({ hits }: AnniversaryTipProps) {
               className="ui-hover-card flex flex-wrap items-baseline justify-between gap-2 rounded border border-transparent px-1 py-0.5 text-xs hover:bg-[var(--ink)]/30"
             >
               <span className="text-[var(--paper)]">{h.title}</span>
-              <span className="font-mono text-[10px] text-[var(--mist)]">
+              <span className="font-mono text-xs text-[var(--mist)]">
                 {h.year} · {h.typeLabel}
               </span>
             </Link>

@@ -51,7 +51,6 @@ type PetSpriteProps = {
   size?: number;
   className?: string;
   onOneShotEnd?: () => void;
-  title?: string;
 };
 
 export function PetSprite({
@@ -61,7 +60,6 @@ export function PetSprite({
   size = 96,
   className = "",
   onOneShotEnd,
-  title,
 }: PetSpriteProps) {
   const [frameSpec, setFrameSpec] = useState<PetFrame>(manifest.frame);
   const cfg = runtimeCfg(manifest, anim, frameSpec);
@@ -77,7 +75,7 @@ export function PetSprite({
   endRef.current = onOneShotEnd;
   const cycleRef = useRef(0);
   const endedRef = useRef(false);
-  const label = title || manifest.displayName;
+  const label = manifest.displayName;
 
   useEffect(() => {
     setFrameSpec(manifest.frame);
@@ -162,7 +160,6 @@ export function PetSprite({
     <span
       role="img"
       aria-label={label}
-      title={label}
       className={`inline-block overflow-hidden ${className}`}
       style={{
         width: cellW,

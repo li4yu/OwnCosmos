@@ -69,7 +69,7 @@ export function TopicFolderList({ folders }: { folders: Folder[] }) {
       return;
     }
     setArchiveTarget(null);
-    router.push("/app/past/gallery/essay-topic");
+    router.push("/app/past/gallery?type=essay_topic_archive");
     router.refresh();
   }
 

@@ -6,19 +6,18 @@ import {
   quoteArchiveAsEssayAction,
   quoteArchiveAsPlanAction,
 } from "@/app/app/past/quote-actions";
-import { collectArchiveMaterialAction } from "@/app/app/materials/actions";
 
 type QuoteNewActionsProps = {
   archiveItemId: string;
 };
 
-/** 馆藏：引用新建随笔/计划；收藏到素材匣 */
+/** 馆藏：引用新建随笔 / 计划 */
 export function QuoteNewActions({ archiveItemId }: QuoteNewActionsProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function run(kind: "essay" | "plan" | "material") {
+  function run(kind: "essay" | "plan") {
     setError(null);
     startTransition(async () => {
       if (kind === "essay") {
@@ -30,21 +29,12 @@ export function QuoteNewActions({ archiveItemId }: QuoteNewActionsProps) {
         router.push(`/app/present/essays/${r.essayId}?saved=1`);
         return;
       }
-      if (kind === "plan") {
-        const r = await quoteArchiveAsPlanAction(archiveItemId);
-        if (r.error || !r.planId) {
-          setError(r.error ?? "创建失败");
-          return;
-        }
-        router.push(`/app/future/plans/${r.planId}?saved=1`);
+      const r = await quoteArchiveAsPlanAction(archiveItemId);
+      if (r.error || !r.planId) {
+        setError(r.error ?? "创建失败");
         return;
       }
-      const r = await collectArchiveMaterialAction(archiveItemId);
-      if (r.error) {
-        setError(r.error);
-        return;
-      }
-      router.push("/app/materials");
+      router.push(`/app/future/plans/${r.planId}?saved=1`);
     });
   }
 
@@ -66,14 +56,6 @@ export function QuoteNewActions({ archiveItemId }: QuoteNewActionsProps) {
           onClick={() => run("plan")}
         >
           引用新建计划
-        </button>
-        <button
-          type="button"
-          className="ui-btn-ghost ui-btn-sm"
-          disabled={pending}
-          onClick={() => run("material")}
-        >
-          收入素材匣
         </button>
       </div>
       {error ? (

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { HoverTip } from "@/components/ui/hover-tip";
 import { authClient } from "@/lib/auth-client";
 import { displayInitial } from "@/lib/user-display";
 
@@ -51,15 +52,16 @@ export function UserMenu({ name, image, email }: UserMenuProps) {
 
   return (
     <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={menuId}
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-full border border-[var(--line)] p-0.5 pr-2 transition hover:border-[var(--amber)]"
-        title={email}
-      >
+      <HoverTip tip={email} variant="hint" nestInControl className="inline-flex">
+        <button
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-controls={menuId}
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-2 rounded-full border border-[var(--line)] p-0.5 pr-2 transition hover:border-[var(--amber)]"
+          aria-label={email}
+        >
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -72,10 +74,11 @@ export function UserMenu({ name, image, email }: UserMenuProps) {
             {initial}
           </span>
         )}
-        <span className="max-w-[7rem] truncate text-xs tracking-wide text-[var(--paper)] sm:max-w-[9rem]">
+        <span className="max-w-[7rem] truncate text-sm tracking-wide text-[var(--paper)] sm:max-w-[9rem]">
           {displayName}
         </span>
-      </button>
+        </button>
+      </HoverTip>
 
       {open ? (
         <div
@@ -95,12 +98,6 @@ export function UserMenu({ name, image, email }: UserMenuProps) {
           </MenuLink>
           <MenuLink href="/app/guide" onNavigate={() => setOpen(false)}>
             使用说明
-          </MenuLink>
-          <MenuLink href="/app/search" onNavigate={() => setOpen(false)}>
-            全局检索
-          </MenuLink>
-          <MenuLink href="/app/materials" onNavigate={() => setOpen(false)}>
-            素材匣
           </MenuLink>
           <div className="my-1 border-t border-[var(--line)]" />
           <button

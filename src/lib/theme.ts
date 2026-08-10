@@ -1,4 +1,4 @@
-export type ThemeId = "night" | "khaki" | "mono";
+export type ThemeId = "night" | "khaki" | "mono" | "lumen";
 
 export const THEME_STORAGE_KEY = "owncosmos-theme";
 
@@ -27,10 +27,21 @@ export const THEME_OPTIONS: {
     hint: "银月炭黑",
     swatches: ["#14171c", "#1e242c", "#e6dfd0", "#8fa8b8"],
   },
+  {
+    id: "lumen",
+    label: "素曜",
+    hint: "白色高级",
+    swatches: ["#f4f6f8", "#ffffff", "#1c2430", "#b08d57"],
+  },
 ];
 
 export function isThemeId(value: unknown): value is ThemeId {
-  return value === "night" || value === "khaki" || value === "mono";
+  return (
+    value === "night" ||
+    value === "khaki" ||
+    value === "mono" ||
+    value === "lumen"
+  );
 }
 
 export function themeLabel(id: ThemeId): string {

@@ -27,8 +27,6 @@ export async function archiveEssayFolderAction(folderId: string) {
   revalidatePath(`/app/present/essays/topics/${folderId}`);
   revalidatePath("/app/past");
   revalidatePath("/app/past/gallery");
-  revalidatePath("/app/past/gallery/essay-sediment");
-  revalidatePath("/app/past/gallery/essay-topic");
   return { ok: true as const, count: result.count, name: result.name };
 }
 

@@ -21,7 +21,7 @@ function revalidateDuePaths(planId?: string) {
   revalidatePath("/app/future/plans");
   revalidatePath("/app/future/cycles");
   revalidatePath("/app/past/gallery");
-  revalidatePath("/app/past/gallery/plan-archive");
+  revalidatePath("/app/past/gallery");
   if (planId) revalidatePath(`/app/future/plans/${planId}`);
 }
 

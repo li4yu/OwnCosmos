@@ -375,7 +375,7 @@ export function PlanEditor(props: PlanEditorProps) {
             <span className="text-[var(--paper)]">
               {formatFocusDurationMs(props.focusTotalMs ?? 0)}
             </span>
-            <span className="ml-1 font-mono text-[10px]">
+            <span className="ml-1 font-mono text-xs">
               · {props.focusSessionCount} 次完整专注
             </span>
           </p>
@@ -437,7 +437,7 @@ export function PlanEditor(props: PlanEditorProps) {
             </div>
           </fieldset>
         ) : (
-          <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
+          <p className="font-mono text-xs tracking-wide text-[var(--teal)]">
             类型：{planKindLabel(kind)}
             {kind === PLAN_KIND_CYCLE
               ? ` · ${cycleUnitLabel(
@@ -560,7 +560,7 @@ export function PlanEditor(props: PlanEditorProps) {
           <div className="flex flex-col gap-3 rounded-xl border border-[var(--line)] bg-[var(--field-bg)]/40 p-3 sm:p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="text-sm text-[var(--paper)]">提前提醒</p>
-              <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
+              <p className="font-mono text-xs tracking-wide text-[var(--teal)]">
                 最多提前 {remindMax} 天（相对今天与截止日）
               </p>
             </div>
@@ -750,7 +750,7 @@ export function PlanEditor(props: PlanEditorProps) {
 
       <div className="mt-4 flex flex-col gap-4">
         {isEdit && kind !== PLAN_KIND_CAPSULE ? (
-          <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
+          <p className="font-mono text-xs tracking-wide text-[var(--teal)]">
             状态：{status === PLAN_STATUS_DONE ? "已完成" : "未完成"}
             <span className="ml-2 text-[var(--mist)]">
               （完成会归档入馆藏，临期提醒同步消失）
@@ -758,7 +758,7 @@ export function PlanEditor(props: PlanEditorProps) {
           </p>
         ) : null}
         {isEdit && kind === PLAN_KIND_CAPSULE && !capsuleLocked ? (
-          <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
+          <p className="font-mono text-xs tracking-wide text-[var(--teal)]">
             已解锁 · 可随时重读，无需归档
           </p>
         ) : null}
@@ -769,7 +769,7 @@ export function PlanEditor(props: PlanEditorProps) {
           </p>
         ) : null}
         {dirty ? (
-          <p className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
+          <p className="font-mono text-xs tracking-wide text-[var(--mist)]">
             有未保存更改；离开页面前请先保存
           </p>
         ) : null}

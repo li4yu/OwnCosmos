@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconChevronRight } from "@/components/ui/icon-glyphs";
 import { remainingDaysLabel } from "@/lib/due-labels";
 import { formatDueDateInput } from "@/lib/plan-dates";
 import { planKindLabel } from "@/lib/plan-kinds";
@@ -23,12 +25,13 @@ export function FuturePlanPreview({ items }: FuturePlanPreviewProps) {
         <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
           近期规划
         </h3>
-        <Link
+        <IconActionLink
           href="/app/future/plans"
-          className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
+          label="全部"
+          className="oc-icon-action--accent"
         >
-          全部 →
-        </Link>
+          <IconChevronRight size={14} />
+        </IconActionLink>
       </div>
       {items.length === 0 ? (
         <div className="mt-3 flex flex-1 flex-col justify-center gap-2">
@@ -54,13 +57,13 @@ export function FuturePlanPreview({ items }: FuturePlanPreviewProps) {
                   <span className="truncate text-xs text-[var(--paper)]">
                     {item.title || "无标题"}
                   </span>
-                  <span className="shrink-0 font-mono text-[9px] text-[var(--mist)]">
+                  <span className="shrink-0 font-mono text-xs text-[var(--mist)]">
                     {planKindLabel(item.kind)}
                   </span>
                 </div>
                 {item.dueAt ? (
                   <p
-                    className={`mt-0.5 font-mono text-[10px] ${
+                    className={`mt-0.5 font-mono text-xs ${
                       item.daysLeft != null && item.daysLeft < 0
                         ? "text-[var(--danger)]"
                         : "text-[var(--amber)]"
@@ -74,7 +77,7 @@ export function FuturePlanPreview({ items }: FuturePlanPreviewProps) {
                     </span>
                   </p>
                 ) : (
-                  <p className="mt-0.5 font-mono text-[10px] text-[var(--mist)]">
+                  <p className="mt-0.5 font-mono text-xs text-[var(--mist)]">
                     无截止日期
                   </p>
                 )}

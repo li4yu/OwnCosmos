@@ -84,7 +84,7 @@ export function VerifyEmailPanel({ email }: VerifyEmailPanelProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
-      <p className="font-mono text-[10px] tracking-[0.2em] text-[var(--teal)]">
+      <p className="font-mono text-xs tracking-[0.2em] text-[var(--teal)]">
         VERIFY EMAIL
       </p>
       <h1 className="text-xl tracking-[0.12em] text-[var(--paper)]">验证邮箱</h1>

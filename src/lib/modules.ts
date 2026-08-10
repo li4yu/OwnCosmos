@@ -18,6 +18,8 @@ export type AppModuleDef = {
   name: string;
   tip: string;
   eyebrow: string;
+  /** 镜面左侧竖题（仿自省「以镜自省」） */
+  motto?: string;
   ready: boolean;
   /** 无子功能（如首页）则为空 */
   subfeatures: readonly SubfeatureDef[];
@@ -39,6 +41,7 @@ export const APP_MODULES: readonly AppModuleDef[] = [
     name: "昔时往",
     tip: "你的过去沉淀库：回顾已归档的思绪、规划与回忆",
     eyebrow: "PAST",
+    motto: "拾忆成往",
     ready: true,
     subfeatures: [
       {
@@ -65,11 +68,22 @@ export const APP_MODULES: readonly AppModuleDef[] = [
     ],
   },
   {
+    id: "reflect",
+    href: "/app/reflect",
+    name: "自省",
+    tip: "以镜自省——对着过往，看清此刻的自己",
+    eyebrow: "MIRROR",
+    ready: true,
+    /** 单页镜面：对镜 / 照时 / 对照 / 留痕，不设侧栏子模块 */
+    subfeatures: [],
+  },
+  {
     id: "present",
     href: "/app/present",
     name: "今时际",
     tip: "抓住此刻的思绪，并查看临近的提醒",
     eyebrow: "PRESENT",
+    motto: "执笔当下",
     ready: true,
     subfeatures: [
       {
@@ -94,6 +108,7 @@ export const APP_MODULES: readonly AppModuleDef[] = [
     name: "来日途",
     tip: "规划未来的目标、日子与自律计划",
     eyebrow: "FUTURE",
+    motto: "向途而行",
     ready: true,
     subfeatures: [
       {
@@ -132,6 +147,7 @@ export const APP_MODULES: readonly AppModuleDef[] = [
     name: "凝时",
     tip: "专注计时：正向计时或倒计时，把心神收在当下",
     eyebrow: "FOCUS",
+    motto: "凝神一时",
     ready: true,
     subfeatures: [
       {

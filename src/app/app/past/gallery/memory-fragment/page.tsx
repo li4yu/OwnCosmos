@@ -1,36 +1,9 @@
-import Link from "next/link";
-import { GallerySectionView } from "@/components/archive/gallery-section-view";
-import { requireSession } from "@/lib/session";
+import { redirect } from "next/navigation";
+import { ARCHIVE_TYPE_MEMORY_FRAGMENT } from "@/db/schema";
 
-type Props = {
-  searchParams: Promise<{
-    q?: string;
-    from?: string;
-    to?: string;
-    page?: string;
-    size?: string;
-  }>;
-};
-
-export default async function GalleryMemoryFragmentPage({
-  searchParams,
-}: Props) {
-  const session = await requireSession();
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Link
-          href="/app/past/gallery/memory-fragment/new"
-          className="ui-btn-ghost ui-btn-sm"
-        >
-          上传碎片
-        </Link>
-      </div>
-      <GallerySectionView
-        userId={session.user.id}
-        sectionId="memory-fragment"
-        searchParams={await searchParams}
-      />
-    </div>
+/** 旧「记忆碎片」分区列表 → 馆藏单页预选类型；上传入口仍在 memory-fragment/new */
+export default function GalleryMemoryFragmentRedirect() {
+  redirect(
+    `/app/past/gallery?type=${encodeURIComponent(ARCHIVE_TYPE_MEMORY_FRAGMENT)}`,
   );
 }

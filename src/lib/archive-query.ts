@@ -6,6 +6,7 @@ import {
   ARCHIVE_TYPE_MEMORY_FRAGMENT,
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
+  ARCHIVE_TYPE_REFLECT_REPORT,
   WIPE_ARCHIVE_TYPES,
 } from "@/db/schema";
 import {
@@ -32,6 +33,7 @@ export const GALLERY_TYPE_OPTIONS: ArchiveTypeOption[] = [
   { value: ARCHIVE_TYPE_DAILY_CHECKIN, label: "每日打卡归档" },
   { value: ARCHIVE_TYPE_FOCUS_RECORD, label: "专注记录" },
   { value: ARCHIVE_TYPE_MEMORY_FRAGMENT, label: "记忆碎片" },
+  { value: ARCHIVE_TYPE_REFLECT_REPORT, label: "自省报告" },
 ];
 
 /** 进知识库状态筛选：空=不限 */

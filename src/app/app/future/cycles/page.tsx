@@ -153,13 +153,13 @@ export default async function FutureCyclesPage({ searchParams }: Props) {
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="oc-section-label mb-0">
             系列计次
-            <span className="ml-2 font-mono text-[10px] text-[var(--mist)] font-normal tracking-normal normal-case">
+            <span className="ml-2 font-mono text-xs text-[var(--mist)] font-normal tracking-normal normal-case">
               {seriesArchives.length}
             </span>
           </h2>
           <Link
-            href="/app/past/gallery/plan-cycle"
-            className="font-mono text-[10px] tracking-wide text-[var(--amber)] hover:underline"
+            href="/app/past/gallery?type=plan_cycle_archive"
+            className="font-mono text-xs tracking-wide text-[var(--amber)] hover:underline"
           >
             馆藏·周期计划归档 →
           </Link>
@@ -174,7 +174,7 @@ export default async function FutureCyclesPage({ searchParams }: Props) {
               <li key={item.id}>
                 <div className="flex items-start gap-3">
                   <Link
-                    href={galleryDetailHref(item.id, "plan-cycle")}
+                    href={galleryDetailHref(item.id)}
                     className="min-w-0 flex-1"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -201,7 +201,7 @@ export default async function FutureCyclesPage({ searchParams }: Props) {
                     </p>
                   </Link>
                   <Link
-                    href={galleryDetailHref(item.id, "plan-cycle")}
+                    href={galleryDetailHref(item.id)}
                     className="ui-btn-ghost ui-btn-sm shrink-0 text-[var(--teal)]"
                   >
                     看馆藏

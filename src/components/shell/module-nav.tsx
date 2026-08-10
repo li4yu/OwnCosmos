@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { HoverTip } from "@/components/ui/hover-tip";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { APP_MODULES, matchModule } from "@/lib/modules";
 
@@ -23,7 +24,14 @@ export function ModuleNav() {
   }, []);
 
   function go(href: string) {
-    if (pathname === href) return;
+    const alreadyHere =
+      pathname === href ||
+      (href !== "/app" && pathname.startsWith(`${href}/`));
+    if (alreadyHere) {
+      // 已在该模块：软导航卡住时再点可恢复，不必整页硬刷
+      router.refresh();
+      return;
+    }
     if (dirty) {
       setPendingHref(href);
       return;
@@ -44,7 +52,7 @@ export function ModuleNav() {
               key={mod.id}
               type="button"
               onClick={() => go(mod.href)}
-              className={`shrink-0 rounded-md px-2.5 py-1.5 text-sm tracking-[0.1em] transition sm:px-3 ${
+              className={`shrink-0 rounded-md px-1.5 py-1 text-[clamp(0.78rem,2.6vw,0.9375rem)] tracking-[0.04em] transition sm:px-3 sm:py-1.5 sm:tracking-[0.08em] ${
                 isActive
                   ? "bg-[var(--amber)] text-[var(--on-amber)]"
                   : "text-[var(--mist)] hover:bg-[var(--field-bg)] hover:text-[var(--paper)]"
@@ -83,14 +91,17 @@ export function ModuleNav() {
  */
 export function BrandMark() {
   return (
-    <div
-      className="shrink-0 select-none"
-      aria-label="自宇"
-      title="自宇 · My Own Cosmos"
+    <HoverTip
+      tip="自宇 · My Own Cosmos"
+      variant="hint"
+      nestInControl
+      className="inline-flex shrink-0"
     >
-      <p className="font-[family-name:var(--font-cormorant)] text-sm tracking-[0.2em] text-[var(--amber)]">
-        自宇
-      </p>
-    </div>
+      <div className="select-none" aria-label="自宇">
+        <p className="font-[family-name:var(--font-cormorant)] text-sm tracking-[0.2em] text-[var(--amber)]">
+          自宇
+        </p>
+      </div>
+    </HoverTip>
   );
 }

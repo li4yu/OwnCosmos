@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconChevronRight } from "@/components/ui/icon-glyphs";
 import { moodDisplay } from "@/lib/moods";
 import { stripToPlainText } from "@/lib/rich-text";
 
@@ -31,12 +33,13 @@ export function PresentEssayPreview({ items }: PresentEssayPreviewProps) {
         <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
           每日随笔
         </h3>
-        <Link
+        <IconActionLink
           href="/app/present/essays/daily"
-          className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
+          label="全部"
+          className="oc-icon-action--accent"
         >
-          全部 →
-        </Link>
+          <IconChevronRight size={14} />
+        </IconActionLink>
       </div>
       {items.length === 0 ? (
         <div className="mt-3 flex flex-1 flex-col justify-center gap-2">
@@ -62,16 +65,16 @@ export function PresentEssayPreview({ items }: PresentEssayPreviewProps) {
                   <span className="truncate text-xs text-[var(--paper)]">
                     {item.title || "无标题"}
                   </span>
-                  <time className="shrink-0 font-mono text-[9px] text-[var(--mist)]">
+                  <time className="shrink-0 font-mono text-xs text-[var(--mist)]">
                     {formatUpdated(item.updatedAt)}
                   </time>
                 </div>
                 {item.mood ? (
-                  <p className="mt-0.5 font-mono text-[10px] text-[var(--teal)]">
+                  <p className="mt-0.5 font-mono text-xs text-[var(--teal)]">
                     {moodDisplay(item.mood)}
                   </p>
                 ) : null}
-                <p className="mt-0.5 line-clamp-2 text-[11px] text-[var(--mist)]">
+                <p className="mt-0.5 line-clamp-2 text-[13px] text-[var(--mist)]">
                   {stripToPlainText(item.body) || "（无正文）"}
                 </p>
               </Link>

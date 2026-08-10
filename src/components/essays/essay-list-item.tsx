@@ -71,7 +71,7 @@ export function EssayListItem({
             <time className="oc-scroll__meta">{updatedLabel}</time>
           </div>
           {moodLabel || (tagNames && tagNames.length > 0) ? (
-            <p className="mt-0.5 flex flex-wrap gap-x-2 font-mono text-[11px] text-[var(--teal)]">
+            <p className="mt-0.5 flex flex-wrap gap-x-2 font-mono text-[13px] text-[var(--teal)]">
               {moodLabel ? <span>{moodLabel}</span> : null}
               {tagNames?.map((name) => (
                 <span key={name}>#{name}</span>

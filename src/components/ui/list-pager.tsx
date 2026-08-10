@@ -80,7 +80,7 @@ export function ListPager({
       >
         下一页
       </button>
-      <label className="flex flex-col gap-0.5 text-[10px] text-[var(--mist)]">
+      <label className="flex flex-col gap-0.5 text-xs text-[var(--mist)]">
         页码
         <input
           type="number"
@@ -95,7 +95,7 @@ export function ListPager({
           aria-label="跳转页码"
         />
       </label>
-      <label className="flex flex-col gap-0.5 text-[10px] text-[var(--mist)]">
+      <label className="flex flex-col gap-0.5 text-xs text-[var(--mist)]">
         每页
         <input
           type="number"
@@ -118,7 +118,7 @@ export function ListPager({
       >
         跳转
       </button>
-      <p className="pb-1 font-mono text-[9px] tracking-wide text-[var(--mist)]">
+      <p className="pb-1 font-mono text-xs tracking-wide text-[var(--mist)]">
         共 {total} 条 · {page}/{totalPages} 页 · 每页 {pageSize}
         <span className="ml-1 opacity-70">
           （{MIN_LIST_PAGE_SIZE}–{MAX_LIST_PAGE_SIZE}）

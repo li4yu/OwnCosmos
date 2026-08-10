@@ -60,8 +60,6 @@ function revalidatePlans(planId?: string) {
   revalidatePath("/app/present");
   revalidatePath("/app/present/due");
   revalidatePath("/app/past/gallery");
-  revalidatePath("/app/past/gallery/plan-archive");
-  revalidatePath("/app/past/gallery/plan-cycle");
   if (planId) revalidatePath(`/app/future/plans/${planId}`);
 }
 
@@ -70,7 +68,6 @@ function revalidateDaily() {
   revalidatePath("/app/future/daily");
   revalidatePath("/app/future");
   revalidatePath("/app/past/gallery");
-  revalidatePath("/app/past/gallery/daily-checkin");
 }
 
 function readKind(formData: FormData): PlanKind {
@@ -297,7 +294,7 @@ export async function checkinPlanTaskAction(
   }
   revalidatePlans(planId);
   revalidatePath("/app");
-  revalidatePath("/app/past/gallery/plan-cycle");
+  revalidatePath("/app/past/gallery");
   return {
     checkCount: result.checkCount,
     lastCheckinDate: result.lastCheckinDate,
@@ -319,7 +316,7 @@ export async function cancelPlanTaskCheckinAction(
   }
   revalidatePlans(planId);
   revalidatePath("/app");
-  revalidatePath("/app/past/gallery/plan-cycle");
+  revalidatePath("/app/past/gallery");
   return { checkCount: result.checkCount };
 }
 

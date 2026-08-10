@@ -3,6 +3,19 @@
 export const COMPANION_BUBBLE_EVENT = "owncosmos:companion-bubble";
 /** 设置页上传/恢复桌宠后通知壳层刷新外观 */
 export const COMPANION_PET_CHANGED = "owncosmos:companion-pet";
+/** 设置页改称呼/语气/勿扰等后通知壳层刷新 */
+export const COMPANION_PREF_CHANGED = "owncosmos:companion-pref";
+
+export function notifyCompanionPrefChanged() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(COMPANION_PREF_CHANGED));
+}
+
+export function notifyCompanionPetChanged() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(COMPANION_PET_CHANGED));
+  notifyCompanionPrefChanged();
+}
 
 export type CompanionBubbleDetail = {
   id: string;

@@ -19,11 +19,11 @@ export function SettingsSection({
       className={`flex flex-col rounded-lg border border-[var(--line)] bg-[var(--panel)] p-3 sm:p-3.5 ${className}`}
     >
       <header className="mb-2.5 border-b border-[color-mix(in_srgb,var(--line)_70%,transparent)] pb-2">
-        <p className="font-mono text-[9px] tracking-[0.18em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.14em] text-[var(--teal)]">
           {label}
         </p>
         {description ? (
-          <div className="mt-1 text-xs leading-relaxed text-[var(--mist)]">
+          <div className="mt-1 text-sm leading-relaxed text-[var(--mist)]">
             {description}
           </div>
         ) : null}

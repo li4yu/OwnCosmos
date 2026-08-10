@@ -16,7 +16,7 @@ type FuturePulseProps = {
 export function FuturePulse({ stats }: FuturePulseProps) {
   return (
     <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-2.5 py-2">
-      <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+      <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
         前路摘要
       </p>
       <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs">

@@ -51,7 +51,7 @@ export function CycleTasksInline({ planId, tasks, compact }: Props) {
     <div className={compact ? "mt-3" : ""}>
       <p
         className={`font-mono tracking-wide text-[var(--mist)] ${
-          compact ? "mb-1.5 text-[10px]" : "mb-2 text-xs"
+          compact ? "mb-1.5 text-xs" : "mb-2 text-xs"
         }`}
       >
         子任务 · 每天可打一次
@@ -68,7 +68,7 @@ export function CycleTasksInline({ planId, tasks, compact }: Props) {
               <span className="min-w-0 flex-1 truncate text-sm text-[var(--paper)]">
                 {task.title}
               </span>
-              <span className="shrink-0 font-mono text-[10px] text-[var(--teal)]">
+              <span className="shrink-0 font-mono text-xs text-[var(--teal)]">
                 {count} 次
                 {already ? " · 今日已打" : ""}
               </span>
@@ -76,7 +76,7 @@ export function CycleTasksInline({ planId, tasks, compact }: Props) {
                 <button
                   type="button"
                   disabled={pending}
-                  className="ui-btn-ghost shrink-0 px-2 py-1 text-[11px]"
+                  className="ui-btn-ghost shrink-0 px-2 py-1 text-[13px]"
                   onClick={() => {
                     setError(null);
                     startTransition(async () => {
@@ -103,7 +103,7 @@ export function CycleTasksInline({ planId, tasks, compact }: Props) {
                 <button
                   type="button"
                   disabled={pending}
-                  className="ui-btn-ghost shrink-0 px-2 py-1 text-[11px]"
+                  className="ui-btn-ghost shrink-0 px-2 py-1 text-[13px]"
                   onClick={() => {
                     setError(null);
                     startTransition(async () => {

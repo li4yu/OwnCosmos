@@ -116,7 +116,7 @@ export function MaterialsPanel({
   return (
     <div className="flex flex-col gap-2">
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
           查询
         </p>
         <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
@@ -202,7 +202,7 @@ export function MaterialsPanel({
       </section>
 
       <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
           新建素材
         </p>
         <div className="mt-1.5 flex flex-col gap-1.5">
@@ -246,7 +246,7 @@ export function MaterialsPanel({
                   <h3 className="text-sm text-[var(--paper)]">
                     {item.title || "（无标题）"}
                   </h3>
-                  <p className="mt-0.5 font-mono text-[10px] text-[var(--teal)]">
+                  <p className="mt-0.5 font-mono text-xs text-[var(--teal)]">
                     {SOURCE_LABEL[item.sourceKind] ?? item.sourceKind}
                   </p>
                   <p className="mt-0.5 line-clamp-3 text-xs text-[var(--mist)]">

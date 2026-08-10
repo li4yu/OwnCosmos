@@ -52,7 +52,7 @@ export function YearAxis({
             <h3 className="text-sm tracking-[0.14em] text-[var(--paper)]">
               {block.year}
             </h3>
-            <p className="font-mono text-[10px] text-[var(--mist)]">
+            <p className="font-mono text-xs text-[var(--mist)]">
               {block.total} 条
             </p>
           </div>
@@ -79,7 +79,7 @@ export function YearAxis({
                   }`}
                   title={`${block.year}-${String(month).padStart(2, "0")} · ${count} 条`}
                 >
-                  <span className="font-mono text-[9px] text-[var(--mist)]">
+                  <span className="font-mono text-xs text-[var(--mist)]">
                     {month}月
                   </span>
                   <span
@@ -90,7 +90,7 @@ export function YearAxis({
                         : "color-mix(in srgb, var(--line) 40%, transparent)",
                     }}
                   />
-                  <span className="font-mono text-[9px] text-[var(--paper)]/80">
+                  <span className="font-mono text-xs text-[var(--paper)]/80">
                     {count || "·"}
                   </span>
                 </Link>

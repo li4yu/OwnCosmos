@@ -146,7 +146,7 @@ export function ForgotPasswordForm() {
     <div className="mx-auto flex w-full max-w-[380px] flex-col gap-4 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-[var(--dialog-shadow)] sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] tracking-[0.2em] text-[var(--teal)]">
+          <p className="font-mono text-xs tracking-[0.2em] text-[var(--teal)]">
             ACCOUNT
           </p>
           <h1 className="mt-1 text-xl tracking-[0.14em] text-[var(--paper)]">

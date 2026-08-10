@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HoverTip } from "@/components/ui/hover-tip";
 import { authClient } from "@/lib/auth-client";
 import {
   applyTheme,
@@ -57,18 +58,20 @@ export function ThemeToggle({ persistToUser = false }: ThemeToggleProps) {
   }
 
   const upcoming = nextTheme(theme);
+  const tip = `当前 ${themeLabel(theme)}，点击切换`;
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={saving}
-      className="ui-btn-ghost bg-[var(--field-bg)] text-[var(--paper)]"
-      aria-label={`切换到${themeLabel(upcoming)}`}
-      title={`当前 ${themeLabel(theme)}，点击切换`}
-    >
-      {saving ? "同步中…" : themeLabel(upcoming)}
-    </button>
+    <HoverTip tip={tip} variant="hint" nestInControl className="inline-flex">
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={saving}
+        className="ui-btn-ghost bg-[var(--field-bg)] text-[var(--paper)]"
+        aria-label={`切换到${themeLabel(upcoming)}`}
+      >
+        {saving ? "同步中…" : themeLabel(upcoming)}
+      </button>
+    </HoverTip>
   );
 }
 

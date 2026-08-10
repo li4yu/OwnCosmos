@@ -200,7 +200,7 @@ export function EssayEditor(props: EssayEditorProps) {
       return;
     }
     emitEssayDirty(false);
-    router.push("/app/past/gallery/essay-sediment");
+    router.push("/app/past/gallery?type=essay_sediment");
     router.refresh();
   }
 
@@ -238,7 +238,14 @@ export function EssayEditor(props: EssayEditorProps) {
 
   return (
     <>
-      <form action={formAction} className="flex flex-col gap-4">
+      <form
+        action={formAction}
+        className={
+          isEdit
+            ? "flex flex-col gap-4"
+            : "oc-compose__form flex flex-col gap-3"
+        }
+      >
         {!isEdit && props.folderId ? (
           <input type="hidden" name="folderId" value={props.folderId} />
         ) : null}
@@ -257,8 +264,23 @@ export function EssayEditor(props: EssayEditorProps) {
             </Link>
           </p>
         ) : null}
-        <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
-          标题
+
+        {isEdit ? (
+          <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
+            标题
+            <input
+              name="title"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                markDirty();
+              }}
+              className="auth-field"
+              placeholder="给这条思绪起个名字"
+              maxLength={120}
+            />
+          </label>
+        ) : (
           <input
             name="title"
             value={title}
@@ -266,14 +288,22 @@ export function EssayEditor(props: EssayEditorProps) {
               setTitle(e.target.value);
               markDirty();
             }}
-            className="auth-field"
-            placeholder="给这条思绪起个名字"
+            className="oc-compose__title"
+            placeholder="标题（可留空）"
             maxLength={120}
+            autoFocus
+            aria-label="标题"
           />
-        </label>
+        )}
 
-        <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
-          正文
+        <label
+          className={
+            isEdit
+              ? "flex flex-col gap-1.5 text-sm text-[var(--mist)]"
+              : "oc-compose__body flex flex-col gap-1.5"
+          }
+        >
+          {isEdit ? "正文" : null}
           <EssayRichEditor
             ref={richEditorRef}
             value={body}
@@ -285,10 +315,10 @@ export function EssayEditor(props: EssayEditorProps) {
               markDirty();
             }}
           />
-          <div className="mt-1.5 flex flex-wrap gap-2">
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="ui-btn-ghost px-3 py-1.5 text-xs text-[var(--teal)]"
+              className="ui-btn-ghost ui-btn-sm !w-auto px-3 text-xs text-[var(--teal)]"
               onClick={() => {
                 setActionError(null);
                 setPolishOpen(true);
@@ -296,46 +326,66 @@ export function EssayEditor(props: EssayEditorProps) {
             >
               AI 润色
             </button>
-            <span className="self-center text-[10px] text-[var(--mist)]">
-              选区或全文 · 多风格 · 采纳才写回
+            <BorrowMemoryPanel
+              onInsert={(text) => {
+                const snippet = text.trim();
+                if (!snippet) return;
+                setBody((prev) => {
+                  const block = `<blockquote><p>${snippet
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll("\n", "<br>")}</p></blockquote>`;
+                  const base = prev.trim() ? sanitizeEssayHtml(prev) : "";
+                  return sanitizeEssayHtml(`${base}${block}`);
+                });
+                markDirty();
+              }}
+            />
+            <span className="self-center text-xs text-[var(--mist)]">
+              润色选区或全文 · 引用仅插入副本
             </span>
           </div>
         </label>
 
-        <MoodPicker
-          value={mood}
-          onChange={(next) => {
-            setMood(next);
-            markDirty();
-          }}
-        />
+        <div className={isEdit ? "contents" : "oc-compose__meta"}>
+          <MoodPicker
+            value={mood}
+            onChange={(next) => {
+              setMood(next);
+              markDirty();
+            }}
+          />
 
-        <TagField
-          allTags={allTags}
-          selectedIds={tagIds}
-          onChange={(ids) => {
-            setTagIds(ids);
-            markDirty();
-          }}
-          onTagsMutated={() => router.refresh()}
-        />
+          <TagField
+            allTags={allTags}
+            selectedIds={tagIds}
+            onChange={(ids) => {
+              setTagIds(ids);
+              markDirty();
+            }}
+            onTagsMutated={() => router.refresh()}
+          />
 
-        <BorrowMemoryPanel
-          onInsert={(text) => {
-            const snippet = text.trim();
-            if (!snippet) return;
-            setBody((prev) => {
-              const block = `<blockquote><p>${snippet
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll("\n", "<br>")}</p></blockquote>`;
-              const base = prev.trim() ? sanitizeEssayHtml(prev) : "";
-              return sanitizeEssayHtml(`${base}${block}`);
-            });
-            markDirty();
-          }}
-        />
+          {isEdit ? (
+            <BorrowMemoryPanel
+              onInsert={(text) => {
+                const snippet = text.trim();
+                if (!snippet) return;
+                setBody((prev) => {
+                  const block = `<blockquote><p>${snippet
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll("\n", "<br>")}</p></blockquote>`;
+                  const base = prev.trim() ? sanitizeEssayHtml(prev) : "";
+                  return sanitizeEssayHtml(`${base}${block}`);
+                });
+                markDirty();
+              }}
+            />
+          ) : null}
+        </div>
 
         {state.error ? (
           <p className="text-sm text-[var(--danger)]" role="alert">
@@ -356,13 +406,23 @@ export function EssayEditor(props: EssayEditorProps) {
         ) : null}
 
         {dirty ? (
-          <p className="font-mono text-[10px] tracking-wide text-[var(--mist)]">
+          <p className="font-mono text-xs tracking-wide text-[var(--mist)]">
             有未保存更改；离开页面前请先保存
           </p>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button type="submit" disabled={pending} className="ui-btn-primary !w-auto px-5">
+        <div
+          className={
+            isEdit
+              ? "flex flex-wrap items-center gap-2"
+              : "oc-compose__actions flex flex-wrap items-center gap-2"
+          }
+        >
+          <button
+            type="submit"
+            disabled={pending}
+            className="ui-btn-primary !w-auto px-5"
+          >
             {pending ? "保存中…" : isEdit ? "保存" : "创建并保存"}
           </button>
           <button

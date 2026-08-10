@@ -10,7 +10,6 @@ import {
   gte,
   ilike,
   inArray,
-  isNotNull,
   isNull,
   lt,
   lte,
@@ -41,7 +40,6 @@ import {
   ARCHIVE_TYPE_PLAN_ARCHIVE,
   ARCHIVE_TYPE_PLAN_CYCLE,
   BODY_FORMAT_PLAIN,
-  PLAN_STATUS_DONE,
   WIPE_ARCHIVE_TYPES,
   archiveItem,
   archiveTopicEssay,
@@ -398,9 +396,12 @@ export async function setArchiveKept(
   const item = await getArchiveItem(userId, itemId);
   if (!item) return { ok: false, error: "条目不存在" };
   if (kept) {
+    if (item.inKnowledge) return { ok: true };
     if (!archiveHasKeepableText(item)) {
       return { ok: false, error: "纯图无文字，无法进知识库" };
     }
+  } else if (!item.inKnowledge) {
+    return { ok: true };
   }
   const now = new Date();
   await getDb()
@@ -432,14 +433,20 @@ export async function setArchiveKeptMany(
 
   if (rows.length === 0) return { ok: false, error: "未找到所选条目" };
 
-  let targetIds = rows.map((r) => r.id);
-  if (kept) {
-    targetIds = rows.filter(archiveHasKeepableText).map((r) => r.id);
-    if (targetIds.length === 0) {
-      return { ok: false, error: "所选条目均无可用文本，无法进知识库" };
-    }
+  const targetRows = kept
+    ? rows.filter((r) => !r.inKnowledge && archiveHasKeepableText(r))
+    : rows.filter((r) => r.inKnowledge);
+
+  if (targetRows.length === 0) {
+    return {
+      ok: false,
+      error: kept
+        ? "所选条目均已进知识库，或无可进文本"
+        : "所选条目均未进知识库，无需移出",
+    };
   }
 
+  const targetIds = targetRows.map((r) => r.id);
   const now = new Date();
   await getDb()
     .update(archiveItem)
@@ -488,8 +495,8 @@ async function hardDeleteArchiveRows(
     rows.map((r) => r.id),
   );
 
-  /** 规划归档删除归档时，同步清掉来日途「已完成」里对应计划 */
-  const completedPlanIds = [
+  /** 规划归档删除时，同步清掉来日途对应计划（已完成列表不再残留） */
+  const linkedPlanIds = [
     ...new Set(
       rows
         .filter(
@@ -512,16 +519,10 @@ async function hardDeleteArchiveRows(
       ),
     );
 
-  if (completedPlanIds.length > 0) {
+  if (linkedPlanIds.length > 0) {
     await getDb()
       .delete(plan)
-      .where(
-        and(
-          eq(plan.userId, userId),
-          inArray(plan.id, completedPlanIds),
-          or(isNotNull(plan.archivedAt), eq(plan.status, PLAN_STATUS_DONE))!,
-        ),
-      );
+      .where(and(eq(plan.userId, userId), inArray(plan.id, linkedPlanIds)));
   }
 
   return rows.length;

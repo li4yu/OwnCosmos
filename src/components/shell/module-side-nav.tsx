@@ -1,13 +1,9 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PoeticName } from "@/components/ui/poetic-name";
-import {
-  GALLERY_SECTIONS,
-  matchGallerySection,
-} from "@/lib/gallery-sections";
 import {
   matchSubfeature,
   type AppModuleDef,
@@ -29,15 +25,6 @@ type ModuleSideNavProps = {
 };
 
 function childrenForSub(moduleId: string, sub: SubfeatureDef): NavChild[] {
-  if (moduleId === "past" && sub.id === "gallery") {
-    return GALLERY_SECTIONS.map((s) => ({
-      id: s.id,
-      href: s.href,
-      name: s.name,
-      tip: s.tip,
-      ready: s.ready,
-    }));
-  }
   if (moduleId === "present" && sub.id === "essays") {
     return [
       {
@@ -79,13 +66,8 @@ export function ModuleSideNav({
   onToggleCollapsed,
 }: ModuleSideNavProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const activeSub = matchSubfeature(pathname, module.id);
-  const activeGallery = matchGallerySection(
-    pathname,
-    searchParams.get("section"),
-  );
 
   const [dirty, setDirty] = useState(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
@@ -184,7 +166,7 @@ export function ModuleSideNav({
           }`}
         >
           {!collapsed ? (
-            <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--teal)]">
+            <p className="font-mono text-xs tracking-[0.16em] text-[var(--teal)]">
               模块
             </p>
           ) : null}
@@ -288,7 +270,7 @@ export function ModuleSideNav({
                     <span className="inline-flex flex-wrap items-center gap-1">
                       <PoeticName name={sub.name} tip={sub.tip} nestInControl />
                       {!sub.ready ? (
-                        <span className="font-mono text-[9px] opacity-60">
+                        <span className="font-mono text-xs opacity-60">
                           稍后
                         </span>
                       ) : null}
@@ -300,10 +282,8 @@ export function ModuleSideNav({
                   <ul className="mb-0.5 ml-4 mt-px flex flex-col gap-px border-l border-[var(--line)] pl-1.5">
                     {children.map((child) => {
                       const childActive =
-                        sub.id === "gallery"
-                          ? activeGallery?.id === child.id
-                          : pathname === child.href ||
-                            pathname.startsWith(`${child.href}/`);
+                        pathname === child.href ||
+                        pathname.startsWith(`${child.href}/`);
                       return (
                         <li key={child.id}>
                           <div
@@ -313,7 +293,7 @@ export function ModuleSideNav({
                             onKeyDown={(e) =>
                               activateOnKey(e, () => go(child.href))
                             }
-                            className={`w-full cursor-pointer rounded-md px-1.5 py-1 text-left text-xs tracking-[0.03em] transition ${
+                            className={`w-full cursor-pointer rounded-md px-1.5 py-1 text-left text-sm tracking-[0.03em] transition ${
                               childActive
                                 ? "bg-[var(--field-bg)] text-[var(--paper)] ring-1 ring-[var(--amber)]/40"
                                 : "text-[var(--mist)] hover:bg-[var(--field-bg)]/50 hover:text-[var(--paper)]"

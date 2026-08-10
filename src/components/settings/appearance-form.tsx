@@ -49,7 +49,7 @@ export function AppearanceForm({ initialTheme }: AppearanceFormProps) {
       <p className="text-xs text-[var(--mist)]">
         登录后主题以账号设置为准。未登录访客仍可用页头临时切换（不入库）。
       </p>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {THEME_OPTIONS.map((opt) => {
           const active = theme === opt.id;
           return (
@@ -82,12 +82,12 @@ export function AppearanceForm({ initialTheme }: AppearanceFormProps) {
                   {opt.label}
                 </span>
                 {active ? (
-                  <span className="font-mono text-[9px] tracking-[0.14em] text-[var(--teal)]">
+                  <span className="font-mono text-xs tracking-[0.14em] text-[var(--teal)]">
                     ON
                   </span>
                 ) : null}
               </span>
-              <span className="text-[10px] text-[var(--mist)]">{opt.hint}</span>
+              <span className="text-xs text-[var(--mist)]">{opt.hint}</span>
             </button>
           );
         })}

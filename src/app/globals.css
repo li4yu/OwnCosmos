@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -77,7 +77,7 @@
     radial-gradient(ellipse 70% 50% at 50% 110%, rgba(168, 148, 108, 0.65), transparent 70%);
 }
 
-/* 墨白 · 银月炭黑（避开纯黑死灰，留月光与呼吸） */
+/* ?? � ??????????????????? */
 [data-theme="mono"] {
   --void: #14171c;
   --ink: #1e242c;
@@ -128,14 +128,76 @@
   background-attachment: fixed;
 }
 
+/* 素曜 · 白色高级 */
+[data-theme="lumen"] {
+  --void: #f4f6f8;
+  --ink: #e8ecf1;
+  --mist: #5a6573;
+  --paper: #1c2430;
+  --amber: #b08d57;
+  --amber-soft: rgba(176, 141, 87, 0.22);
+  --teal: #4a6d78;
+  --line: rgba(28, 36, 48, 0.1);
+  --glow: rgba(176, 141, 87, 0.14);
+  --panel: rgba(255, 255, 255, 0.94);
+  --background: var(--void);
+  --foreground: var(--paper);
+  --field-bg: #ffffff;
+  --field-fg: #1c2430;
+  --field-placeholder: rgba(90, 101, 115, 0.68);
+  --field-border: rgba(28, 36, 48, 0.14);
+  --field-focus: #b08d57;
+  --on-amber: #fffaf3;
+  --overlay: rgba(28, 36, 48, 0.28);
+  --dialog-shadow: 0 24px 56px rgba(28, 36, 48, 0.12);
+  --danger: #b54a4a;
+  --on-danger: #fff6f5;
+  --font-noto-serif: "Noto Serif SC";
+  --font-cormorant: "Cormorant Garamond";
+  --font-mono: "JetBrains Mono";
+  --topbar: rgba(244, 246, 248, 0.9);
+  --pill-bg: rgba(255, 255, 255, 0.78);
+  --core-text: #fffaf3;
+  --star-rgb: 90, 101, 115;
+  --nebula:
+    radial-gradient(ellipse 58% 42% at 12% 8%, rgba(176, 141, 87, 0.1), transparent 58%),
+    radial-gradient(ellipse 48% 36% at 88% 18%, rgba(74, 109, 120, 0.08), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(232, 236, 241, 0.9), transparent 70%);
+}
+
+[data-theme="lumen"] .atmosphere-wash {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -10%, rgba(255, 255, 255, 0.95), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(176, 141, 87, 0.06), transparent 50%),
+    var(--background);
+}
+
+[data-theme="lumen"] body {
+  background-image: var(--nebula);
+  background-attachment: fixed;
+}
+
+:root {
+  /* 随视口缩放的字号阶梯，避免小屏裁字、大屏过疏 */
+  --oc-text: clamp(0.875rem, 0.82rem + 0.28vw, 0.9375rem);
+  --oc-text-sm: clamp(0.75rem, 0.7rem + 0.22vw, 0.875rem);
+  --oc-text-xs: clamp(0.6875rem, 0.65rem + 0.18vw, 0.8125rem);
+  --oc-title: clamp(1.05rem, 0.95rem + 0.45vw, 1.28rem);
+  --oc-motto: clamp(1.45rem, 1.05rem + 1.6vw, 2.35rem);
+  --oc-motto-track: clamp(0.12em, 0.06em + 0.4vw, 0.28em);
+  --oc-mode-track: clamp(0.04em, 0.03em + 0.25vw, 0.14em);
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: var(--oc-text);
+  line-height: 1.6;
   transition: background 0.45s ease, color 0.35s ease;
 }
 
-/* 全站滚动条：对齐时间胶囊细条（含首页「今日打卡」等 overflow 区域） */
+/* ????????????????????????? overflow ??? */
 html {
   scrollbar-width: thin;
   scrollbar-color:
@@ -171,11 +233,31 @@ button,
   font-family: inherit;
 }
 
+/* 与顶栏大模块雅名悬停同款 */
 .ui-tooltip {
   font-family: var(--font-noto-serif), "Songti SC", serif;
+  max-width: min(280px, calc(100vw - 24px));
+  border-radius: 0.65rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 0.55rem 0.8rem;
+  text-align: left;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--mist);
+  box-shadow: var(--dialog-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
-/* 时间胶囊星点悬停 */
+/* 图标短提示：同字体色板，仅略紧凑 */
+.ui-tooltip--hint {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+/* 胶囊舱专用悬停 */
 .ui-tooltip--capsule {
   border-color: color-mix(in srgb, var(--amber) 45%, var(--line));
   background: color-mix(in srgb, var(--panel) 92%, #070b14);
@@ -183,6 +265,7 @@ button,
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   line-height: 1.55;
+  white-space: normal;
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--amber) 18%, transparent),
     0 16px 40px rgba(0, 0, 0, 0.45);
@@ -191,7 +274,7 @@ button,
   display: block;
   margin-top: 0.2rem;
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   letter-spacing: 0.14em;
   color: var(--teal);
 }
@@ -231,8 +314,31 @@ button,
     color-scheme: light;
   }
 
+  [data-theme="lumen"] .auth-field {
+    color-scheme: light;
+  }
+
   [data-theme="mono"] .auth-field {
     color-scheme: dark;
+  }
+
+  /* ?? select???? color-scheme??????????? */
+  select {
+    color: var(--field-fg);
+    background-color: var(--field-bg);
+    border-color: var(--field-border);
+    color-scheme: dark;
+  }
+  [data-theme="khaki"] select {
+    color-scheme: light;
+  }
+  [data-theme="lumen"] select {
+    color-scheme: light;
+  }
+  select option,
+  select optgroup {
+    color: CanvasText;
+    background-color: Canvas;
   }
 
   .auth-submit,
@@ -279,16 +385,16 @@ button,
   }
 
   .ui-btn-sm {
-    @apply px-2.5 py-1 text-xs tracking-[0.06em];
+    @apply px-3 py-1.5 text-sm tracking-[0.05em];
   }
 
   /**
-   * 悬停统一（交互强调色 = amber，勿混用 teal）
-   * - card: 有边框的卡片 / 列表行
-   * - link: mist 文字链 → amber
-   * - link-accent: 已是 amber 的入口链
-   * - chip: 分段 / 筛选未选中
-   * - bar: 图表柱等色块
+   * ?????????? = amber???? teal?
+   * - card: ?????? / ???
+   * - link: mist ??? ? amber
+   * - link-accent: ?? amber ????
+   * - chip: ?? / ?????
+   * - bar: ??????
    */
   .ui-hover-card {
     @apply transition hover:border-[var(--amber)];
@@ -322,8 +428,8 @@ button,
 }
 
 /**
- * 图表柱悬停（放在 @layer 外，避免被未分层的模块样式盖住）
- * 默认色用 --ui-bar；悬停整列加 .group 即可
+ * ???????? @layer ????????????????
+ * ???? --ui-bar?????? .group ??
  */
 .ui-hover-bar {
   --ui-bar: color-mix(in srgb, var(--teal) 70%, transparent);
@@ -536,13 +642,27 @@ button,
   text-indent: 0.32em;
 }
 .focus-chamber__nav-link {
-  font-family: var(--font-cormorant), Georgia, serif;
-  font-size: 0.92rem;
-  letter-spacing: 0.14em;
-  color: var(--mist);
-  padding-top: 0.4rem;
-  transition: color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.35rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  background: color-mix(in srgb, var(--panel) 55%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  color: var(--paper);
+  line-height: 1;
   white-space: nowrap;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 .focus-chamber__nav-link:first-child {
   justify-self: start;
@@ -552,6 +672,11 @@ button,
 }
 .focus-chamber__nav-link:hover {
   color: var(--amber);
+  border-color: color-mix(in srgb, var(--amber) 45%, var(--line));
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
+}
+.focus-chamber__nav-link span {
+  line-height: 1;
 }
 
 /* ???? */
@@ -756,7 +881,7 @@ button,
     width 1s cubic-bezier(0.22, 1, 0.36, 1),
     transform 1s cubic-bezier(0.22, 1, 0.36, 1);
 }
-/* 逆漏空闲：星盘略缩小，腾出设定区 */
+/* ???????????????? */
 .focus-chamber.is-idle .focus-dock:has(.focus-chamber__duration) {
   width: min(78vw, 300px);
   top: 48%;
@@ -778,7 +903,7 @@ button,
   margin-top: 0.15rem;
 }
 
-/* 逆漏 / 顺钟：启钟前设置区（嵌在星盘下方） */
+/* ?? / ????????????????? */
 .focus-chamber__setup {
   display: flex;
   width: 100%;
@@ -789,7 +914,7 @@ button,
 }
 .focus-chamber__setup-label {
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   letter-spacing: 0.16em;
   color: var(--teal);
   text-align: center;
@@ -812,7 +937,7 @@ button,
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: var(--mist);
 }
 .focus-chamber__duration-input {
@@ -838,7 +963,7 @@ button,
   border: 1px solid var(--line);
   border-radius: 9999px;
   padding: 0.28rem 0.7rem;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.06em;
   color: var(--mist);
   background: color-mix(in srgb, var(--panel) 55%, transparent);
@@ -853,7 +978,7 @@ button,
   background: var(--amber);
   color: var(--on-amber);
 }
-/* 凝时绑定目标：自定义下拉 */
+/* ???????????? */
 .focus-bind {
   position: relative;
   z-index: 5;
@@ -864,7 +989,7 @@ button,
   gap: 0.35rem;
 }
 .focus-bind__label {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.08em;
   color: var(--mist);
   text-align: center;
@@ -901,7 +1026,7 @@ button,
 }
 .focus-bind__chevron {
   flex-shrink: 0;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: var(--teal);
 }
 .focus-bind__menu {
@@ -927,7 +1052,7 @@ button,
 .focus-bind__group-label {
   padding: 0.35rem 0.65rem 0.2rem;
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.58rem;
+  font-size: 0.75rem;
   letter-spacing: 0.16em;
   color: var(--teal);
 }
@@ -1114,14 +1239,14 @@ button,
   color: var(--mist);
   text-align: center;
 }
-/* 空闲：跟在启钟按钮下方，避免与中央 dial 叠字 */
+/* ????????????????? dial ?? */
 .focus-chamber.is-idle .focus-chamber__msg {
   position: static;
   transform: none;
   margin-top: 0.15rem;
   padding: 0 0.5rem;
 }
-/* 进行中：贴底居中，避开左右控制条 */
+/* ???????????????? */
 .focus-chamber.is-engaged .focus-chamber__msg {
   position: absolute;
   left: 50%;
@@ -1338,7 +1463,7 @@ button,
   }
 }
 
-/* 登录后内容区：与顶栏同宽；大屏放宽上限，减少两侧空带 */
+/* ?????????????????????????? */
 .app-shell-width {
   width: 100%;
   max-width: 80rem; /* ~1280px */
@@ -1359,13 +1484,13 @@ button,
 }
 @media (min-width: 1536px) {
   .app-shell-width {
-    max-width: 96rem; /* ~1536px，宽屏更满 */
+    max-width: 96rem; /* ~1536px????? */
     padding-left: 1.5rem;
     padding-right: 1.5rem;
   }
 }
 
-/* 列表筛选：不套卡片，底部分隔线融入页面节奏 */
+/* ????????????????????? */
 .oc-filter {
   display: flex;
   flex-direction: column;
@@ -1384,8 +1509,8 @@ button,
 .oc-filter__eyebrow {
   margin: 0;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.14em;
   color: var(--teal);
 }
 .oc-filter__actions {
@@ -1402,33 +1527,97 @@ button,
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  font-size: 0.8125rem;
+  font-size: var(--oc-text-sm);
   color: var(--mist);
+  min-width: 0;
 }
 .oc-filter__hint {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--danger, #c45);
 }
 
 /*
- * 笺页流布局（非首页）
- * 列表像笺纸：细线分隔、无厚卡片；编辑区为开敞笺面。
+ * ??????????
+ * ?????????????????????????
  */
 .oc-back {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   margin-bottom: 0.35rem;
-  padding: 0;
+  padding: 0.15rem;
   border: none;
   background: transparent;
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   color: var(--mist);
   transition: color 0.2s ease;
+  line-height: 0;
 }
 .oc-back:hover {
+  color: var(--amber);
+}
+
+.oc-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 0.2rem;
+  border: none;
+  background: transparent;
+  color: var(--mist);
+  line-height: 0;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.18s ease, opacity 0.18s ease;
+}
+.oc-icon-action:hover:not(:disabled) {
+  color: var(--amber);
+}
+.oc-icon-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.oc-icon-action--ghost {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
+  background: color-mix(in srgb, var(--panel) 35%, transparent);
+  color: var(--mist);
+}
+.oc-icon-action--ghost:hover:not(:disabled) {
+  color: var(--paper);
+  border-color: color-mix(in srgb, var(--teal) 40%, var(--line));
+}
+.oc-icon-action--primary {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--amber) 50%, var(--line));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--amber) 92%, #fff),
+    color-mix(in srgb, var(--amber) 78%, var(--paper))
+  );
+  color: var(--on-amber);
+}
+.oc-icon-action--primary:hover:not(:disabled) {
+  color: var(--on-amber);
+  filter: brightness(1.05);
+}
+.oc-icon-action--accent {
+  color: var(--amber);
+}
+.oc-icon-action--accent:hover:not(:disabled) {
+  color: var(--paper);
+}
+.oc-icon-action--teal {
+  color: var(--teal);
+}
+.oc-icon-action--teal:hover:not(:disabled) {
   color: var(--amber);
 }
 .oc-page-head {
@@ -1444,24 +1633,24 @@ button,
 .oc-page-head__title {
   margin: 0;
   font-family: var(--font-noto-serif), "Songti SC", serif;
-  font-size: 1.2rem;
+  font-size: var(--oc-title);
   font-weight: 600;
-  letter-spacing: 0.16em;
-  line-height: 1.25;
+  letter-spacing: 0.14em;
+  line-height: 1.3;
   color: var(--paper);
 }
 .oc-page-head__desc {
   margin: 0.35rem 0 0;
-  font-size: 0.8125rem;
+  font-size: 0.9rem;
   line-height: 1.55;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   color: var(--mist);
 }
 .oc-page-head__eyebrow {
   margin: 0 0 0.2rem;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.16em;
   color: var(--teal);
 }
 
@@ -1494,14 +1683,14 @@ button,
 .oc-scroll__title {
   margin: 0;
   font-family: var(--font-noto-serif), "Songti SC", serif;
-  font-size: 1.02rem;
-  letter-spacing: 0.06em;
+  font-size: 1.06rem;
+  letter-spacing: 0.05em;
   color: var(--paper);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 .oc-scroll__body {
   margin: 0.35rem 0 0;
-  font-size: 0.8125rem;
+  font-size: 0.9rem;
   line-height: 1.55;
   color: var(--mist);
 }
@@ -1512,8 +1701,8 @@ button,
   gap: 0.2rem;
   flex-shrink: 0;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
   color: var(--mist);
   text-align: right;
 }
@@ -1535,6 +1724,77 @@ button,
   padding-top: 1rem;
   border-top: 1px solid color-mix(in srgb, var(--line) 45%, transparent);
 }
+
+/* 新建随笔 · 轻量笺面（少撑高、工具横排） */
+.oc-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.oc-compose .oc-page-head {
+  margin-bottom: 0;
+  padding-bottom: 0.55rem;
+}
+.oc-compose__sheet {
+  padding: 0.85rem 0.95rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+}
+.oc-compose__form {
+  gap: 0.75rem;
+}
+.oc-compose__title {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  background: transparent;
+  padding: 0.2rem 0.05rem 0.55rem;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: clamp(1.15rem, 1rem + 0.55vw, 1.4rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  color: var(--paper);
+  outline: none;
+}
+.oc-compose__title::placeholder {
+  color: color-mix(in srgb, var(--mist) 72%, transparent);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+.oc-compose__title:focus {
+  border-bottom-color: color-mix(in srgb, var(--amber) 55%, var(--line));
+}
+.oc-compose__body {
+  min-height: 0;
+}
+.oc-compose__body .oc-essay-editor,
+.oc-compose__body [contenteditable="true"],
+.oc-compose__body .ProseMirror {
+  min-height: min(28vh, 14rem);
+}
+.oc-compose__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-top: 0.1rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed color-mix(in srgb, var(--line) 58%, transparent);
+}
+.oc-compose__meta > * {
+  width: auto;
+  max-width: 100%;
+}
+.oc-compose__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+  padding-top: 0.55rem;
+}
+
 .oc-empty {
   margin: 0.5rem 0;
   padding: 1.75rem 0.5rem;
@@ -1581,7 +1841,7 @@ button,
   color: var(--paper);
 }
 
-/* 流思笺 · 富文本编辑（笺面工具条，非厚卡片） */
+/* ??? � ????????????????? */
 .oc-essay-editor {
   display: flex;
   flex-direction: column;
@@ -1600,7 +1860,7 @@ button,
   background: transparent;
   color: var(--mist);
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.08em;
   padding: 0.28rem 0.45rem;
   cursor: pointer;
@@ -1709,7 +1969,7 @@ button,
   color: var(--mist);
 }
 
-/* 首页：紧凑纵向节奏，预留给后续图表 */
+/* ????????????????? */
 .home-v1 {
   display: flex;
   flex-direction: column;
@@ -1768,7 +2028,7 @@ button,
 .home-v1__help-link {
   margin-left: 0.45rem;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.08em;
   color: var(--amber);
   text-decoration: none;
@@ -1786,7 +2046,7 @@ button,
   white-space: nowrap;
 }
 
-/* 首页 · 今日脉搏（笺墨线形，非厚仪表盘） */
+/* ?? � ???????????????? */
 .home-v1__pulse {
   display: grid;
   gap: 1rem 1.5rem;
@@ -1880,7 +2140,7 @@ button,
 }
 .home-v1__pulse-svg-tick {
   fill: var(--mist);
-  font-size: 9px;
+  font-size: 12px;
   font-family: var(--font-mono), ui-monospace, monospace;
   letter-spacing: 0.04em;
 }
@@ -1920,7 +2180,7 @@ button,
   stroke-width: 1.6;
 }
 
-/* 构成：比例墨条 + 行账，替代饼图 */
+/* ??????? + ??????? */
 .home-v1__pulse-mix {
   display: flex;
   flex-direction: column;
@@ -1943,7 +2203,7 @@ button,
 }
 .home-v1__pulse-mix-unit {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.12em;
   color: var(--mist);
 }
@@ -2015,7 +2275,7 @@ button,
 }
 .home-v1__pulse-mix-row-val {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.06em;
   color: var(--paper);
 }
@@ -2033,7 +2293,7 @@ button,
   padding-block: 0.15rem;
 }
 @media (min-width: 900px) {
-  /* 左栏贴合临期方卡，右栏吃剩余，不平分 */
+  /* ?????????????????? */
   .home-v1__split {
     grid-template-columns: minmax(14rem, 17.5rem) minmax(0, 1fr);
     align-items: start;
@@ -2063,7 +2323,7 @@ button,
   color: var(--mist);
 }
 
-/* 首页双栏标题行：同一高度、同一字号，左右对齐 */
+/* ?????????????????????? */
 .home-v1__pane {
   min-width: 0;
 }
@@ -2121,7 +2381,7 @@ button,
   color: var(--mist);
 }
 
-/* 首页双栏：去厚重卡片壳，只留分区，避免与内层方卡叠框 */
+/* ?????????????????????????? */
 .home-v1__due,
 .home-v1__daily {
   padding: 0;
@@ -2138,7 +2398,7 @@ button,
   }
 }
 
-/* 首页内临期方卡略收，避免占半屏 */
+/* ??????????????? */
 .home-v1__due .due-deck__stage,
 .home-v1__due .due-deck__controls,
 .home-v1__due .due-deck__dots {
@@ -2154,7 +2414,7 @@ button,
   overflow: auto;
 }
 
-/* —— 临期帖方形层叠翻阅 —— */
+/* ?? ????????? ?? */
 .due-deck {
   display: flex;
   flex-direction: column;
@@ -2340,7 +2600,7 @@ button,
 }
 
 .home-v1__daily {
-  /* 与 .home-v1__due 一致：透明分区，不另套强调边框 */
+  /* ? .home-v1__due ??????????????? */
   border: none;
   background: transparent;
   box-shadow: none;
@@ -2423,7 +2683,7 @@ button,
   margin-top: 0.1rem;
   border-radius: 9999px;
   border: 1px solid var(--line);
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: var(--mist);
 }
 .home-v1__daily-item--done .home-v1__daily-mark {
@@ -2537,7 +2797,7 @@ button,
 .home-v1__jump-eyebrow {
   display: block;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.14em;
   color: var(--teal);
 }
@@ -2595,7 +2855,7 @@ button,
   }
 }
 
-/* 时间胶囊舱：全屏沉浸（类顺钟） */
+/* ??????????????? */
 .capsule-chamber {
   position: fixed;
   inset: 0;
@@ -2669,19 +2929,51 @@ button,
   pointer-events: auto;
 }
 .capsule-chamber__nav {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.35rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  background: color-mix(in srgb, var(--panel) 55%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: 0.9rem;
   letter-spacing: 0.12em;
-  color: var(--mist);
+  color: var(--paper);
+  line-height: 1;
   text-decoration: none;
-  transition: color 0.2s ease;
+  white-space: nowrap;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 .capsule-chamber__nav:hover {
-  color: var(--paper);
+  color: var(--amber);
+  border-color: color-mix(in srgb, var(--amber) 45%, var(--line));
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
 }
 .capsule-chamber__nav--ghost {
   justify-self: end;
-  opacity: 0.7;
+  min-height: auto;
+  padding: 0.35rem 0.2rem;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--mist);
+  opacity: 0.85;
+  pointer-events: none;
+}
+.capsule-chamber__nav--back {
+  justify-self: start;
 }
 .capsule-chamber__brand {
   text-align: center;
@@ -2701,7 +2993,7 @@ button,
   color: var(--paper);
 }
 .capsule-chamber__field {
-  /* 全屏漂浮；顶栏/快捷栏/底部按钮用更高 z-index 盖住可点区域 */
+  /* ???????/???/??????? z-index ?????? */
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -2786,7 +3078,7 @@ button,
   border-radius: 999px;
   opacity: 0.7;
 }
-/* 已解锁：琥珀暖光 */
+/* ???????? */
 .capsule-chamber__node.is-ready .capsule-chamber__node-float {
   animation-duration: calc(var(--dur) * 0.9);
 }
@@ -2811,7 +3103,7 @@ button,
 .capsule-chamber__node.is-ready .capsule-chamber__node-ring {
   border: 1px solid color-mix(in srgb, var(--amber) 65%, transparent);
 }
-/* 未解锁：青绿冷光 */
+/* ???????? */
 .capsule-chamber__node.is-locked .capsule-chamber__node-core {
   background:
     radial-gradient(
@@ -2854,7 +3146,7 @@ button,
       0 0 34px color-mix(in srgb, var(--amber) 65%, transparent);
   }
 }
-/* 全屏慢游：上下左右都动，但收在视口内 */
+/* ?????????????????? */
 @keyframes capsule-node-drift-1 {
   0% {
     transform: translate(0, 0);
@@ -2924,7 +3216,7 @@ button,
   }
 }
 
-/* 已解锁快捷查看 */
+/* ??????? */
 .capsule-chamber__ready {
   position: absolute;
   top: 5.8rem;
@@ -2999,7 +3291,7 @@ button,
 }
 .capsule-chamber__ready-item-date {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   color: var(--amber);
   opacity: 0.85;
@@ -3263,7 +3555,7 @@ button,
   }
 }
 
-/* 时间胶囊到期：星核浮标 + 启封动效（不归档） */
+/* ??????????? + ????????? */
 .capsule-orb {
   position: fixed;
   right: 1.1rem;
@@ -3343,7 +3635,7 @@ button,
   right: 0;
   bottom: 0;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-align: center;
   color: var(--mist);
@@ -4685,9 +4977,9 @@ button,
   }
 }
 
-/* —— 伴读桌宠壳层 —— */
+/* ?? ?????? ?? */
 .companion-root {
-  /* 不用 transform，避免固定菜单被困在 108px 盒子里 */
+  /* ?? transform?????????? 108px ??? */
 }
 .companion-dock--above {
   bottom: 100%;
@@ -4698,7 +4990,7 @@ button,
   margin-top: 0.55rem;
 }
 
-/* —— AI 对话窗：实底不透明（跟主题变量，免逐主题硬编码） —— */
+/* ?? AI ???????????????????????? ?? */
 .companion-chat {
   border: 1px solid var(--line);
   border-radius: 0.55rem;
@@ -4713,13 +5005,13 @@ button,
 .companion-chat__eyebrow {
   margin: 0;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   color: var(--teal);
 }
 .companion-chat__status {
   margin: 0.1rem 0 0;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--mist);
 }
 .companion-chat__tool {
@@ -4782,7 +5074,7 @@ button,
 .companion-chat__intent {
   margin: 0.3rem 0 0;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--mist);
 }
 .companion-chat__foot {
@@ -4820,7 +5112,7 @@ button,
   background: color-mix(in srgb, var(--teal) 22%, var(--panel));
 }
 
-/* —— 主动轻语气泡 —— */
+/* ?? ?????? ?? */
 .companion-bubble {
   position: relative;
   width: min(92vw, 240px);
@@ -4840,7 +5132,7 @@ button,
 .companion-bubble__label {
   margin: 0;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   color: var(--teal);
 }
@@ -4862,7 +5154,7 @@ button,
   border-radius: 999px;
   background: color-mix(in srgb, var(--void) 35%, transparent);
   padding: 0.2rem 0.65rem;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.08em;
   color: var(--mist);
   cursor: pointer;
@@ -4933,7 +5225,7 @@ button,
   opacity: 1;
 }
 
-/* —— 伴读对话 · 快捷跳转 —— */
+/* ?? ???? � ???? ?? */
 .companion-jump {
   margin-top: 0.55rem;
   padding-top: 0.45rem;
@@ -4942,7 +5234,7 @@ button,
 .companion-jump__label {
   margin: 0 0 0.35rem;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   color: var(--teal);
 }
@@ -4978,7 +5270,7 @@ button,
   grid-column: 1;
   grid-row: 1;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   color: var(--teal);
 }
@@ -5004,7 +5296,7 @@ button,
   color: var(--amber);
 }
 
-/* —— 伴读桌宠 · 右键动作菜单（portal 到 body） —— */
+/* ?? ???? � ???????portal ? body? ?? */
 .companion-pet-menu {
   position: fixed;
   z-index: 80;
@@ -5019,7 +5311,7 @@ button,
 .companion-pet-menu__label {
   margin: 0 0.15rem 0.45rem;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   color: var(--teal);
 }
@@ -5044,8 +5336,972 @@ button,
   margin: 0.45rem 0.1rem 0;
   padding-top: 0.4rem;
   border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.45;
   letter-spacing: 0.04em;
   color: var(--mist);
+}
+
+/* ——— 自省 · 以镜自省（全页镜室） ——— */
+.oc-reflect-stage,
+.oc-module-stage {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  margin-top: -0.65rem;
+  margin-bottom: -1rem;
+  height: calc(100dvh - 3.25rem);
+  max-height: calc(100dvh - 3.25rem);
+  padding: 0;
+  overflow: hidden;
+}
+
+.oc-mirror {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(11rem, 16rem) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+  gap: clamp(0.75rem, 2vw, 2.5rem);
+  width: min(100%, 78rem);
+  height: 100%;
+  max-height: 100%;
+  margin-inline: auto;
+  padding: clamp(0.75rem, 1.5vw, 1.25rem) clamp(0.75rem, 2.5vw, 2.5rem)
+    clamp(0.85rem, 1.5vw, 1.5rem);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.oc-mirror--reading {
+  grid-template-columns: 1fr;
+  justify-items: stretch;
+  justify-content: center;
+}
+.oc-mirror--reading .oc-mirror__looking {
+  width: min(100%, 48rem);
+  margin-inline: auto;
+}
+
+.oc-mirror__veil {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(
+      ellipse 55% 48% at 72% 42%,
+      color-mix(in srgb, var(--teal) 14%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 40% 35% at 12% 78%,
+      color-mix(in srgb, var(--paper) 8%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 70% 50% at 50% 100%,
+      color-mix(in srgb, var(--void) 55%, transparent),
+      transparent 75%
+    );
+}
+
+.oc-mirror__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(42px);
+  opacity: 0.55;
+  animation: oc-mirror-drift 16s ease-in-out infinite;
+}
+.oc-mirror__orb--a {
+  width: min(42vw, 28rem);
+  height: min(42vw, 28rem);
+  top: 8%;
+  right: 12%;
+  background: color-mix(in srgb, var(--teal) 22%, transparent);
+}
+.oc-mirror__orb--b {
+  width: min(28vw, 18rem);
+  height: min(28vw, 18rem);
+  bottom: 10%;
+  left: 8%;
+  background: color-mix(in srgb, var(--paper) 10%, transparent);
+  animation-delay: -6s;
+  animation-duration: 22s;
+}
+
+.oc-mirror__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+.oc-mirror__side,
+.oc-mirror__looking {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+}
+
+.oc-mirror__side {
+  display: flex;
+  flex-direction: column;
+  /* safe：内容过高时改贴顶，避免 center 把竖题/导航裁掉且滚不到 */
+  justify-content: safe center;
+  gap: clamp(0.75rem, 1.6vw, 1.75rem);
+  padding-block: clamp(0.5rem, 1.2vw, 1.25rem);
+  min-width: 0;
+  overflow-x: visible;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.oc-mirror__inscribe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.oc-mirror__eyebrow {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.28em;
+  color: color-mix(in srgb, var(--teal) 80%, var(--mist));
+}
+
+.oc-mirror__motto {
+  margin: 0;
+  writing-mode: vertical-rl;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: var(--oc-motto);
+  font-weight: 500;
+  letter-spacing: var(--oc-motto-track);
+  color: var(--paper);
+  line-height: 1.2;
+  text-shadow: 0 0 40px color-mix(in srgb, var(--paper) 12%, transparent);
+  align-self: flex-start;
+  max-height: none;
+  /* 竖排字距会吃高度，保证四字完整可见 */
+  padding-block: 0.15em;
+  box-decoration-break: clone;
+}
+
+.oc-mirror__sub {
+  margin: 0;
+  max-width: 12rem;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(0.88rem, 0.8rem + 0.35vw, 1.05rem);
+  letter-spacing: 0.06em;
+  line-height: 1.55;
+  color: var(--mist);
+  overflow-wrap: anywhere;
+}
+
+.oc-mirror__modes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  border-left: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+  padding-left: 0.85rem;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.oc-mirror__mode {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--mist);
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: 0.55rem;
+  align-items: baseline;
+  text-align: left;
+  padding: 0.55rem 0.4rem;
+  border-radius: 0.4rem;
+  transition:
+    color 180ms ease,
+    background 180ms ease;
+}
+.oc-mirror__mode-idx {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+.oc-mirror__mode-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+.oc-mirror__mode-label {
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: clamp(0.88rem, 0.82rem + 0.28vw, 1rem);
+  letter-spacing: var(--oc-mode-track);
+  overflow-wrap: anywhere;
+}
+.oc-mirror__mode-hint {
+  font-size: var(--oc-text-xs);
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.oc-mirror__mode:hover {
+  color: var(--paper);
+  background: color-mix(in srgb, var(--paper) 4%, transparent);
+}
+.oc-mirror__mode--on {
+  color: var(--paper);
+  background: color-mix(in srgb, var(--paper) 6%, transparent);
+}
+.oc-mirror__mode--on .oc-mirror__mode-idx {
+  color: var(--teal);
+  opacity: 1;
+}
+.oc-mirror__mode:focus-visible {
+  outline: 2px solid var(--field-focus);
+  outline-offset: 2px;
+}
+
+.oc-mirror__looking {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  padding: 0.35rem;
+  overflow: hidden;
+}
+
+.oc-mirror__looking--wide {
+  width: min(100%, 48rem);
+  max-height: 100%;
+}
+
+.oc-mirror__rim {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 48% / 12%;
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--paper) 35%, transparent),
+      color-mix(in srgb, var(--teal) 18%, transparent) 40%,
+      color-mix(in srgb, var(--paper) 8%, transparent) 70%,
+      color-mix(in srgb, var(--void) 40%, transparent)
+    );
+  opacity: 0.55;
+  filter: blur(0.5px);
+  z-index: 0;
+}
+.oc-mirror__rim::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    112deg,
+    transparent 38%,
+    color-mix(in srgb, var(--paper) 28%, transparent) 50%,
+    transparent 62%
+  );
+  background-size: 240% 100%;
+  animation: oc-mirror-shine 9s ease-in-out infinite;
+  opacity: 0.45;
+}
+
+.oc-mirror__glass {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  border-radius: 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--paper) 16%, var(--line));
+  background:
+    linear-gradient(
+      185deg,
+      color-mix(in srgb, var(--paper) 9%, transparent),
+      transparent 22%
+    ),
+    color-mix(in srgb, var(--panel) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--paper) 18%, transparent),
+    inset 0 -40px 80px color-mix(in srgb, var(--void) 28%, transparent),
+    0 28px 80px color-mix(in srgb, var(--void) 45%, transparent);
+  padding: clamp(0.75rem, 1.4vw, 1.25rem) clamp(0.7rem, 1.4vw, 1.25rem)
+    clamp(0.7rem, 1.2vw, 1.1rem);
+  overflow: hidden;
+}
+
+.oc-mirror__glass::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 50% at 50% -5%,
+    color-mix(in srgb, var(--paper) 12%, transparent),
+    transparent 65%
+  );
+}
+
+.oc-mirror__pane {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  animation: oc-mirror-pane-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.oc-mirror__pane--scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.15rem;
+}
+
+a.oc-mirror__mode {
+  text-decoration: none;
+  color: inherit;
+}
+
+.oc-mirror__echo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 0.7rem;
+}
+
+.oc-mirror__toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.oc-mirror__composer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.15rem;
+  flex-shrink: 0;
+}
+.oc-mirror__toolbar-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+  flex: 1;
+}
+.oc-mirror__conv-select {
+  max-width: 22rem;
+}
+.oc-mirror__conv-select > button {
+  border-radius: 999px;
+  padding-inline: 0.85rem;
+  background: color-mix(in srgb, var(--field-bg) 88%, transparent);
+}
+
+.oc-mirror__lead {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--mist);
+  max-width: 36rem;
+}
+
+.oc-mirror__thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.85rem 0.7rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--void) 32%, transparent);
+  border: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--mist) 45%, transparent) transparent;
+}
+.oc-mirror__thread::-webkit-scrollbar {
+  width: 6px;
+}
+.oc-mirror__thread::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mist) 40%, transparent);
+}
+
+.oc-mirror__bubble {
+  max-width: min(92%, 36rem);
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.85rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--paper);
+  animation: oc-mirror-pane-in 280ms ease both;
+}
+.oc-mirror__bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.oc-mirror__bubble--you {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--teal) 16%, var(--field-bg));
+  border: 1px solid color-mix(in srgb, var(--teal) 30%, var(--line));
+}
+.oc-mirror__bubble--echo {
+  align-self: flex-start;
+  background: color-mix(in srgb, var(--paper) 5%, var(--field-bg));
+  border: 1px solid color-mix(in srgb, var(--paper) 12%, var(--line));
+  box-shadow: inset 0 0 28px color-mix(in srgb, var(--paper) 5%, transparent);
+}
+.oc-mirror__who {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  color: var(--mist);
+}
+
+.oc-mirror__input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 999px;
+  border: 1px solid var(--field-border);
+  background: color-mix(in srgb, var(--field-bg) 90%, transparent);
+  color: var(--field-fg);
+  padding: 0.7rem 1.1rem;
+  font-size: 0.9rem;
+}
+.oc-mirror__input::placeholder {
+  color: var(--field-placeholder);
+}
+.oc-mirror__input:focus {
+  outline: none;
+  border-color: var(--field-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--field-focus) 18%, transparent);
+}
+
+.oc-mirror__primary,
+.oc-mirror__ghost {
+  appearance: none;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 0.62rem 1.15rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+.oc-mirror__primary {
+  border: 1px solid color-mix(in srgb, var(--amber) 50%, var(--line));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--amber) 92%, #fff),
+    color-mix(in srgb, var(--amber) 78%, var(--paper))
+  );
+  color: var(--on-amber);
+}
+.oc-mirror__primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.oc-mirror__primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.oc-mirror__ghost {
+  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
+  background: color-mix(in srgb, var(--panel) 35%, transparent);
+  color: var(--mist);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+.oc-mirror__ghost:hover:not(:disabled) {
+  color: var(--paper);
+  border-color: color-mix(in srgb, var(--teal) 40%, var(--line));
+}
+.oc-mirror__ghost:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.oc-mirror__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: min(100%, 30rem);
+  margin: auto;
+  padding-block: 1.5rem 0.5rem;
+}
+
+.oc-mirror__form--traces {
+  width: min(100%, 34rem);
+  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  padding-block: 0.35rem;
+}
+.oc-mirror__form--traces .oc-mirror__traces {
+  width: 100%;
+  margin-inline: 0;
+}
+
+.oc-mirror__dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+.oc-mirror__date {
+  letter-spacing: 0.08em;
+}
+.oc-mirror__date > button {
+  border-radius: 0.65rem;
+  letter-spacing: 0.02em;
+}
+.oc-mirror__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  color: var(--mist);
+}
+.oc-mirror__field textarea {
+  border-radius: 0.65rem;
+  border: 1px solid var(--field-border);
+  background: var(--field-bg);
+  color: var(--field-fg);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  min-height: 9rem;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.oc-mirror__traces {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: min(100%, 34rem);
+  margin-inline: auto;
+  flex: 1;
+  overflow-y: auto;
+}
+.oc-mirror__trace-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+.oc-mirror__traces a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+  background: color-mix(in srgb, var(--void) 24%, transparent);
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+.oc-mirror__traces a:hover {
+  border-color: color-mix(in srgb, var(--teal) 42%, var(--line));
+  background: color-mix(in srgb, var(--paper) 4%, transparent);
+  transform: translateY(-1px);
+}
+.oc-mirror__trace-trash {
+  appearance: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+  background: color-mix(in srgb, var(--void) 24%, transparent);
+  color: var(--mist);
+  transition:
+    color 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+.oc-mirror__trace-trash:hover:not(:disabled) {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 42%, var(--line));
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+.oc-mirror__trace-trash:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.oc-mirror__trace-title {
+  font-size: 0.95rem;
+  color: var(--paper);
+  letter-spacing: 0.04em;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+}
+.oc-mirror__trace-meta {
+  font-size: 0.68rem;
+  color: var(--mist);
+}
+
+.oc-mirror__read-head {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0.35rem;
+}
+.oc-mirror__read-title {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--paper);
+  line-height: 1.35;
+}
+
+.oc-mirror__reading {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  white-space: pre-wrap;
+  font-size: 0.98rem;
+  line-height: 1.85;
+  color: var(--paper);
+  padding: 0.75rem 0.35rem 0.5rem;
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  scrollbar-width: thin;
+}
+
+.oc-mirror__note {
+  position: relative;
+  z-index: 1;
+  margin: 0.5rem 0 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.65rem;
+  border: 1px dashed color-mix(in srgb, var(--line) 90%, transparent);
+  font-size: 0.78rem;
+  color: var(--mist);
+  line-height: 1.55;
+}
+
+.oc-mirror__actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.65rem;
+  margin-top: auto;
+}
+
+.oc-mirror__back {
+  display: inline-flex;
+  margin-bottom: 0.55rem;
+  color: var(--mist);
+}
+.oc-mirror__back:hover {
+  color: var(--teal);
+}
+
+.oc-mirror__empty,
+.oc-mirror__warn,
+.oc-mirror__err {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.oc-mirror__empty {
+  color: var(--mist);
+  text-align: center;
+  padding: 2.5rem 1rem;
+  font-family: var(--font-cormorant), Georgia, serif;
+  letter-spacing: 0.08em;
+  font-size: 1.05rem;
+}
+.oc-mirror__warn {
+  color: var(--mist);
+}
+.oc-mirror__err {
+  color: var(--danger);
+}
+
+@keyframes oc-mirror-shine {
+  0%,
+  100% {
+    background-position: 130% 0;
+  }
+  45%,
+  55% {
+    background-position: -30% 0;
+  }
+}
+
+@keyframes oc-mirror-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes oc-mirror-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-2%, 3%, 0) scale(1.06);
+  }
+}
+
+@media (max-width: 1280px), (max-height: 820px) {
+  .oc-mirror__mode-hint {
+    display: none;
+  }
+
+  .oc-mirror__sub {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 1100px) {
+  .oc-mirror {
+    grid-template-columns: minmax(9.5rem, 13rem) minmax(0, 1fr);
+  }
+}
+
+@media (max-height: 720px) {
+  .oc-mirror__eyebrow,
+  .oc-mirror__sub {
+    display: none;
+  }
+
+  .oc-mirror__side {
+    justify-content: flex-start;
+    gap: 0.65rem;
+  }
+
+  .oc-mirror__motto {
+    font-size: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
+    letter-spacing: 0.14em;
+  }
+
+  .oc-mirror__mode {
+    padding: 0.35rem 0.3rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .oc-reflect-stage,
+  .oc-module-stage {
+    height: auto;
+    max-height: none;
+    min-height: calc(100dvh - 3.25rem);
+    overflow: visible;
+  }
+
+  .oc-mirror {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0.65rem;
+    height: auto;
+    min-height: calc(100dvh - 3.25rem);
+    max-height: none;
+    padding: 0.7rem 0.7rem 1rem;
+    overflow: visible;
+  }
+
+  .oc-mirror__side {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 0.65rem 1rem;
+    padding-block: 0.2rem 0.1rem;
+    overflow: visible;
+    flex-shrink: 0;
+  }
+
+  .oc-mirror__inscribe {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 0.35rem;
+  }
+
+  .oc-mirror__eyebrow {
+    font-size: var(--oc-text-xs);
+    letter-spacing: 0.18em;
+  }
+
+  .oc-mirror__motto {
+    writing-mode: horizontal-tb;
+    letter-spacing: var(--oc-motto-track);
+    text-indent: 0;
+    font-size: clamp(1.35rem, 5.2vw, 1.85rem);
+    max-height: none;
+  }
+
+  .oc-mirror__sub {
+    display: none;
+  }
+
+  .oc-mirror__modes {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+    padding-left: 0;
+    padding-top: 0.45rem;
+    width: 100%;
+    gap: 0.25rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .oc-mirror__mode {
+    grid-template-columns: auto;
+    flex: 0 0 auto;
+    min-width: max-content;
+    padding: 0.4rem 0.55rem;
+  }
+
+  .oc-mirror__mode-idx {
+    display: none;
+  }
+
+  .oc-mirror__mode-copy {
+    align-items: center;
+  }
+
+  .oc-mirror__mode-label {
+    letter-spacing: 0.08em;
+    font-size: clamp(0.82rem, 2.8vw, 0.92rem);
+    white-space: nowrap;
+  }
+
+  .oc-mirror__mode-hint {
+    display: none;
+  }
+
+  .oc-mirror__rim {
+    border-radius: 1.85rem;
+  }
+
+  .oc-mirror__looking {
+    min-height: min(62dvh, 28rem);
+    height: auto;
+    max-height: none;
+  }
+
+  .oc-mirror__glass {
+    border-radius: 1.25rem;
+    padding: 0.8rem 0.75rem 0.75rem;
+    height: auto;
+    max-height: none;
+    min-height: min(62dvh, 28rem);
+  }
+
+  .oc-mirror__pane--scroll {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 640px) {
+  .oc-mirror {
+    padding: 0.55rem 0.5rem 0.85rem;
+    gap: 0.5rem;
+  }
+
+  .oc-mirror__eyebrow {
+    display: none;
+  }
+
+  .oc-mirror__motto {
+    font-size: clamp(1.2rem, 6.5vw, 1.55rem);
+    letter-spacing: 0.16em;
+  }
+
+  .oc-mirror__mode {
+    padding: 0.35rem 0.45rem;
+  }
+
+  .oc-mirror__mode-label {
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  .oc-mirror__glass {
+    border-radius: 1rem;
+    padding: 0.65rem 0.55rem 0.6rem;
+  }
+
+  .oc-page-head__desc {
+    font-size: var(--oc-text-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oc-mirror__rim::after,
+  .oc-mirror__pane,
+  .oc-mirror__bubble,
+  .oc-mirror__orb {
+    animation: none;
+  }
 }

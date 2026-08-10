@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { HoverTip } from "@/components/ui/hover-tip";
+import { IconArrowLeft } from "@/components/ui/icon-glyphs";
 
 type GuardedBackProps = {
   href: string;
@@ -37,13 +39,16 @@ export function GuardedBackLink({ href, label = "返回" }: GuardedBackProps) {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={attempt}
-        className="oc-back"
-      >
-        ← {label}
-      </button>
+      <HoverTip tip={label} variant="hint" nestInControl className="inline-flex">
+        <button
+          type="button"
+          onClick={attempt}
+          className="oc-back"
+          aria-label={label}
+        >
+          <IconArrowLeft size={15} />
+        </button>
+      </HoverTip>
       <ConfirmDialog
         open={open}
         title="离开编辑？"
@@ -54,7 +59,9 @@ export function GuardedBackLink({ href, label = "返回" }: GuardedBackProps) {
         onConfirm={() => {
           setOpen(false);
           window.dispatchEvent(
-            new CustomEvent("owncosmos:essay-dirty", { detail: { dirty: false } }),
+            new CustomEvent("owncosmos:essay-dirty", {
+              detail: { dirty: false },
+            }),
           );
           router.push(href);
         }}

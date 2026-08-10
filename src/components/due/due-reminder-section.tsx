@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconChevronRight } from "@/components/ui/icon-glyphs";
 import { DueCardDeck } from "@/components/due/due-card-deck";
 import { DuePlanCard } from "@/components/due/due-plan-card";
 import { PoeticName } from "@/components/ui/poetic-name";
@@ -56,12 +57,13 @@ export function DueReminderSection({
               </p>
             ) : null}
           </div>
-          <Link
+          <IconActionLink
             href="/app/present/due"
-            className="ui-hover-link-accent home-v1__split-head-link font-mono text-[10px] tracking-wide text-[var(--amber)]"
+            label="全部"
+            className="oc-icon-action--accent home-v1__split-head-link"
           >
-            全部 →
-          </Link>
+            <IconChevronRight size={14} />
+          </IconActionLink>
         </div>
       ) : null}
 

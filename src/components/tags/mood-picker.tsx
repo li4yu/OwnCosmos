@@ -38,7 +38,6 @@ export function MoodPicker({
             <button
               key={m.key}
               type="button"
-              title={m.label}
               aria-pressed={active}
               className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition ${
                 active

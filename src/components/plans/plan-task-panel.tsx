@@ -81,7 +81,7 @@ export function PlanTaskPanel({ planId, tasks, readOnly }: Props) {
             每天可打卡一次，只记次数；与「完成本期」无关
           </p>
         </div>
-        <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-wide text-[var(--teal)]">
           {progressLabel}
         </p>
       </div>
@@ -103,7 +103,7 @@ export function PlanTaskPanel({ planId, tasks, readOnly }: Props) {
                 <span className="min-w-0 flex-1 text-sm text-[var(--paper)]">
                   {task.title}
                 </span>
-                <span className="shrink-0 font-mono text-[10px] text-[var(--teal)]">
+                <span className="shrink-0 font-mono text-xs text-[var(--teal)]">
                   {count} 次
                   {already ? " · 今日已打" : ""}
                 </span>

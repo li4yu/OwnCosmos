@@ -69,11 +69,11 @@ export function DailyHabits({ habits, todayLabel }: Props) {
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm tracking-[0.12em] text-[var(--paper)]">
           今日每日打卡
-          <span className="ml-2 font-mono text-[10px] text-[var(--mist)]">
+          <span className="ml-2 font-mono text-xs text-[var(--mist)]">
             {doneCount}/{habits.length}
           </span>
         </h2>
-        <p className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
+        <p className="font-mono text-xs tracking-wide text-[var(--teal)]">
           {todayLabel}
         </p>
       </div>
@@ -136,7 +136,7 @@ export function DailyHabits({ habits, todayLabel }: Props) {
                   ) : null}
                 </div>
                 <span
-                  className={`font-mono text-[10px] tracking-wide ${
+                  className={`font-mono text-xs tracking-wide ${
                     habit.checkedIn ? "text-[var(--teal)]" : "text-[var(--amber)]"
                   }`}
                 >

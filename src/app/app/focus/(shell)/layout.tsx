@@ -1,6 +1,6 @@
 import { ModuleShell } from "@/components/shell/module-shell";
 
-/** 凝时普通页：保留模块标题与二级导航 */
+/** 凝时总览 / 专注记录：与其它模块同款镜面壳 */
 export default function FocusShellLayout({
   children,
 }: {

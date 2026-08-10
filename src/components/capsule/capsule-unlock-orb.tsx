@@ -8,6 +8,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { HoverTip } from "@/components/ui/hover-tip";
 
 export type CapsuleUnlockItem = {
   id: string;
@@ -194,15 +195,16 @@ export function CapsuleUnlockOrb({ userId, items }: CapsuleUnlockOrbProps) {
             {active.length > 1 ? ` · ${active.length}` : ""}
           </span>
         </button>
-        <button
-          type="button"
-          className="capsule-orb__dismiss"
-          onClick={dismissFloat}
-          aria-label="今日不再提醒"
-          title="今日不再提醒"
-        >
-          ×
-        </button>
+        <HoverTip tip="今日不再提醒" variant="hint" nestInControl className="inline-flex">
+          <button
+            type="button"
+            className="capsule-orb__dismiss"
+            onClick={dismissFloat}
+            aria-label="今日不再提醒"
+          >
+            ×
+          </button>
+        </HoverTip>
       </div>
 
       {open && current ? (
@@ -238,7 +240,7 @@ export function CapsuleUnlockOrb({ userId, items }: CapsuleUnlockOrbProps) {
               aria-labelledby={titleId}
               className="capsule-reveal__panel"
             >
-              <p className="font-mono text-[10px] tracking-[0.22em] text-[var(--teal)]">
+              <p className="font-mono text-xs tracking-[0.22em] text-[var(--teal)]">
                 TIME CAPSULE
               </p>
               <h2
@@ -247,7 +249,7 @@ export function CapsuleUnlockOrb({ userId, items }: CapsuleUnlockOrbProps) {
               >
                 启封
               </h2>
-              <p className="mt-1 font-mono text-[10px] tracking-wide text-[var(--mist)]">
+              <p className="mt-1 font-mono text-xs tracking-wide text-[var(--mist)]">
                 解锁日 {current.dueLabel}
                 {active.length > 1
                   ? ` · ${Math.min(index, active.length - 1) + 1}/${active.length}`

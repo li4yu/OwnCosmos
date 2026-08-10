@@ -9,6 +9,8 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { HoverTip } from "@/components/ui/hover-tip";
+import { IconCalendar, IconClose } from "@/components/ui/icon-glyphs";
 import {
   formatDueDateInput,
   parseDueDateInput,
@@ -21,6 +23,7 @@ type DatePickerFieldProps = {
   value: string;
   onChange: (next: string) => void;
   label?: string;
+  className?: string;
   disabled?: boolean;
   /** 允许选择今天之前的日期（馆藏筛选等）；默认 false，与计划截止日期一致 */
   allowPastDates?: boolean;
@@ -83,6 +86,7 @@ export function DatePickerField({
   value,
   onChange,
   label = "截止日期",
+  className = "",
   disabled = false,
   allowPastDates = false,
   clearable = false,
@@ -249,7 +253,7 @@ export function DatePickerField({
                   ‹
                 </button>
               </div>
-              <p className="min-w-0 flex-1 text-center font-mono text-[11px] tracking-wide text-[var(--paper)]">
+              <p className="min-w-0 flex-1 text-center font-mono text-[13px] tracking-wide text-[var(--paper)]">
                 {monthLabel}
               </p>
               <div className="flex items-center gap-0.5">
@@ -272,7 +276,7 @@ export function DatePickerField({
               </div>
             </div>
 
-            <div className="mb-1 grid grid-cols-7 gap-0.5 text-center font-mono text-[9px] tracking-wide text-[var(--mist)]">
+            <div className="mb-1 grid grid-cols-7 gap-0.5 text-center font-mono text-xs tracking-wide text-[var(--mist)]">
               {WEEKDAYS.map((w) => (
                 <span key={w} className="py-1">
                   {w}
@@ -361,13 +365,16 @@ export function DatePickerField({
                   </button>
                 ) : null}
               </div>
-              <button
-                type="button"
-                className="ui-btn-ghost ui-btn-sm"
-                onClick={() => setOpen(false)}
-              >
-                关闭
-              </button>
+              <HoverTip tip="关闭" variant="hint" nestInControl>
+                <button
+                  type="button"
+                  className="ui-btn-ghost ui-btn-sm"
+                  onClick={() => setOpen(false)}
+                  aria-label="关闭"
+                >
+                  <IconClose size={13} />
+                </button>
+              </HoverTip>
             </div>
           </div>,
           document.body,
@@ -377,28 +384,31 @@ export function DatePickerField({
   return (
     <div
       ref={rootRef}
-      className="relative flex flex-col gap-1 text-xs text-[var(--mist)]"
+      className={`relative flex flex-col gap-1 text-xs text-[var(--mist)] ${className}`.trim()}
     >
       <span id={labelId}>{label}</span>
       <input type="hidden" name={name} value={value} />
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-labelledby={labelId}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        disabled={disabled}
-        onClick={() => {
-          if (disabled) return;
-          setOpen((v) => !v);
-        }}
-        className="auth-field flex w-full items-center justify-between gap-2 !py-1.5 text-left text-sm text-[var(--paper)] disabled:opacity-50"
-      >
-        <span>{formatDisplay(value)}</span>
-        <span className="font-mono text-[10px] tracking-wide text-[var(--teal)]">
-          选日期
-        </span>
-      </button>
+      <HoverTip tip="选日期" variant="hint" nestInControl className="block w-full">
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-labelledby={labelId}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label={`${label}：${formatDisplay(value)}，选日期`}
+          disabled={disabled}
+          onClick={() => {
+            if (disabled) return;
+            setOpen((v) => !v);
+          }}
+          className="auth-field flex w-full items-center justify-between gap-2 !py-1.5 text-left text-sm text-[var(--paper)] disabled:opacity-50"
+        >
+          <span className="min-w-0 truncate">{formatDisplay(value)}</span>
+          <span className="shrink-0 text-[var(--teal)]">
+            <IconCalendar size={14} />
+          </span>
+        </button>
+      </HoverTip>
       {popover}
     </div>
   );

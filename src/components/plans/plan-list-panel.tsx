@@ -185,7 +185,7 @@ export function PlanListPanel({
       <section className="flex flex-col gap-3">
         <h2 className="oc-section-label">
           未完成
-          <span className="ml-2 font-mono text-[10px] text-[var(--mist)] font-normal tracking-normal normal-case">
+          <span className="ml-2 font-mono text-xs text-[var(--mist)] font-normal tracking-normal normal-case">
             {open.total}
           </span>
         </h2>
@@ -227,7 +227,7 @@ export function PlanListPanel({
       <section className="flex flex-col gap-3">
         <h2 className="oc-section-label">
           已完成
-          <span className="ml-2 font-mono text-[10px] text-[var(--mist)] font-normal tracking-normal normal-case">
+          <span className="ml-2 font-mono text-xs text-[var(--mist)] font-normal tracking-normal normal-case">
             {done.total}
           </span>
         </h2>

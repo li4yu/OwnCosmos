@@ -263,7 +263,7 @@ export function GuideArticle({ mode, loggedIn = false }: GuideArticleProps) {
 
           <h3>织网能力（随笔侧）</h3>
           <p>
-            编辑随笔时可<strong>引用过往</strong>（检索昔时往插入复制）、打<strong>标签</strong>与固定心情；全局关键词检索与素材匣可跨模块调取（复制，不迁移原文）。
+            编辑随笔时可<strong>引用过往</strong>（检索昔时往插入复制）、打<strong>标签</strong>与固定心情。
           </p>
         </section>
 

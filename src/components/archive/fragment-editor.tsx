@@ -207,7 +207,7 @@ export function FragmentEditor(props: FragmentEditorProps) {
           {busy ? "保存中…" : isEdit ? "保存" : "收入馆藏"}
         </button>
         <Link
-          href="/app/past/gallery/memory-fragment"
+          href="/app/past/gallery"
           className="ui-btn-ghost ui-btn-sm"
         >
           取消

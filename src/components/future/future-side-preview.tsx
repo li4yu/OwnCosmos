@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { IconActionLink } from "@/components/ui/icon-action";
+import { IconChevronRight } from "@/components/ui/icon-glyphs";
 import { formatDueDateInput } from "@/lib/plan-dates";
 
 export type FutureCapsulePreviewItem = {
@@ -34,12 +36,13 @@ export function FutureSidePreview({
           <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
             时间胶囊
           </h3>
-          <Link
+          <IconActionLink
             href="/app/future/capsule"
-            className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
+            label="全部"
+            className="oc-icon-action--accent"
           >
-            全部 →
-          </Link>
+            <IconChevronRight size={14} />
+          </IconActionLink>
         </div>
         {capsules.length === 0 ? (
           <p className="mt-2 text-xs text-[var(--mist)]">
@@ -54,7 +57,7 @@ export function FutureSidePreview({
                   className="ui-hover-card block rounded border border-[var(--amber)]/40 bg-[var(--amber)]/5 px-2 py-1.5"
                 >
                   <span className="text-xs text-[var(--paper)]">{c.title}</span>
-                  <p className="mt-0.5 font-mono text-[10px] text-[var(--amber)]">
+                  <p className="mt-0.5 font-mono text-xs text-[var(--amber)]">
                     可开启
                   </p>
                 </Link>
@@ -67,7 +70,7 @@ export function FutureSidePreview({
                   className="ui-hover-card block rounded border border-[var(--line)] px-2 py-1.5"
                 >
                   <span className="text-xs text-[var(--mist)]">{c.title}</span>
-                  <p className="mt-0.5 font-mono text-[10px] text-[var(--mist)]">
+                  <p className="mt-0.5 font-mono text-xs text-[var(--mist)]">
                     {c.dueAt
                       ? `解锁 ${formatDueDateInput(c.dueAt)}`
                       : "待设定"}
@@ -84,12 +87,13 @@ export function FutureSidePreview({
           <h3 className="text-xs tracking-[0.1em] text-[var(--paper)]">
             进行中周期计划
           </h3>
-          <Link
+          <IconActionLink
             href="/app/future/cycles"
-            className="ui-hover-link-accent font-mono text-[9px] text-[var(--amber)]"
+            label="全部"
+            className="oc-icon-action--accent"
           >
-            全部 →
-          </Link>
+            <IconChevronRight size={14} />
+          </IconActionLink>
         </div>
         {cycles.length === 0 ? (
           <p className="mt-2 text-xs text-[var(--mist)]">暂无周期计划。</p>
@@ -103,7 +107,7 @@ export function FutureSidePreview({
                 >
                   {c.title}
                   {c.dueAt ? (
-                    <span className="ml-2 font-mono text-[9px] text-[var(--mist)]">
+                    <span className="ml-2 font-mono text-xs text-[var(--mist)]">
                       本期 {formatDueDateInput(c.dueAt)}
                     </span>
                   ) : null}
