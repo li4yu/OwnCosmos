@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   archiveEssayAction,
   createEssayAction,
@@ -12,7 +12,11 @@ import {
   type EssayActionState,
 } from "@/app/app/present/actions";
 import { BorrowMemoryPanel } from "@/components/essays/borrow-memory-panel";
-import { EssayRichEditor } from "@/components/essays/essay-rich-editor";
+import {
+  EssayRichEditor,
+  type EssayRichEditorHandle,
+} from "@/components/essays/essay-rich-editor";
+import { EssayPolishPanel } from "@/components/essays/essay-polish-panel";
 import { MoodPicker } from "@/components/tags/mood-picker";
 import { TagField, type TagOption } from "@/components/tags/tag-field";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -89,6 +93,8 @@ export function EssayEditor(props: EssayEditorProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [refineOpen, setRefineOpen] = useState(false);
+  const [polishOpen, setPolishOpen] = useState(false);
+  const richEditorRef = useRef<EssayRichEditorHandle | null>(null);
   const [actionPending, setActionPending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ title: string; message: string } | null>(
@@ -269,6 +275,7 @@ export function EssayEditor(props: EssayEditorProps) {
         <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
           正文
           <EssayRichEditor
+            ref={richEditorRef}
             value={body}
             format={
               isEdit ? (props.initialBodyFormat ?? "html") : "html"
@@ -278,6 +285,21 @@ export function EssayEditor(props: EssayEditorProps) {
               markDirty();
             }}
           />
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="ui-btn-ghost px-3 py-1.5 text-xs text-[var(--teal)]"
+              onClick={() => {
+                setActionError(null);
+                setPolishOpen(true);
+              }}
+            >
+              AI 润色
+            </button>
+            <span className="self-center text-[10px] text-[var(--mist)]">
+              选区或全文 · 多风格 · 采纳才写回
+            </span>
+          </div>
         </label>
 
         <MoodPicker
@@ -458,6 +480,13 @@ export function EssayEditor(props: EssayEditorProps) {
         title={notice?.title ?? "提示"}
         message={notice?.message ?? ""}
         onClose={() => setNotice(null)}
+      />
+
+      <EssayPolishPanel
+        open={polishOpen}
+        editorRef={richEditorRef}
+        onClose={() => setPolishOpen(false)}
+        onAccepted={() => markDirty()}
       />
     </>
   );
