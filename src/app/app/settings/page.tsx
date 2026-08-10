@@ -9,6 +9,7 @@ import { ExportChartsPanel } from "@/components/settings/export-charts-panel";
 import { ExportOpenContent } from "@/components/settings/export-open-content";
 import { FocusPreferenceForm } from "@/components/settings/focus-preference-form";
 import { NotifyPreferenceForm } from "@/components/settings/notify-preference-form";
+import { SettingsSection } from "@/components/settings/settings-section";
 import { PageHeader } from "@/components/shell/page-header";
 import { PoeticName } from "@/components/ui/poetic-name";
 import { DEFAULT_FOCUS_COUNTDOWN_MS } from "@/db/schema";
@@ -28,135 +29,112 @@ export default async function SettingsPage() {
   };
 
   return (
-    <main className="flex flex-col gap-3">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4">
       <PageHeader
         title="设置"
         eyebrow="SETTINGS"
-        description="外观、归档、通知、凝时、伴读、账号与数据导出"
+        description="外观、偏好、伴读、账号与导出"
         backHref="/app"
         backLabel="返回首页"
       />
 
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          外观
-        </p>
-        <div className="mt-1.5">
-          <AppearanceForm initialTheme={user.theme} />
-        </div>
-      </section>
+      <SettingsSection
+        label="外观"
+        description="三套主题；墨白为银月炭黑。登录后写入账号，各端同步。"
+      >
+        <AppearanceForm initialTheme={user.theme} />
+      </SettingsSection>
 
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          随笔 · 归档
-        </p>
-        <p className="mt-0.5 text-xs text-[var(--mist)]">
-          <PoeticName
-            name="自动归档"
-            tip="久未改动的随笔会沉淀进昔时往；也可提前归档；小时数可在此修改"
-          />
-          的自动小时数
-        </p>
-        <div className="mt-1.5">
+      <div className="grid gap-3 md:grid-cols-2 md:items-stretch">
+        <SettingsSection
+          label="随笔 · 归档"
+          description={
+            <>
+              <PoeticName
+                name="自动归档"
+                tip="久未改动的随笔会沉淀进昔时往；也可提前归档；小时数可在此修改"
+              />
+              的自动小时数
+            </>
+          }
+        >
           <ArchivePreferenceForm initialIdleHours={user.essayIdleHours} />
-        </div>
-      </section>
+        </SettingsSection>
 
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          通知与回望
-        </p>
-        <div className="mt-1.5">
+        <SettingsSection
+          label="通知与回望"
+          description="桌面通知与往年今日轻提示。"
+        >
           <NotifyPreferenceForm
             initialNotifyEnabled={user.notifyEnabled ?? true}
             initialNotifyDueReminder={user.notifyDueReminder ?? true}
             initialAnniversaryRemind={Boolean(user.anniversaryRemind)}
           />
-        </div>
-      </section>
+        </SettingsSection>
+      </div>
 
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          凝时
-        </p>
-        <div className="mt-1.5">
+      <div className="grid gap-3 md:grid-cols-2 md:items-stretch">
+        <SettingsSection
+          label="凝时"
+          description="倒计时默认时长与专注勿扰。"
+        >
           <FocusPreferenceForm
             initialFocusDnd={Boolean(user.focusDnd)}
             initialCountdownDefaultMs={
               user.focusCountdownDefaultMs ?? DEFAULT_FOCUS_COUNTDOWN_MS
             }
           />
-        </div>
-      </section>
+        </SettingsSection>
 
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          账号与安全
-        </p>
-        <p className="mt-0.5 text-xs text-[var(--mist)]">
-          已登录：{session.user.email}
-          {session.user.emailVerified ? " · 邮箱已验证" : " · 邮箱未验证"}
-        </p>
-        <div className="mt-2 flex flex-col gap-4">
-          <div>
-            <p className="mb-1.5 text-xs tracking-[0.06em] text-[var(--paper)]">
-              修改密码
-            </p>
-            <ChangePasswordForm />
-          </div>
-          <div className="border-t border-[var(--line)] pt-3">
-            <p className="mb-1.5 text-xs tracking-[0.06em] text-[var(--danger)]">
-              注销账号
-            </p>
-            <DeleteAccountForm />
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          伴读桌宠
-        </p>
-        <p className="mt-0.5 text-xs text-[var(--mist)]">
-          称呼与语气、主动气泡频控与勿扰；对话总闸仍为环境变量 AI_ENABLED。
-        </p>
-        <div className="mt-1.5">
-          <CompanionPreferenceForm />
-        </div>
-      </section>
-
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          AI 开发
-        </p>
-        <p className="mt-0.5 text-xs text-[var(--mist)]">
-          伴读桌宠在登录后右下角；此处保留召回测试入口。
-        </p>
-        <Link
-          href="/app/ai/recall"
-          className="mt-1.5 inline-block text-sm text-[var(--teal)] underline-offset-2 hover:underline"
+        <SettingsSection
+          label="账号与安全"
+          description={`已登录：${session.user.email}${
+            session.user.emailVerified ? " · 邮箱已验证" : " · 邮箱未验证"
+          }`}
         >
-          打开 RAG 召回测试 →
-        </Link>
-      </section>
+          <div className="flex flex-col gap-4">
+            <div>
+              <p className="mb-1.5 text-xs tracking-[0.06em] text-[var(--paper)]">
+                修改密码
+              </p>
+              <ChangePasswordForm />
+            </div>
+            <div className="border-t border-[var(--line)] pt-3">
+              <p className="mb-1.5 text-xs tracking-[0.06em] text-[var(--danger)]">
+                注销账号
+              </p>
+              <DeleteAccountForm />
+            </div>
+          </div>
+        </SettingsSection>
+      </div>
 
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          数据导出
-        </p>
-        <div className="mt-1.5">
+      <SettingsSection
+        label="伴读桌宠"
+        description="定制形象、称呼与语气、主动气泡频控与勿扰；对话总闸仍为环境变量 AI_ENABLED。"
+      >
+        <CompanionPreferenceForm />
+      </SettingsSection>
+
+      <div className="grid gap-3 md:grid-cols-3 md:items-stretch">
+        <SettingsSection label="数据导出">
           <ExportOpenContent />
-        </div>
-      </section>
-
-      <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-2.5">
-        <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--teal)]">
-          图表导出
-        </p>
-        <div className="mt-1.5">
+        </SettingsSection>
+        <SettingsSection label="图表导出">
           <ExportChartsPanel />
-        </div>
-      </section>
+        </SettingsSection>
+        <SettingsSection
+          label="AI 开发"
+          description="伴读在右下角；此处保留召回测试入口。"
+        >
+          <Link
+            href="/app/ai/recall"
+            className="inline-block text-sm text-[var(--teal)] underline-offset-2 hover:underline"
+          >
+            打开 RAG 召回测试 →
+          </Link>
+        </SettingsSection>
+      </div>
     </main>
   );
 }

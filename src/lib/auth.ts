@@ -144,8 +144,5 @@ export const auth = betterAuth({
 });
 
 export type Session = typeof auth.$Infer.Session;
-export type ThemeId = "night" | "khaki";
-
-export function isThemeId(value: unknown): value is ThemeId {
-  return value === "night" || value === "khaki";
-}
+export type { ThemeId } from "@/lib/theme";
+export { isThemeId } from "@/lib/theme";

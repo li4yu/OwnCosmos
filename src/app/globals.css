@@ -77,6 +77,57 @@
     radial-gradient(ellipse 70% 50% at 50% 110%, rgba(168, 148, 108, 0.65), transparent 70%);
 }
 
+/* 墨白 · 银月炭黑（避开纯黑死灰，留月光与呼吸） */
+[data-theme="mono"] {
+  --void: #14171c;
+  --ink: #1e242c;
+  --mist: #a7b0bc;
+  --paper: #f2f0ea;
+  --amber: #e6dfd0;
+  --amber-soft: rgba(230, 223, 208, 0.32);
+  --teal: #8fa8b8;
+  --line: rgba(242, 240, 234, 0.16);
+  --glow: rgba(180, 200, 220, 0.16);
+  --panel: rgba(28, 33, 40, 0.94);
+  --background: var(--void);
+  --foreground: var(--paper);
+  --field-bg: rgba(18, 22, 28, 0.88);
+  --field-fg: #f2f0ea;
+  --field-placeholder: rgba(167, 176, 188, 0.7);
+  --field-border: rgba(242, 240, 234, 0.2);
+  --field-focus: #e6dfd0;
+  --on-amber: #171b21;
+  --overlay: rgba(10, 12, 16, 0.58);
+  --dialog-shadow: 0 28px 68px rgba(8, 10, 14, 0.48);
+  --danger: #d0676a;
+  --on-danger: #f8ecea;
+  --font-noto-serif: "Noto Serif SC";
+  --font-cormorant: "Cormorant Garamond";
+  --font-mono: "JetBrains Mono";
+  --topbar: rgba(20, 23, 28, 0.88);
+  --pill-bg: rgba(36, 42, 50, 0.72);
+  --core-text: #171b21;
+  --star-rgb: 236, 232, 220;
+  --nebula:
+    radial-gradient(ellipse 58% 44% at 16% 18%, rgba(200, 220, 240, 0.18), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 86% 72%, rgba(230, 220, 200, 0.14), transparent 58%),
+    radial-gradient(ellipse 42% 28% at 48% 42%, rgba(255, 255, 255, 0.05), transparent 55%),
+    radial-gradient(ellipse 75% 52% at 50% 115%, rgba(16, 18, 22, 0.9), transparent 70%);
+}
+
+[data-theme="mono"] .atmosphere-wash {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -8%, rgba(190, 210, 230, 0.14), transparent 58%),
+    radial-gradient(ellipse 55% 45% at 100% 100%, rgba(230, 220, 200, 0.1), transparent 52%),
+    radial-gradient(ellipse 40% 30% at 0% 80%, rgba(140, 165, 185, 0.08), transparent 50%),
+    var(--background);
+}
+
+[data-theme="mono"] body {
+  background-image: var(--nebula);
+  background-attachment: fixed;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
@@ -178,6 +229,10 @@ button,
 
   [data-theme="khaki"] .auth-field {
     color-scheme: light;
+  }
+
+  [data-theme="mono"] .auth-field {
+    color-scheme: dark;
   }
 
   .auth-submit,
@@ -4643,23 +4698,17 @@ button,
   margin-top: 0.55rem;
 }
 
-/* —— AI 对话窗：实底不透明 —— */
+/* —— AI 对话窗：实底不透明（跟主题变量，免逐主题硬编码） —— */
 .companion-chat {
   border: 1px solid var(--line);
   border-radius: 0.55rem;
-  background: #10182a;
+  background: var(--panel);
   box-shadow: var(--dialog-shadow);
-}
-[data-theme="khaki"] .companion-chat {
-  background: #efe6d2;
 }
 .companion-chat__head {
   padding: 0.55rem 0.65rem;
   border-bottom: 1px solid var(--line);
-  background: #0c1220;
-}
-[data-theme="khaki"] .companion-chat__head {
-  background: #e6d9b8;
+  background: var(--void);
 }
 .companion-chat__eyebrow {
   margin: 0;
@@ -4676,15 +4725,12 @@ button,
 .companion-chat__tool {
   border: 1px solid var(--line);
   border-radius: 0.3rem;
-  background: #10182a;
+  background: var(--ink);
   padding: 0.15rem 0.4rem;
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--mist);
   cursor: pointer;
-}
-[data-theme="khaki"] .companion-chat__tool {
-  background: #efe6d2;
 }
 .companion-chat__tool:hover {
   border-color: var(--amber);
@@ -4692,23 +4738,17 @@ button,
 }
 .companion-chat__body {
   padding: 0.55rem 0.65rem;
-  background: #10182a;
-}
-[data-theme="khaki"] .companion-chat__body {
-  background: #efe6d2;
+  background: var(--panel);
 }
 .companion-chat__chip {
   border: 1px solid var(--line);
   border-radius: 0.35rem;
-  background: #0c1220;
+  background: var(--void);
   padding: 0.35rem 0.5rem;
   text-align: left;
   font-size: 0.75rem;
   color: var(--paper);
   cursor: pointer;
-}
-[data-theme="khaki"] .companion-chat__chip {
-  background: #e8dcc0;
 }
 .companion-chat__chip:hover:not(:disabled) {
   border-color: var(--teal);
@@ -4725,18 +4765,12 @@ button,
   font-size: 0.875rem;
   line-height: 1.55;
   color: var(--paper);
-  background: #0c1220;
-}
-[data-theme="khaki"] .companion-chat__bubble {
-  background: #f4ecdc;
+  background: var(--field-bg);
 }
 .companion-chat__bubble--user {
   margin-left: 1.25rem;
   border-color: color-mix(in srgb, var(--teal) 35%, var(--line));
-  background: color-mix(in srgb, var(--teal) 16%, #10182a);
-}
-[data-theme="khaki"] .companion-chat__bubble--user {
-  background: color-mix(in srgb, var(--teal) 12%, #efe6d2);
+  background: color-mix(in srgb, var(--teal) 16%, var(--panel));
 }
 .companion-chat__bubble--assistant,
 .companion-chat__bubble--stream {
@@ -4754,21 +4788,15 @@ button,
 .companion-chat__foot {
   border-top: 1px solid var(--line);
   padding: 0.5rem;
-  background: #0c1220;
-}
-[data-theme="khaki"] .companion-chat__foot {
-  background: #e6d9b8;
+  background: var(--void);
 }
 .companion-chat__input {
   border: 1px solid var(--line);
   border-radius: 0.35rem;
-  background: #070b14;
+  background: var(--field-bg);
   padding: 0.4rem 0.5rem;
   font-size: 0.875rem;
   color: var(--paper);
-}
-[data-theme="khaki"] .companion-chat__input {
-  background: #f4ecdc;
 }
 .companion-chat__input:focus {
   outline: none;
@@ -4777,25 +4805,19 @@ button,
 .companion-chat__send {
   border: 1px solid var(--teal);
   border-radius: 0.3rem;
-  background: color-mix(in srgb, var(--teal) 14%, #10182a);
+  background: color-mix(in srgb, var(--teal) 14%, var(--panel));
   padding: 0.35rem 0.55rem;
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   color: var(--teal);
   cursor: pointer;
 }
-[data-theme="khaki"] .companion-chat__send {
-  background: color-mix(in srgb, var(--teal) 12%, #efe6d2);
-}
 .companion-chat__send:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 .companion-chat__send:not(:disabled):hover {
-  background: color-mix(in srgb, var(--teal) 22%, #10182a);
-}
-[data-theme="khaki"] .companion-chat__send:not(:disabled):hover {
-  background: color-mix(in srgb, var(--teal) 18%, #efe6d2);
+  background: color-mix(in srgb, var(--teal) 22%, var(--panel));
 }
 
 /* —— 主动轻语气泡 —— */
@@ -4990,12 +5012,9 @@ button,
   padding: 0.55rem 0.5rem 0.55rem;
   border: 1px solid var(--line);
   border-radius: 0.55rem;
-  background: #10182a;
+  background: var(--panel);
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
   pointer-events: auto;
-}
-[data-theme="khaki"] .companion-pet-menu {
-  background: #efe6d2;
 }
 .companion-pet-menu__label {
   margin: 0 0.15rem 0.45rem;
@@ -5013,19 +5032,13 @@ button,
   width: 100%;
   justify-content: center;
   min-height: 2rem;
-  background: #0c1220;
+  background: var(--field-bg);
   color: var(--paper);
-}
-[data-theme="khaki"] .companion-pet-menu__btn {
-  background: #e8dcc0;
 }
 .companion-pet-menu__btn:hover {
   border-color: var(--amber);
   color: var(--amber);
-  background: color-mix(in srgb, var(--amber) 10%, #0c1220);
-}
-[data-theme="khaki"] .companion-pet-menu__btn:hover {
-  background: color-mix(in srgb, var(--amber) 10%, #e8dcc0);
+  background: color-mix(in srgb, var(--amber) 10%, var(--field-bg));
 }
 .companion-pet-menu__foot {
   margin: 0.45rem 0.1rem 0;

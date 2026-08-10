@@ -32,7 +32,7 @@ export default function RootLayout({
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("owncosmos-theme");if(t==="khaki"||t==="night")document.documentElement.setAttribute("data-theme",t)}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("owncosmos-theme");if(t==="khaki"||t==="night"||t==="mono")document.documentElement.setAttribute("data-theme",t)}catch(e){}})();`,
           }}
         />
       </head>

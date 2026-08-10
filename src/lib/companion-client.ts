@@ -1,6 +1,8 @@
 /** 伴读桌宠：打卡成功后立刻弹鼓励轻语 */
 
 export const COMPANION_BUBBLE_EVENT = "owncosmos:companion-bubble";
+/** 设置页上传/恢复桌宠后通知壳层刷新外观 */
+export const COMPANION_PET_CHANGED = "owncosmos:companion-pet";
 
 export type CompanionBubbleDetail = {
   id: string;

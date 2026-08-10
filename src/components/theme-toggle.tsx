@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { applyTheme, isThemeId, readStoredTheme, type ThemeId } from "@/lib/theme";
+import {
+  applyTheme,
+  isThemeId,
+  nextTheme,
+  readStoredTheme,
+  themeLabel,
+  type ThemeId,
+} from "@/lib/theme";
 
 type ThemeToggleProps = {
   /** When set, toggle also persists to the user record. */
@@ -22,7 +29,7 @@ export function ThemeToggle({ persistToUser = false }: ThemeToggleProps) {
   }, []);
 
   async function toggle() {
-    const next: ThemeId = theme === "night" ? "khaki" : "night";
+    const next = nextTheme(theme);
     applyTheme(next);
     setTheme(next);
 
@@ -49,15 +56,18 @@ export function ThemeToggle({ persistToUser = false }: ThemeToggleProps) {
     );
   }
 
+  const upcoming = nextTheme(theme);
+
   return (
     <button
       type="button"
       onClick={toggle}
       disabled={saving}
       className="ui-btn-ghost bg-[var(--field-bg)] text-[var(--paper)]"
-      aria-label={theme === "khaki" ? "切换到深空夜色" : "切换到时光卡其"}
+      aria-label={`切换到${themeLabel(upcoming)}`}
+      title={`当前 ${themeLabel(theme)}，点击切换`}
     >
-      {saving ? "同步中…" : theme === "khaki" ? "深空夜色" : "时光卡其"}
+      {saving ? "同步中…" : themeLabel(upcoming)}
     </button>
   );
 }

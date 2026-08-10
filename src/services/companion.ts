@@ -26,6 +26,12 @@ import {
   clampUserAddress,
   normalizeTone,
 } from "@/lib/companion-persona";
+import {
+  DEFAULT_PET_MANIFEST,
+  DEFAULT_PET_SHEET_URL,
+  normalizePetManifest,
+  type PetManifest,
+} from "@/lib/companion-pet";
 import { moodDisplay, parseMoodKey, type MoodKey } from "@/lib/moods";
 import { getFocusShortStats } from "@/services/focus";
 import { getHomeSummary } from "@/services/home-summary";
@@ -186,7 +192,40 @@ export type CompanionPref = {
   tone: CompanionTone;
   userAddress: string;
   personaReady: boolean;
+  /** 自定义精灵图；null 表示内置默认 */
+  petSheetUrl: string | null;
+  petManifest: PetManifest | null;
+  /** 实际播放用（自定义或默认） */
+  activePetSheetUrl: string;
+  activePetManifest: PetManifest;
 };
+
+function resolvePetFromRow(row?: {
+  petSheetUrl?: string | null;
+  petManifest?: Record<string, unknown> | null;
+}): Pick<
+  CompanionPref,
+  "petSheetUrl" | "petManifest" | "activePetSheetUrl" | "activePetManifest"
+> {
+  const sheet = row?.petSheetUrl?.trim() || null;
+  const parsed = row?.petManifest
+    ? normalizePetManifest(row.petManifest)
+    : null;
+  if (sheet && parsed?.ok) {
+    return {
+      petSheetUrl: sheet,
+      petManifest: parsed.manifest,
+      activePetSheetUrl: sheet,
+      activePetManifest: parsed.manifest,
+    };
+  }
+  return {
+    petSheetUrl: null,
+    petManifest: null,
+    activePetSheetUrl: DEFAULT_PET_SHEET_URL,
+    activePetManifest: DEFAULT_PET_MANIFEST,
+  };
+}
 
 export async function getCompanionPref(userId: string): Promise<CompanionPref> {
   const rows = await getDb()
@@ -195,6 +234,7 @@ export async function getCompanionPref(userId: string): Promise<CompanionPref> {
     .where(eq(aiCompanionPref.userId, userId))
     .limit(1);
   const row = rows[0];
+  const pet = resolvePetFromRow(row);
   return {
     dnd: row?.dnd ?? false,
     dailyBubbleCap: row?.dailyBubbleCap ?? DEFAULT_DAILY_BUBBLE_CAP,
@@ -204,15 +244,21 @@ export async function getCompanionPref(userId: string): Promise<CompanionPref> {
     tone: normalizeTone(row?.tone),
     userAddress: row?.userAddress?.trim() || DEFAULT_USER_ADDRESS,
     personaReady: row?.personaReady ?? false,
+    ...pet,
   };
 }
 
 export async function upsertCompanionPref(
   userId: string,
-  patch: Partial<CompanionPref>,
+  patch: Partial<
+    Omit<
+      CompanionPref,
+      "activePetSheetUrl" | "activePetManifest"
+    >
+  >,
 ): Promise<CompanionPref> {
   const current = await getCompanionPref(userId);
-  const next: CompanionPref = {
+  const nextBase = {
     dnd: patch.dnd ?? current.dnd,
     dailyBubbleCap: patch.dailyBubbleCap ?? current.dailyBubbleCap,
     quietStartMin:
@@ -232,37 +278,67 @@ export async function upsertCompanionPref(
         ? clampUserAddress(patch.userAddress)
         : current.userAddress,
     personaReady: patch.personaReady ?? current.personaReady,
+    petSheetUrl:
+      patch.petSheetUrl !== undefined ? patch.petSheetUrl : current.petSheetUrl,
+    petManifest:
+      patch.petManifest !== undefined
+        ? patch.petManifest
+        : current.petManifest,
   };
   const now = new Date();
   await getDb()
     .insert(aiCompanionPref)
     .values({
       userId,
-      dnd: next.dnd,
-      dailyBubbleCap: next.dailyBubbleCap,
-      quietStartMin: next.quietStartMin,
-      quietEndMin: next.quietEndMin,
-      companionName: next.companionName,
-      tone: next.tone,
-      userAddress: next.userAddress,
-      personaReady: next.personaReady,
+      dnd: nextBase.dnd,
+      dailyBubbleCap: nextBase.dailyBubbleCap,
+      quietStartMin: nextBase.quietStartMin,
+      quietEndMin: nextBase.quietEndMin,
+      companionName: nextBase.companionName,
+      tone: nextBase.tone,
+      userAddress: nextBase.userAddress,
+      personaReady: nextBase.personaReady,
+      petSheetUrl: nextBase.petSheetUrl,
+      petManifest: nextBase.petManifest,
       updatedAt: now,
     })
     .onConflictDoUpdate({
       target: aiCompanionPref.userId,
       set: {
-        dnd: next.dnd,
-        dailyBubbleCap: next.dailyBubbleCap,
-        quietStartMin: next.quietStartMin,
-        quietEndMin: next.quietEndMin,
-        companionName: next.companionName,
-        tone: next.tone,
-        userAddress: next.userAddress,
-        personaReady: next.personaReady,
+        dnd: nextBase.dnd,
+        dailyBubbleCap: nextBase.dailyBubbleCap,
+        quietStartMin: nextBase.quietStartMin,
+        quietEndMin: nextBase.quietEndMin,
+        companionName: nextBase.companionName,
+        tone: nextBase.tone,
+        userAddress: nextBase.userAddress,
+        personaReady: nextBase.personaReady,
+        petSheetUrl: nextBase.petSheetUrl,
+        petManifest: nextBase.petManifest,
         updatedAt: now,
       },
     });
-  return next;
+  return getCompanionPref(userId);
+}
+
+export async function setCompanionCustomPet(
+  userId: string,
+  sheetUrl: string,
+  manifest: PetManifest,
+): Promise<CompanionPref> {
+  return upsertCompanionPref(userId, {
+    petSheetUrl: sheetUrl,
+    petManifest: manifest,
+  });
+}
+
+export async function clearCompanionCustomPet(
+  userId: string,
+): Promise<CompanionPref> {
+  return upsertCompanionPref(userId, {
+    petSheetUrl: null,
+    petManifest: null,
+  });
 }
 
 export type ProactiveBubble = {

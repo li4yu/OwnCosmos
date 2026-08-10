@@ -218,6 +218,13 @@
       "when": 1786343259806,
       "tag": "0030_silent_scarlet_spider",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1786348132218,
+      "tag": "0031_short_cerise",
+      "breakpoints": true
     }
   ]
 }

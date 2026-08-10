@@ -46,7 +46,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
-  /** Phase 2: 深空夜色 night / 时光卡其 khaki */
+  /** Phase 2: night / khaki / mono（墨白） */
   theme: text("theme").notNull().default("night"),
   /** Phase 2: 简介 / 签名 */
   bio: text("bio"),
@@ -219,6 +219,10 @@ export const aiCompanionPref = pgTable("ai_companion_pref", {
   userAddress: text("user_address").notNull().default(DEFAULT_USER_ADDRESS),
   /** false：首次打开对话时引导设置人格 */
   personaReady: boolean("persona_ready").notNull().default(false),
+  /** 自定义桌宠精灵图 URL；null=内置默认 */
+  petSheetUrl: text("pet_sheet_url"),
+  /** 自定义桌宠 pet.json 清单（含 frame/animations） */
+  petManifest: jsonb("pet_manifest").$type<Record<string, unknown> | null>(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { applyTheme, isThemeId, type ThemeId } from "@/lib/theme";
+import {
+  THEME_OPTIONS,
+  applyTheme,
+  isThemeId,
+  type ThemeId,
+} from "@/lib/theme";
 
 type AppearanceFormProps = {
   initialTheme: string | null | undefined;
@@ -40,34 +45,55 @@ export function AppearanceForm({ initialTheme }: AppearanceFormProps) {
   }
 
   return (
-    <div className="flex max-w-md flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <p className="text-xs text-[var(--mist)]">
         登录后主题以账号设置为准。未登录访客仍可用页头临时切换（不入库）。
       </p>
-      <div className="grid grid-cols-2 gap-1.5">
-        {(
-          [
-            { id: "night", label: "深空夜色" },
-            { id: "khaki", label: "时光卡其" },
-          ] as const
-        ).map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            disabled={pending}
-            onClick={() => selectTheme(opt.id)}
-            className={`rounded-md border px-3 py-2 text-sm tracking-[0.08em] transition disabled:opacity-50 ${
-              theme === opt.id
-                ? "border-[var(--amber)] bg-[var(--amber)] text-[var(--on-amber)]"
-                : "border-[var(--line)] text-[var(--mist)] hover:border-[var(--amber)]"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {THEME_OPTIONS.map((opt) => {
+          const active = theme === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              disabled={pending}
+              onClick={() => selectTheme(opt.id)}
+              className={`group flex flex-col gap-2 rounded-lg border p-2.5 text-left transition disabled:opacity-50 ${
+                active
+                  ? "border-[var(--amber)] bg-[var(--amber-soft)]"
+                  : "border-[var(--line)] hover:border-[var(--amber)]"
+              }`}
+            >
+              <span className="flex h-8 overflow-hidden rounded-md border border-[var(--line)]">
+                {opt.swatches.map((c) => (
+                  <span
+                    key={c}
+                    className="h-full flex-1"
+                    style={{ background: c }}
+                  />
+                ))}
+              </span>
+              <span className="flex items-baseline justify-between gap-2">
+                <span
+                  className={`text-sm tracking-[0.06em] ${
+                    active ? "text-[var(--amber)]" : "text-[var(--paper)]"
+                  }`}
+                >
+                  {opt.label}
+                </span>
+                {active ? (
+                  <span className="font-mono text-[9px] tracking-[0.14em] text-[var(--teal)]">
+                    ON
+                  </span>
+                ) : null}
+              </span>
+              <span className="text-[10px] text-[var(--mist)]">{opt.hint}</span>
+            </button>
+          );
+        })}
       </div>
       {error ? (
-        <p className="text-xs text-[#b54a4a]" role="alert">
+        <p className="text-xs text-[var(--danger)]" role="alert">
           {error}
         </p>
       ) : null}

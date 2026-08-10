@@ -148,7 +148,12 @@ export function GuestAtmosphereLanding({
         const twinkle = reduce
           ? st.a
           : st.a * (0.55 + 0.45 * Math.sin(t * st.s + st.p));
-        const alpha = theme === "khaki" ? twinkle * 0.55 : twinkle;
+        const alpha =
+          theme === "khaki"
+            ? twinkle * 0.55
+            : theme === "mono"
+              ? twinkle * 0.85
+              : twinkle;
         ctx.beginPath();
         ctx.fillStyle = `rgba(${rgb}, ${alpha})`;
         ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
