@@ -1,9 +1,14 @@
 import { randomBytes } from "node:crypto";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, lt } from "drizzle-orm";
 import { chatCompletion } from "@/ai/llm";
 import { SYSTEM_MEMORY_COMPRESS } from "@/ai/prompts";
 import { getDb } from "@/db";
 import { aiConversation, aiMessage } from "@/db/schema";
+import {
+  COMPANION_CLOSED_RETENTION_DAYS,
+  COMPANION_MAX_CONVERSATIONS,
+  retentionCutoff,
+} from "@/lib/conversation-retention";
 
 const RECENT_MESSAGE_LIMIT = 12;
 const COMPRESS_AFTER_MESSAGES = 16;
@@ -12,7 +17,53 @@ function newId() {
   return randomBytes(16).toString("hex");
 }
 
+/** 伴读：删过期已关闭会话 + 超上限时删最旧已关闭（不碰当前开放） */
+export async function purgeCompanionConversations(userId: string) {
+  const db = getDb();
+  const cutoff = retentionCutoff(COMPANION_CLOSED_RETENTION_DAYS);
+
+  await db
+    .delete(aiConversation)
+    .where(
+      and(
+        eq(aiConversation.userId, userId),
+        isNotNull(aiConversation.closedAt),
+        lt(aiConversation.closedAt, cutoff),
+      ),
+    );
+
+  const rows = await db
+    .select({
+      id: aiConversation.id,
+      closedAt: aiConversation.closedAt,
+      updatedAt: aiConversation.updatedAt,
+    })
+    .from(aiConversation)
+    .where(eq(aiConversation.userId, userId))
+    .orderBy(asc(aiConversation.updatedAt));
+
+  const excess = rows.length - COMPANION_MAX_CONVERSATIONS;
+  if (excess <= 0) return;
+
+  const victimIds: string[] = [];
+  for (const row of rows) {
+    if (victimIds.length >= excess) break;
+    if (row.closedAt != null) victimIds.push(row.id);
+  }
+  if (victimIds.length === 0) return;
+
+  await db
+    .delete(aiConversation)
+    .where(
+      and(
+        eq(aiConversation.userId, userId),
+        inArray(aiConversation.id, victimIds),
+      ),
+    );
+}
+
 export async function getOrCreateOpenConversation(userId: string) {
+  await purgeCompanionConversations(userId);
   const db = getDb();
   const existing = await db
     .select()
@@ -44,6 +95,7 @@ export async function getOrCreateOpenConversation(userId: string) {
 }
 
 export async function startNewConversation(userId: string) {
+  await purgeCompanionConversations(userId);
   const db = getDb();
   const now = new Date();
   await db
@@ -63,12 +115,177 @@ export async function startNewConversation(userId: string) {
     updatedAt: now,
     closedAt: null,
   });
+  await purgeCompanionConversations(userId);
   const rows = await db
     .select()
     .from(aiConversation)
     .where(eq(aiConversation.id, id))
     .limit(1);
   return rows[0]!;
+}
+
+/** 近期伴读会话（含已关闭），供历史切换 */
+export async function listCompanionConversations(
+  userId: string,
+  limit = COMPANION_MAX_CONVERSATIONS,
+) {
+  await purgeCompanionConversations(userId);
+  return getDb()
+    .select({
+      id: aiConversation.id,
+      title: aiConversation.title,
+      updatedAt: aiConversation.updatedAt,
+      closedAt: aiConversation.closedAt,
+    })
+    .from(aiConversation)
+    .where(eq(aiConversation.userId, userId))
+    .orderBy(desc(aiConversation.updatedAt))
+    .limit(limit);
+}
+
+/** 切到指定会话：设为当前打开，其余关闭 */
+export async function openCompanionConversation(
+  userId: string,
+  conversationId: string,
+) {
+  const listed = await listConversationMessages(userId, conversationId, 1);
+  if (!listed?.conversation) return null;
+  const db = getDb();
+  const now = new Date();
+  await db
+    .update(aiConversation)
+    .set({ closedAt: now, updatedAt: now })
+    .where(
+      and(eq(aiConversation.userId, userId), isNull(aiConversation.closedAt)),
+    );
+  await db
+    .update(aiConversation)
+    .set({ closedAt: null, updatedAt: now })
+    .where(
+      and(
+        eq(aiConversation.id, conversationId),
+        eq(aiConversation.userId, userId),
+      ),
+    );
+  return listConversationMessages(userId, conversationId);
+}
+
+/** 删除伴读会话（消息级联） */
+export async function deleteCompanionConversation(
+  userId: string,
+  conversationId: string,
+) {
+  const listed = await listConversationMessages(userId, conversationId, 1);
+  if (!listed?.conversation) return null;
+
+  await getDb()
+    .delete(aiConversation)
+    .where(
+      and(
+        eq(aiConversation.id, conversationId),
+        eq(aiConversation.userId, userId),
+      ),
+    );
+
+  await purgeCompanionConversations(userId);
+
+  const remaining = await listCompanionConversations(userId, 1);
+  if (remaining[0]) {
+    const opened = await openCompanionConversation(userId, remaining[0].id);
+    return {
+      conversation: opened!.conversation,
+      messages: opened!.messages,
+      conversations: await listCompanionConversations(userId),
+      count: 1,
+    };
+  }
+
+  const conversation = await getOrCreateOpenConversation(userId);
+  return {
+    conversation,
+    messages: [] as typeof listed.messages,
+    conversations: await listCompanionConversations(userId),
+    count: 1,
+  };
+}
+
+/** 批量删除伴读会话 */
+export async function deleteCompanionConversationsMany(
+  userId: string,
+  conversationIds: string[],
+): Promise<
+  | {
+      ok: true;
+      count: number;
+      conversation: Awaited<ReturnType<typeof getOrCreateOpenConversation>>;
+      messages: NonNullable<
+        Awaited<ReturnType<typeof listConversationMessages>>
+      >["messages"];
+      conversations: Awaited<ReturnType<typeof listCompanionConversations>>;
+    }
+  | { ok: false; error: string }
+> {
+  const ids = [
+    ...new Set(conversationIds.map((id) => id.trim()).filter(Boolean)),
+  ];
+  if (ids.length === 0) return { ok: false, error: "请先选择会话" };
+
+  const owned = await getDb()
+    .select({
+      id: aiConversation.id,
+      closedAt: aiConversation.closedAt,
+    })
+    .from(aiConversation)
+    .where(
+      and(eq(aiConversation.userId, userId), inArray(aiConversation.id, ids)),
+    );
+  if (owned.length === 0) return { ok: false, error: "未找到所选会话" };
+
+  const deleteIds = owned.map((r) => r.id);
+  const deletingOpen = owned.some((r) => r.closedAt == null);
+
+  await getDb()
+    .delete(aiConversation)
+    .where(
+      and(
+        eq(aiConversation.userId, userId),
+        inArray(aiConversation.id, deleteIds),
+      ),
+    );
+
+  await purgeCompanionConversations(userId);
+
+  if (deletingOpen) {
+    const remaining = await listCompanionConversations(userId, 1);
+    if (remaining[0]) {
+      const opened = await openCompanionConversation(userId, remaining[0].id);
+      return {
+        ok: true,
+        count: deleteIds.length,
+        conversation: opened!.conversation,
+        messages: opened!.messages,
+        conversations: await listCompanionConversations(userId),
+      };
+    }
+    const conversation = await getOrCreateOpenConversation(userId);
+    return {
+      ok: true,
+      count: deleteIds.length,
+      conversation,
+      messages: [],
+      conversations: await listCompanionConversations(userId),
+    };
+  }
+
+  const open = await getOrCreateOpenConversation(userId);
+  const packed = await listConversationMessages(userId, open.id);
+  return {
+    ok: true,
+    count: deleteIds.length,
+    conversation: open,
+    messages: packed?.messages ?? [],
+    conversations: await listCompanionConversations(userId),
+  };
 }
 
 export async function listConversationMessages(

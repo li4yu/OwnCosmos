@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, lt } from "drizzle-orm";
 import { chatCompletion } from "@/ai/llm";
 import { semanticSearchUser } from "@/ai/search";
 import { isRagInfraReady } from "@/ai/config";
@@ -22,6 +22,11 @@ import {
   archiveItem,
 } from "@/db/schema";
 import { scheduleArchiveRagUpsert } from "@/ai";
+import {
+  REFLECT_CLOSED_RETENTION_DAYS,
+  REFLECT_MAX_CONVERSATIONS,
+  retentionCutoff,
+} from "@/lib/conversation-retention";
 import { createEssay } from "@/services/essays";
 import { wipeInflowArchivesByIds } from "@/services/archive";
 
@@ -29,7 +34,53 @@ function newId() {
   return randomBytes(16).toString("hex");
 }
 
+/** 自省：删过期已关闭会话 + 超上限时删最旧已关闭（不碰当前开放） */
+export async function purgeReflectConversations(userId: string) {
+  const db = getDb();
+  const cutoff = retentionCutoff(REFLECT_CLOSED_RETENTION_DAYS);
+
+  await db
+    .delete(aiReflectConversation)
+    .where(
+      and(
+        eq(aiReflectConversation.userId, userId),
+        isNotNull(aiReflectConversation.closedAt),
+        lt(aiReflectConversation.closedAt, cutoff),
+      ),
+    );
+
+  const rows = await db
+    .select({
+      id: aiReflectConversation.id,
+      closedAt: aiReflectConversation.closedAt,
+      updatedAt: aiReflectConversation.updatedAt,
+    })
+    .from(aiReflectConversation)
+    .where(eq(aiReflectConversation.userId, userId))
+    .orderBy(asc(aiReflectConversation.updatedAt));
+
+  const excess = rows.length - REFLECT_MAX_CONVERSATIONS;
+  if (excess <= 0) return;
+
+  const victimIds: string[] = [];
+  for (const row of rows) {
+    if (victimIds.length >= excess) break;
+    if (row.closedAt != null) victimIds.push(row.id);
+  }
+  if (victimIds.length === 0) return;
+
+  await db
+    .delete(aiReflectConversation)
+    .where(
+      and(
+        eq(aiReflectConversation.userId, userId),
+        inArray(aiReflectConversation.id, victimIds),
+      ),
+    );
+}
+
 export async function getOrCreateReflectConversation(userId: string) {
+  await purgeReflectConversations(userId);
   const db = getDb();
   const existing = await db
     .select()
@@ -64,6 +115,7 @@ export async function getOrCreateReflectConversation(userId: string) {
 }
 
 export async function startNewReflectConversation(userId: string) {
+  await purgeReflectConversations(userId);
   const db = getDb();
   const now = new Date();
   await db
@@ -85,6 +137,7 @@ export async function startNewReflectConversation(userId: string) {
     updatedAt: now,
     closedAt: null,
   });
+  await purgeReflectConversations(userId);
   const rows = await db
     .select()
     .from(aiReflectConversation)
@@ -94,7 +147,11 @@ export async function startNewReflectConversation(userId: string) {
 }
 
 /** 近期对镜会话（含已拭镜关闭的），供下拉切换 */
-export async function listReflectConversations(userId: string, limit = 40) {
+export async function listReflectConversations(
+  userId: string,
+  limit = REFLECT_MAX_CONVERSATIONS,
+) {
+  await purgeReflectConversations(userId);
   return getDb()
     .select({
       id: aiReflectConversation.id,
@@ -113,6 +170,7 @@ export async function openReflectConversation(
   userId: string,
   conversationId: string,
 ) {
+  await purgeReflectConversations(userId);
   const listed = await listReflectMessages(userId, conversationId, 1);
   if (!listed?.conversation) return null;
   const db = getDb();

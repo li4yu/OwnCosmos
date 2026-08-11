@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { scheduleArchiveRagRefreshIfStale } from "@/ai";
 import { IconActionLink } from "@/components/ui/icon-action";
 import { IconArrowLeft } from "@/components/ui/icon-glyphs";
 import {
@@ -59,6 +60,9 @@ export async function ArchiveDetailView({
 
   const isFragment = item.type === ARCHIVE_TYPE_MEMORY_FRAGMENT;
   const isTopic = item.type === ARCHIVE_TYPE_ESSAY_TOPIC;
+  if (item.inKnowledge) {
+    scheduleArchiveRagRefreshIfStale(userId, item.id);
+  }
   const [tags, focusSession, topicEssays] = await Promise.all([
     listArchiveItemTags(userId, item.id),
     item.type === ARCHIVE_TYPE_FOCUS_RECORD && item.sourceFocusSessionId

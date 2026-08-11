@@ -43,6 +43,7 @@ import {
   AI_INTENT_UNKNOWN,
   AI_INTENT_USER_RECALL,
 } from "@/db/schema";
+import { formatDueDateInput } from "@/lib/plan-dates";
 import { buildPersonaPromptBlock } from "@/lib/companion-persona";
 import {
   appendMessage,
@@ -53,6 +54,19 @@ import {
   setConversationTitleIfEmpty,
 } from "@/services/ai-conversation";
 import { getCompanionPref } from "@/services/companion";
+
+function buildNowContextBlock(now = new Date()): string {
+  const ymd = formatDueDateInput(now);
+  const weekday = new Intl.DateTimeFormat("zh-CN", {
+    weekday: "long",
+  }).format(now);
+  const hm = new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(now);
+  return `【此刻】本地日历 ${ymd}（${weekday}）约 ${hm}。回答「今天几号/星期几/现在」必须用本行；馆藏 created/archived 只是条目日期，不是今天。`;
+}
 
 export type CompanionStreamEvent =
   | {
@@ -221,7 +235,8 @@ export async function* streamCompanionTurn(input: {
   });
   const pref = await getCompanionPref(input.userId);
   const personaBlock = buildPersonaPromptBlock(pref);
-  const systemWithPersona = `${built.system}\n\n${personaBlock}`;
+  const nowBlock = buildNowContextBlock();
+  const systemWithPersona = `${built.system}\n\n${personaBlock}\n\n${nowBlock}`;
   const jumps = jumpsFromAgentMeta(route.intent, built.meta);
 
   yield {

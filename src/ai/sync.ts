@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import {
   chunkPlainText,
   hashContent,
@@ -16,6 +16,7 @@ import {
 import { getDb } from "@/db";
 import {
   ARCHIVE_TYPE_DAILY_CHECKIN,
+  ARCHIVE_TYPE_ESSAY_TOPIC,
   ARCHIVE_TYPE_PLAN_CYCLE,
   RAG_CORPUS_PROJECT,
   RAG_CORPUS_USER,
@@ -25,9 +26,11 @@ import {
   RAG_STATUS_ERROR,
   RAG_STATUS_SYNCED,
   archiveItem,
+  archiveTopicEssay,
   ragDocument,
 } from "@/db/schema";
 import { formatDueDateInput } from "@/lib/plan-dates";
+import { stripToPlainText } from "@/lib/rich-text";
 
 function newId() {
   return randomBytes(16).toString("hex");
@@ -72,6 +75,65 @@ function buildArchiveRagMeta(item: {
   }
 
   return meta;
+}
+
+/** 专题归档：父条简介 + 夹内各篇正文（否则向量库只有夹名） */
+async function buildArchivePlainForRag(item: {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  body: string;
+  bodyFormat: string | null;
+}): Promise<string> {
+  if (item.type !== ARCHIVE_TYPE_ESSAY_TOPIC) {
+    return normalizeArchivePlainText({
+      title: item.title,
+      body: item.body,
+      bodyFormat: item.bodyFormat,
+    });
+  }
+
+  const children = await getDb()
+    .select()
+    .from(archiveTopicEssay)
+    .where(
+      and(
+        eq(archiveTopicEssay.userId, item.userId),
+        eq(archiveTopicEssay.archiveItemId, item.id),
+      ),
+    )
+    .orderBy(asc(archiveTopicEssay.sortIndex), asc(archiveTopicEssay.id));
+
+  const parts: string[] = [];
+  const folderHead = normalizeArchivePlainText({
+    title: `专题：${item.title}`,
+    body: item.body,
+    bodyFormat: item.bodyFormat,
+  });
+  if (folderHead.trim()) parts.push(folderHead);
+
+  for (const child of children) {
+    const created = formatDueDateInput(child.sourceCreatedAt);
+    const piece = normalizeArchivePlainText({
+      title: child.title,
+      body: child.body,
+      bodyFormat: child.bodyFormat,
+    });
+    const mood = child.mood?.trim();
+    const block = [
+      `【篇 ${created}${mood ? ` · ${mood}` : ""}】`,
+      piece,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    if (block.trim()) parts.push(block);
+  }
+
+  if (parts.length === 0) {
+    return stripToPlainText(item.title).trim();
+  }
+  return parts.join("\n\n");
 }
 
 async function upsertReconcile(row: {
@@ -158,11 +220,7 @@ export async function upsertArchiveItemRag(
     return { ok: true };
   }
 
-  const plain = normalizeArchivePlainText({
-    title: item.title,
-    body: item.body,
-    bodyFormat: item.bodyFormat,
-  });
+  const plain = await buildArchivePlainForRag(item);
   if (!plain.trim()) {
     await deleteArchiveItemRag(userId, archiveItemId);
     return { ok: true };
@@ -346,4 +404,51 @@ export function scheduleArchiveRagUpsert(userId: string, archiveItemId: string) 
 
 export function scheduleArchiveRagDelete(userId: string, archiveItemId: string) {
   void deleteArchiveItemRag(userId, archiveItemId).catch(() => {});
+}
+
+/**
+ * 专题等正文构成可能变更：若本地可拼正文与已同步 hash 不一致则重入库。
+ * 供馆藏详情打开时补洞（不阻塞页面）。
+ */
+export function scheduleArchiveRagRefreshIfStale(
+  userId: string,
+  archiveItemId: string,
+) {
+  void (async () => {
+    if (!isRagInfraReady()) return;
+    const rows = await getDb()
+      .select()
+      .from(archiveItem)
+      .where(
+        and(eq(archiveItem.id, archiveItemId), eq(archiveItem.userId, userId)),
+      )
+      .limit(1);
+    const item = rows[0];
+    if (!item?.inKnowledge) return;
+    const plain = await buildArchivePlainForRag(item);
+    if (!plain.trim()) return;
+    const contentHash = hashContent(plain);
+    const docs = await getDb()
+      .select({
+        contentHash: ragDocument.contentHash,
+        status: ragDocument.status,
+      })
+      .from(ragDocument)
+      .where(
+        and(
+          eq(ragDocument.corpus, RAG_CORPUS_USER),
+          eq(ragDocument.sourceId, archiveItemId),
+        ),
+      )
+      .limit(1);
+    const doc = docs[0];
+    if (
+      doc &&
+      doc.status === RAG_STATUS_SYNCED &&
+      doc.contentHash === contentHash
+    ) {
+      return;
+    }
+    await upsertArchiveItemRag(userId, archiveItemId);
+  })().catch(() => {});
 }

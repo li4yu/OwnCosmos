@@ -13,6 +13,7 @@ export {
   upsertHandbookSectionRag,
   scheduleArchiveRagUpsert,
   scheduleArchiveRagDelete,
+  scheduleArchiveRagRefreshIfStale,
 } from "@/ai/sync";
 export { semanticSearchUser, semanticSearchProject } from "@/ai/search";
 export { streamRagAnswer } from "@/ai/rag-answer";

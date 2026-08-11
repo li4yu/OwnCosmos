@@ -14,6 +14,8 @@ import {
   IconSend,
   IconStop,
 } from "@/components/ui/icon-glyphs";
+import { MirrorSideToggle } from "@/components/shell/mirror-side-toggle";
+import { useMirrorSideCollapse } from "@/hooks/use-mirror-side-collapse";
 
 export type ReflectArchiveOpt = {
   id: string;
@@ -60,6 +62,7 @@ export function ReflectMirror({
   initialView?: View;
 }) {
   const [view, setViewState] = useState<View>(() => parseView(initialView));
+  const { collapsed, toggle } = useMirrorSideCollapse("reflect");
 
   function setView(next: View) {
     setViewState(next);
@@ -67,44 +70,63 @@ export function ReflectMirror({
   }
 
   return (
-    <div className="oc-mirror">
+    <div
+      className={
+        collapsed ? "oc-mirror oc-mirror--side-collapsed" : "oc-mirror"
+      }
+    >
       <div className="oc-mirror__veil" aria-hidden>
         <span className="oc-mirror__orb oc-mirror__orb--a" />
         <span className="oc-mirror__orb oc-mirror__orb--b" />
         <span className="oc-mirror__grain" />
       </div>
 
-      <aside className="oc-mirror__side">
-        <header className="oc-mirror__inscribe">
-          <p className="oc-mirror__eyebrow">MIRROR</p>
-          <h1 className="oc-mirror__motto" lang="zh-Hans">
-            以镜自省
-          </h1>
-          <p className="oc-mirror__sub">对着过往，看清此刻的自己</p>
-        </header>
+      <aside className="oc-mirror__side" aria-label="自省铭文栏">
+        {collapsed ? (
+          <MirrorSideToggle collapsed onToggle={toggle} variant="rail" />
+        ) : (
+          <>
+            <div className="oc-mirror__side-toolbar">
+              <MirrorSideToggle
+                collapsed={false}
+                onToggle={toggle}
+                variant="panel"
+              />
+            </div>
+            <div className="oc-mirror__side-body">
+              <header className="oc-mirror__inscribe">
+                <p className="oc-mirror__eyebrow">MIRROR</p>
+                <h1 className="oc-mirror__motto" lang="zh-Hans">
+                  以镜自省
+                </h1>
+                <p className="oc-mirror__sub">对着过往，看清此刻的自己</p>
+              </header>
 
-        <nav className="oc-mirror__modes" aria-label="自省方式">
-          {VIEWS.map((v, i) => (
-            <button
-              key={v.id}
-              type="button"
-              className={
-                view === v.id
-                  ? "oc-mirror__mode oc-mirror__mode--on"
-                  : "oc-mirror__mode"
-              }
-              onClick={() => setView(v.id)}
-            >
-              <span className="oc-mirror__mode-idx">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className="oc-mirror__mode-copy">
-                <span className="oc-mirror__mode-label">{v.label}</span>
-                <span className="oc-mirror__mode-hint">{v.hint}</span>
-              </span>
-            </button>
-          ))}
-        </nav>
+              <nav className="oc-mirror__modes" aria-label="自省方式">
+                {VIEWS.map((v, i) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    className={
+                      view === v.id
+                        ? "oc-mirror__mode oc-mirror__mode--on"
+                        : "oc-mirror__mode"
+                    }
+                    onClick={() => setView(v.id)}
+                  >
+                    <span className="oc-mirror__mode-idx">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="oc-mirror__mode-copy">
+                      <span className="oc-mirror__mode-label">{v.label}</span>
+                      <span className="oc-mirror__mode-hint">{v.hint}</span>
+                    </span>
+                  </button>
+                ))}
+              </nav>
+            </div>
+          </>
+        )}
       </aside>
 
       <section className="oc-mirror__looking" aria-label="镜面">
@@ -398,7 +420,8 @@ function EchoPane() {
       <div className="oc-mirror__toolbar">
         <div className="oc-mirror__toolbar-main">
           <p className="oc-mirror__lead">
-            镜中是过去自己的缩影——只依据你已藏忆的馆藏作答。
+            镜中是过去自己的缩影——只依据你已藏忆的馆藏作答。关闭超过 90
+            天或过多的旧对镜会自动清理。
           </p>
           {conversationId && selectOptions.length > 0 ? (
             <SelectField

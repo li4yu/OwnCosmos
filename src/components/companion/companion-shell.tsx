@@ -21,7 +21,15 @@ import {
   DEFAULT_PET_SHEET_URL,
 } from "@/components/companion/pet-sprite";
 import { CompanionPersonaSetup } from "@/components/companion/companion-persona-setup";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { HoverTip } from "@/components/ui/hover-tip";
+import { SelectField } from "@/components/ui/select-field";
+import {
+  IconClose,
+  IconRefresh,
+  IconSend,
+  IconStop,
+} from "@/components/ui/icon-glyphs";
 import { RECOMMENDED_QUESTIONS } from "@/ai/recommended-questions";
 import {
   DEFAULT_COMPANION_NAME,
@@ -42,6 +50,13 @@ type ChatMessage = {
   content: string;
   intent?: string | null;
   jumps?: CompanionJump[];
+};
+
+type CompanionConvRow = {
+  id: string;
+  title: string | null;
+  updatedAt: string;
+  closedAt: string | null;
 };
 
 type Recommended = { id: string; label: string; text: string };
@@ -112,6 +127,12 @@ export function CompanionShell({ userName }: { userName: string }) {
   const [open, setOpen] = useState(false);
   const [infraReady, setInfraReady] = useState(true);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<CompanionConvRow[]>([]);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingBatchDelete, setPendingBatchDelete] = useState(false);
+  const [historyManage, setHistoryManage] = useState(false);
+  const [selectedConvIds, setSelectedConvIds] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [recommended, setRecommended] =
     useState<Recommended[]>(FALLBACK_RECOMMENDED);
@@ -154,6 +175,34 @@ export function CompanionShell({ userName }: { userName: string }) {
     moved: boolean;
   } | null>(null);
 
+  function applyConversations(
+    rows:
+      | {
+          id: string;
+          title: string | null;
+          updatedAt: string | Date;
+          closedAt: string | Date | null;
+        }[]
+      | undefined,
+  ) {
+    setConversations(
+      (rows ?? []).map((c) => ({
+        id: c.id,
+        title: c.title,
+        updatedAt:
+          typeof c.updatedAt === "string"
+            ? c.updatedAt
+            : new Date(c.updatedAt).toISOString(),
+        closedAt:
+          c.closedAt == null
+            ? null
+            : typeof c.closedAt === "string"
+              ? c.closedAt
+              : new Date(c.closedAt).toISOString(),
+      })),
+    );
+  }
+
   const loadConversation = useCallback(async () => {
     try {
       const res = await fetch("/api/ai/conversation");
@@ -161,6 +210,12 @@ export function CompanionShell({ userName }: { userName: string }) {
         ok: boolean;
         infraReady?: boolean;
         conversation?: { id: string };
+        conversations?: {
+          id: string;
+          title: string | null;
+          updatedAt: string | Date;
+          closedAt: string | Date | null;
+        }[];
         messages?: ChatMessage[];
         recommended?: Recommended[];
       };
@@ -170,6 +225,7 @@ export function CompanionShell({ userName }: { userName: string }) {
       }
       setInfraReady(Boolean(data.infraReady));
       setConversationId(data.conversation?.id ?? null);
+      applyConversations(data.conversations);
       setMessages(data.messages ?? []);
       setRecommended(
         data.recommended?.length ? data.recommended : FALLBACK_RECOMMENDED,
@@ -420,17 +476,166 @@ export function CompanionShell({ userName }: { userName: string }) {
     setError(null);
     setStreamBuf("");
     setIntent(null);
-    const res = await fetch("/api/ai/conversation", { method: "POST" });
+    setHistoryManage(false);
+    setSelectedConvIds([]);
+    const res = await fetch("/api/ai/conversation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "new" }),
+    });
     const data = (await res.json()) as {
       ok: boolean;
       conversation?: { id: string };
+      conversations?: {
+        id: string;
+        title: string | null;
+        updatedAt: string | Date;
+        closedAt: string | Date | null;
+      }[];
       recommended?: Recommended[];
     };
     if (!data.ok) return;
     setConversationId(data.conversation?.id ?? null);
+    applyConversations(data.conversations);
     setMessages([]);
     setRecommended(
       data.recommended?.length ? data.recommended : FALLBACK_RECOMMENDED,
+    );
+  }
+
+  async function switchChat(nextId: string) {
+    if (!nextId || nextId === conversationId || streaming || deleting) return;
+    setError(null);
+    const res = await fetch("/api/ai/conversation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "open", conversationId: nextId }),
+    });
+    const data = (await res.json()) as {
+      ok: boolean;
+      error?: string;
+      conversation?: { id: string };
+      conversations?: {
+        id: string;
+        title: string | null;
+        updatedAt: string | Date;
+        closedAt: string | Date | null;
+      }[];
+      messages?: ChatMessage[];
+      recommended?: Recommended[];
+    };
+    if (!res.ok || !data.ok || !data.conversation) {
+      setError(data.error || "无法切换会话");
+      return;
+    }
+    setConversationId(data.conversation.id);
+    applyConversations(data.conversations);
+    setMessages(data.messages ?? []);
+    setStreamBuf("");
+    setIntent(null);
+    setRecommended(
+      data.recommended?.length ? data.recommended : FALLBACK_RECOMMENDED,
+    );
+  }
+
+  async function deleteChat(targetId: string) {
+    if (!targetId || streaming || deleting) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/ai/conversation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete",
+          conversationId: targetId,
+        }),
+      });
+      const data = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        conversation?: { id: string };
+        conversations?: {
+          id: string;
+          title: string | null;
+          updatedAt: string | Date;
+          closedAt: string | Date | null;
+        }[];
+        messages?: ChatMessage[];
+        recommended?: Recommended[];
+      };
+      if (!res.ok || !data.ok || !data.conversation) {
+        setError(data.error || "删除失败");
+        return;
+      }
+      setConversationId(data.conversation.id);
+      applyConversations(data.conversations);
+      setMessages(data.messages ?? []);
+      setStreamBuf("");
+      setIntent(null);
+      setPendingDeleteId(null);
+      setSelectedConvIds((prev) => prev.filter((id) => id !== targetId));
+      setRecommended(
+        data.recommended?.length ? data.recommended : FALLBACK_RECOMMENDED,
+      );
+    } catch {
+      setError("删除失败，请稍后重试");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function deleteChatsBatch(ids: string[]) {
+    if (ids.length === 0 || streaming || deleting) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/ai/conversation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "deleteMany",
+          conversationIds: ids,
+        }),
+      });
+      const data = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        conversation?: { id: string };
+        conversations?: {
+          id: string;
+          title: string | null;
+          updatedAt: string | Date;
+          closedAt: string | Date | null;
+        }[];
+        messages?: ChatMessage[];
+        recommended?: Recommended[];
+      };
+      if (!res.ok || !data.ok || !data.conversation) {
+        setError(data.error || "批量删除失败");
+        return;
+      }
+      setConversationId(data.conversation.id);
+      applyConversations(data.conversations);
+      setMessages(data.messages ?? []);
+      setStreamBuf("");
+      setIntent(null);
+      setPendingBatchDelete(false);
+      setSelectedConvIds([]);
+      setHistoryManage(false);
+      setRecommended(
+        data.recommended?.length ? data.recommended : FALLBACK_RECOMMENDED,
+      );
+    } catch {
+      setError("批量删除失败，请稍后重试");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function toggleConvSelected(id: string) {
+    setSelectedConvIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   }
 
@@ -636,53 +841,179 @@ export function CompanionShell({ userName }: { userName: string }) {
       ) : null}
 
       {open ? (
-        <section className="companion-chat pointer-events-auto flex h-[min(70vh,520px)] w-[min(92vw,360px)] flex-col overflow-hidden">
-          <header className="companion-chat__head flex items-center justify-between gap-2">
-            <div>
-              <p className="companion-chat__eyebrow">{pref.companionName}</p>
+        <section className="companion-chat pointer-events-auto">
+          <header className="companion-chat__head">
+            <div className="companion-chat__brand">
+              <p className="companion-chat__name">{pref.companionName}</p>
               <p className="companion-chat__status">
-                {pref.personaReady
-                  ? infraReady
-                    ? "就绪"
-                    : "AI 未启用"
-                  : "认识一下"}
-                {pref.personaReady && intent ? ` · ${intent}` : ""}
+                {!pref.personaReady
+                  ? "认识一下"
+                  : infraReady
+                    ? "在线"
+                    : "AI 未启用"}
               </p>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="companion-chat__tools">
               {pref.personaReady ? (
                 <HoverTip tip="勿扰：关闭主动气泡" variant="hint" nestInControl>
                   <button
                     type="button"
-                    className="companion-chat__tool"
+                    className={
+                      pref.dnd
+                        ? "companion-chat__icon-btn companion-chat__icon-btn--on"
+                        : "companion-chat__icon-btn"
+                    }
                     onClick={() => void toggleDnd()}
-                    aria-label="勿扰：关闭主动气泡"
+                    aria-label="勿扰"
+                    aria-pressed={pref.dnd}
                   >
-                    {pref.dnd ? "勿扰开" : "勿扰"}
+                    静
                   </button>
                 </HoverTip>
               ) : null}
               {pref.personaReady ? (
+                <HoverTip
+                  tip="新开对话；旧会话超时或过多会自动清理"
+                  variant="hint"
+                  nestInControl
+                >
+                  <button
+                    type="button"
+                    className="companion-chat__icon-btn"
+                    disabled={streaming || deleting}
+                    onClick={() => void newChat()}
+                    aria-label="新开对话"
+                  >
+                    <IconRefresh size={13} />
+                  </button>
+                </HoverTip>
+              ) : null}
+              <HoverTip tip="收起" variant="hint" nestInControl>
                 <button
                   type="button"
-                  className="companion-chat__tool"
-                  onClick={() => void newChat()}
+                  className="companion-chat__icon-btn"
+                  onClick={() => setOpen(false)}
+                  aria-label="收起"
                 >
-                  新开
+                  <IconClose size={13} />
                 </button>
-              ) : null}
-              <button
-                type="button"
-                className="companion-chat__tool"
-                onClick={() => setOpen(false)}
-              >
-                收起
-              </button>
+              </HoverTip>
             </div>
           </header>
 
+          {pref.personaReady && conversationId && conversations.length > 0 ? (
+            <div className="companion-chat__history">
+              <div className="companion-chat__history-bar">
+                {!historyManage ? (
+                  <SelectField
+                    className="companion-chat__conv-select"
+                    value={conversationId}
+                    disabled={streaming || deleting}
+                    options={conversations.map((c) => {
+                      const day = c.updatedAt.slice(0, 10);
+                      const label = (c.title?.trim() || "未命名对话").slice(
+                        0,
+                        24,
+                      );
+                      return {
+                        value: c.id,
+                        label,
+                        hint: c.closedAt ? `${day} · 往昔` : `${day} · 此刻`,
+                      };
+                    })}
+                    onChange={(id) => void switchChat(id)}
+                    optionAction={{
+                      label: "删除",
+                      onClick: (id) => setPendingDeleteId(id),
+                    }}
+                  />
+                ) : (
+                  <p className="companion-chat__history-hint">
+                    已选 {selectedConvIds.length} / {conversations.length}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  className="companion-chat__history-manage"
+                  disabled={streaming || deleting}
+                  onClick={() => {
+                    if (historyManage) {
+                      setHistoryManage(false);
+                      setSelectedConvIds([]);
+                    } else {
+                      setHistoryManage(true);
+                      setSelectedConvIds([]);
+                    }
+                  }}
+                >
+                  {historyManage ? "完成" : "管理"}
+                </button>
+              </div>
+
+              {historyManage ? (
+                <div className="companion-chat__batch">
+                  <ul className="companion-chat__batch-list">
+                    {conversations.map((c) => {
+                      const on = selectedConvIds.includes(c.id);
+                      const day = c.updatedAt.slice(0, 10);
+                      return (
+                        <li key={c.id}>
+                          <label className="companion-chat__batch-row">
+                            <input
+                              type="checkbox"
+                              checked={on}
+                              disabled={deleting}
+                              onChange={() => toggleConvSelected(c.id)}
+                            />
+                            <span className="companion-chat__batch-title">
+                              {(c.title?.trim() || "未命名对话").slice(0, 28)}
+                            </span>
+                            <span className="companion-chat__batch-meta">
+                              {c.closedAt ? `${day} · 往昔` : `${day} · 此刻`}
+                            </span>
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <div className="companion-chat__batch-actions">
+                    <button
+                      type="button"
+                      className="companion-chat__batch-btn"
+                      disabled={deleting || conversations.length === 0}
+                      onClick={() =>
+                        setSelectedConvIds(conversations.map((c) => c.id))
+                      }
+                    >
+                      全选
+                    </button>
+                    <button
+                      type="button"
+                      className="companion-chat__batch-btn"
+                      disabled={deleting || selectedConvIds.length === 0}
+                      onClick={() => setSelectedConvIds([])}
+                    >
+                      清空
+                    </button>
+                    <button
+                      type="button"
+                      className="companion-chat__batch-btn companion-chat__batch-btn--danger"
+                      disabled={deleting || selectedConvIds.length === 0}
+                      onClick={() => setPendingBatchDelete(true)}
+                    >
+                      删除所选
+                      {selectedConvIds.length > 0
+                        ? `（${selectedConvIds.length}）`
+                        : ""}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {!pref.personaReady ? (
-            <div className="companion-chat__body flex-1 overflow-y-auto">
+            <div className="companion-chat__body">
               <CompanionPersonaSetup
                 userName={userName}
                 initial={{
@@ -704,102 +1035,134 @@ export function CompanionShell({ userName }: { userName: string }) {
             </div>
           ) : (
             <>
-          <div
-            ref={listRef}
-            className="companion-chat__body flex-1 space-y-2 overflow-y-auto"
-          >
-            {messages.length === 0 && !streamBuf ? (
-              <div className="space-y-2">
-                <p className="text-sm text-[var(--mist)]">
-                  {pref.userAddress !== "你" ? pref.userAddress : userName}
-                  ，想问用法、过往、临期或专注，直接说即可；也可以找我随便聊聊。
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {recommended.map((q) => (
-                    <button
-                      key={q.id}
-                      type="button"
-                      disabled={!infraReady || streaming}
-                      className="companion-chat__chip"
-                      onClick={() => void sendMessage(q.text)}
+              <div ref={listRef} className="companion-chat__body">
+                {messages.length === 0 && !streamBuf ? (
+                  <div className="companion-chat__empty">
+                    <p>
+                      {pref.userAddress !== "你" ? pref.userAddress : userName}
+                      ，用法、过往、临期、专注都可以问；也可以随便聊聊。
+                    </p>
+                    <div className="companion-chat__chips">
+                      {recommended.map((q) => (
+                        <button
+                          key={q.id}
+                          type="button"
+                          disabled={!infraReady || streaming}
+                          className="companion-chat__chip ui-hover-chip"
+                          onClick={() => void sendMessage(q.text)}
+                        >
+                          {q.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="companion-chat__thread">
+                  {messages.map((m) => (
+                    <article
+                      key={m.id}
+                      className={
+                        m.role === "user"
+                          ? "companion-chat__bubble companion-chat__bubble--user"
+                          : "companion-chat__bubble companion-chat__bubble--assistant"
+                      }
                     >
-                      {q.label}
-                    </button>
+                      <p className="companion-chat__text">{m.content}</p>
+                      {m.role === "assistant" && m.jumps?.length ? (
+                        <CompanionJumpRail jumps={m.jumps} />
+                      ) : null}
+                    </article>
                   ))}
+
+                  {streamBuf ? (
+                    <article className="companion-chat__bubble companion-chat__bubble--assistant companion-chat__bubble--stream">
+                      <p className="companion-chat__text">{streamBuf}</p>
+                      {pendingJumps.length ? (
+                        <CompanionJumpRail jumps={pendingJumps} />
+                      ) : null}
+                    </article>
+                  ) : null}
                 </div>
+
+                {error ? (
+                  <p className="companion-chat__error">{error}</p>
+                ) : null}
               </div>
-            ) : null}
 
-            {messages.map((m) => (
-              <article
-                key={m.id}
-                className={
-                  m.role === "user"
-                    ? "companion-chat__bubble companion-chat__bubble--user"
-                    : "companion-chat__bubble companion-chat__bubble--assistant"
-                }
-              >
-                <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                {m.role === "assistant" && m.intent ? (
-                  <p className="companion-chat__intent">{m.intent}</p>
-                ) : null}
-                {m.role === "assistant" && m.jumps?.length ? (
-                  <CompanionJumpRail jumps={m.jumps} />
-                ) : null}
-              </article>
-            ))}
-
-            {streamBuf ? (
-              <article className="companion-chat__bubble companion-chat__bubble--stream">
-                <p className="whitespace-pre-wrap break-words">{streamBuf}</p>
-                {pendingJumps.length ? (
-                  <CompanionJumpRail jumps={pendingJumps} />
-                ) : null}
-              </article>
-            ) : null}
-
-            {error ? (
-              <p className="text-xs text-[var(--danger)]">{error}</p>
-            ) : null}
-          </div>
-
-          <footer className="companion-chat__foot">
-            <div className="flex gap-1.5">
-              <textarea
-                className="companion-chat__input min-h-[40px] flex-1 resize-none"
-                placeholder={infraReady ? "说点什么…" : "请先配置 AI 环境"}
-                value={input}
-                disabled={!infraReady || streaming}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    void sendMessage(input);
-                  }
-                }}
-              />
-              {streaming ? (
-                <button
-                  type="button"
-                  className="companion-chat__tool self-end"
-                  onClick={stop}
-                >
-                  停止
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={!infraReady || !input.trim()}
-                  className="companion-chat__send self-end"
-                  onClick={() => void sendMessage(input)}
-                >
-                  发送
-                </button>
-              )}
-            </div>
-          </footer>
+              <footer className="companion-chat__foot">
+                <div className="companion-chat__composer">
+                  <textarea
+                    className="companion-chat__input"
+                    rows={1}
+                    placeholder={infraReady ? "说点什么…" : "请先配置 AI 环境"}
+                    value={input}
+                    disabled={!infraReady || streaming}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        void sendMessage(input);
+                      }
+                    }}
+                  />
+                  {streaming ? (
+                    <button
+                      type="button"
+                      className="companion-chat__send companion-chat__send--ghost"
+                      onClick={stop}
+                    >
+                      <IconStop size={14} />
+                      <span>停止</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={!infraReady || !input.trim()}
+                      className="companion-chat__send"
+                      onClick={() => void sendMessage(input)}
+                    >
+                      <IconSend size={14} />
+                      <span>发送</span>
+                    </button>
+                  )}
+                </div>
+              </footer>
             </>
           )}
+          <ConfirmDialog
+            open={Boolean(pendingDeleteId)}
+            title="删除这段对话？"
+            message={`将永久删除「${
+              conversations.find((c) => c.id === pendingDeleteId)?.title?.trim() ||
+              "未命名对话"
+            }」及其全部消息，不可恢复。`}
+            confirmLabel={deleting ? "删除中…" : "删除"}
+            cancelLabel="留下"
+            tone="danger"
+            pending={deleting}
+            onConfirm={() => {
+              if (pendingDeleteId) void deleteChat(pendingDeleteId);
+            }}
+            onCancel={() => {
+              if (!deleting) setPendingDeleteId(null);
+            }}
+          />
+          <ConfirmDialog
+            open={pendingBatchDelete}
+            title="批量删除对话？"
+            message={`将永久删除所选 ${selectedConvIds.length} 段对话及其全部消息，不可恢复。`}
+            confirmLabel={deleting ? "删除中…" : "删除所选"}
+            cancelLabel="留下"
+            tone="danger"
+            pending={deleting}
+            onConfirm={() => {
+              void deleteChatsBatch(selectedConvIds);
+            }}
+            onCancel={() => {
+              if (!deleting) setPendingBatchDelete(false);
+            }}
+          />
         </section>
       ) : null}
       </div>
