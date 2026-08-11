@@ -17,6 +17,7 @@ import {
   SplashWaterRipple,
   type SplashWaterRippleHandle,
 } from "@/components/landing/splash-water-ripple";
+import { markAppArrive } from "@/lib/app-arrive";
 
 type GateMode = "login" | "register";
 
@@ -103,6 +104,9 @@ export function GuestAtmosphereLanding({
     setEntering(true);
     setLoadingHint(true);
     window.setTimeout(() => {
+      if (path === "/app" || path.startsWith("/app/")) {
+        markAppArrive();
+      }
       router.push(path);
     }, 1700);
   }
@@ -518,8 +522,7 @@ export function GuestAtmosphereLanding({
           >
             <div className="guest-landing__pane guest-landing__pane--welcome">
               <p className="guest-landing__title">
-                Welcome to{" "}
-                <span className="guest-landing__hl">自</span>宇
+                Welcome to <span className="guest-landing__hl">自宇</span>
               </p>
               <p className="guest-landing__desc">
                 {loggedIn && userName ? (

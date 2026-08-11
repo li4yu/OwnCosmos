@@ -9,6 +9,7 @@ import {
   authErrorMessage,
   isAlreadyRegisteredError,
 } from "@/lib/auth-errors";
+import { markAppArrive } from "@/lib/app-arrive";
 
 function emailLocalPart(email: string) {
   const local = email.split("@")[0]?.trim();
@@ -182,6 +183,9 @@ export function RegisterForm({
   function enterApp() {
     setSuccessOpen(false);
     const dest = nextPath.startsWith("/") ? nextPath : "/app";
+    if (dest === "/app" || dest.startsWith("/app/")) {
+      markAppArrive();
+    }
     router.push(dest);
     router.refresh();
   }

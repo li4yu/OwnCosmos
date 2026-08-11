@@ -1,6 +1,7 @@
 import { CapsuleUnlockOrb } from "@/components/capsule/capsule-unlock-orb";
 import { CompanionShell } from "@/components/companion/companion-shell";
 import { DesktopNotifyBridge } from "@/components/notify/desktop-notify-bridge";
+import { AppAtmosphere } from "@/components/shell/app-atmosphere";
 import { AppChrome } from "@/components/shell/app-chrome";
 import { formatDueDateInput } from "@/lib/plan-dates";
 import { requireSession } from "@/lib/session";
@@ -27,9 +28,9 @@ export default async function AppAreaLayout({
 
   if (!session.user.emailVerified && onVerifyPage) {
     return (
-      <div className="atmosphere-wash min-h-screen">
+      <AppAtmosphere>
         <div className="app-shell-width mx-auto py-8 sm:py-10">{children}</div>
-      </div>
+      </AppAtmosphere>
     );
   }
 
@@ -56,7 +57,7 @@ export default async function AppAreaLayout({
   ]);
 
   return (
-    <div className="atmosphere-wash min-h-screen">
+    <AppAtmosphere>
       <AppChrome
         user={{
           name: session.user.name,
@@ -93,6 +94,6 @@ export default async function AppAreaLayout({
         />
       ) : null}
       <CompanionShell userName={session.user.name} />
-    </div>
+    </AppAtmosphere>
   );
 }

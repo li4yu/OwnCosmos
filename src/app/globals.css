@@ -372,7 +372,7 @@ button,
 
   .auth-submit,
   .ui-btn-primary {
-    @apply inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm tracking-[0.12em] transition hover:opacity-90 disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm tracking-[0.04em] transition hover:opacity-90 disabled:opacity-50;
     font-family: inherit;
     background: var(--amber);
     color: var(--on-amber);
@@ -383,7 +383,7 @@ button,
   }
 
   .ui-btn-ghost {
-    @apply inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm tracking-[0.08em] transition disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm tracking-[0.04em] transition disabled:opacity-50;
     font-family: inherit;
     border-color: var(--line);
     color: var(--mist);
@@ -395,7 +395,7 @@ button,
   }
 
   .ui-btn-danger {
-    @apply inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm tracking-[0.08em] transition disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm tracking-[0.04em] transition disabled:opacity-50;
     font-family: inherit;
     border-color: color-mix(in srgb, var(--danger) 40%, transparent);
     color: var(--danger);
@@ -407,7 +407,7 @@ button,
   }
 
   .ui-btn-danger-solid {
-    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm tracking-[0.08em] transition disabled:opacity-50 hover:opacity-90;
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm tracking-[0.04em] transition disabled:opacity-50 hover:opacity-90;
     font-family: inherit;
     background: var(--danger);
     color: var(--on-danger);
@@ -453,6 +453,85 @@ button,
       radial-gradient(ellipse 80% 55% at 50% -10%, var(--glow), transparent 55%),
       radial-gradient(ellipse 50% 40% at 100% 100%, var(--amber-soft), transparent 50%),
       var(--background);
+  }
+
+  /* 欢迎页 → /app 进站淡入（仅 owncosmos_arrive flag） */
+  .atmosphere-wash.is-arriving {
+    position: relative;
+    animation: app-arrive-fade 1.8s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  }
+
+  .atmosphere-wash.is-arriving::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 90% 70% at 50% 35%, rgba(26, 39, 68, 0.72), transparent 68%),
+      radial-gradient(ellipse 55% 40% at 78% 18%, rgba(120, 170, 230, 0.28), transparent 65%),
+      radial-gradient(ellipse 40% 30% at 50% 60%, color-mix(in srgb, var(--amber) 22%, transparent), transparent 70%);
+    animation: app-arrive-veil 1.8s ease forwards;
+  }
+}
+
+/* 壳层品牌标：对齐欢迎顶栏「自宇 My Own Cosmos」 */
+.app-brand-mark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  line-height: 1;
+}
+.app-brand-mark__zh {
+  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
+  color: var(--paper);
+}
+.app-brand-mark__en {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+@media (max-width: 640px) {
+  .app-brand-mark__en {
+    display: none;
+  }
+}
+
+@keyframes app-arrive-fade {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes app-arrive-veil {
+  0% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atmosphere-wash.is-arriving {
+    animation: none !important;
+  }
+  .atmosphere-wash.is-arriving::before {
+    display: none !important;
   }
 }
 
@@ -2020,7 +2099,7 @@ button,
   font-family: var(--font-noto-serif), "Songti SC", serif;
   font-weight: 600;
   font-size: clamp(1.45rem, 4vw, 1.85rem);
-  letter-spacing: 0.22em;
+  letter-spacing: 0.08em;
   line-height: 1.15;
   color: var(--paper);
 }
@@ -3949,7 +4028,7 @@ button,
 .guest-nebula__cloud {
   position: absolute;
   border-radius: 50%;
-  filter: blur(clamp(24px, 4vw, 56px));
+  filter: blur(clamp(10px, 2vw, 28px));
   mix-blend-mode: screen;
   will-change: transform, opacity;
 }
@@ -3958,11 +4037,11 @@ button,
   height: clamp(38vh, 52vh, 68vh);
   top: -16%;
   right: -20%;
-  opacity: 0.92;
+  opacity: 1;
   background:
-    radial-gradient(ellipse 70% 60% at 42% 48%, rgba(120, 175, 255, 0.78), transparent 68%),
-    radial-gradient(ellipse 50% 45% at 68% 36%, rgba(170, 210, 255, 0.5), transparent 70%),
-    radial-gradient(ellipse 40% 35% at 55% 62%, rgba(212, 176, 114, 0.38), transparent 72%);
+    radial-gradient(ellipse 52% 46% at 42% 48%, rgba(155, 200, 255, 1), transparent 58%),
+    radial-gradient(ellipse 38% 34% at 68% 36%, rgba(200, 225, 255, 0.75), transparent 60%),
+    radial-gradient(ellipse 30% 28% at 55% 62%, rgba(230, 195, 130, 0.58), transparent 62%);
   animation: guest-nebula-a 26s ease-in-out infinite alternate;
 }
 .guest-nebula__cloud--b {
@@ -3970,10 +4049,10 @@ button,
   height: clamp(32vh, 44vh, 56vh);
   bottom: -14%;
   left: -16%;
-  opacity: 0.78;
+  opacity: 0.95;
   background:
-    radial-gradient(ellipse 65% 55% at 55% 40%, rgba(80, 140, 220, 0.72), transparent 70%),
-    radial-gradient(ellipse 45% 40% at 30% 60%, rgba(140, 185, 240, 0.42), transparent 68%);
+    radial-gradient(ellipse 50% 44% at 55% 40%, rgba(110, 170, 245, 0.95), transparent 60%),
+    radial-gradient(ellipse 36% 32% at 30% 60%, rgba(170, 210, 255, 0.65), transparent 58%);
   animation: guest-nebula-b 32s ease-in-out infinite alternate;
 }
 .guest-nebula__cloud--c {
@@ -3981,10 +4060,10 @@ button,
   height: clamp(28vh, 38vh, 48vh);
   top: 34%;
   left: 36%;
-  opacity: 0.7;
+  opacity: 0.92;
   background:
-    radial-gradient(ellipse 60% 55% at 50% 50%, rgba(212, 176, 114, 0.48), transparent 72%),
-    radial-gradient(ellipse 40% 35% at 62% 38%, rgba(190, 220, 255, 0.35), transparent 70%);
+    radial-gradient(ellipse 48% 44% at 50% 50%, rgba(230, 195, 130, 0.72), transparent 60%),
+    radial-gradient(ellipse 32% 28% at 62% 38%, rgba(210, 230, 255, 0.58), transparent 60%);
   animation: guest-nebula-c 22s ease-in-out infinite alternate;
 }
 .guest-nebula__cloud--d {
@@ -3992,20 +4071,20 @@ button,
   height: clamp(22vh, 30vh, 40vh);
   top: 10%;
   left: 6%;
-  opacity: 0.62;
+  opacity: 0.88;
   background:
-    radial-gradient(ellipse 55% 50% at 50% 50%, rgba(150, 195, 250, 0.58), transparent 70%);
+    radial-gradient(ellipse 44% 40% at 50% 50%, rgba(175, 215, 255, 0.85), transparent 60%);
   animation: guest-nebula-d 28s ease-in-out infinite alternate;
 }
 .guest-nebula__veil {
   position: absolute;
   inset: -5%;
-  opacity: 0.7;
+  opacity: 0.82;
   mix-blend-mode: soft-light;
   background:
-    radial-gradient(ellipse 80% 55% at 72% 22%, rgba(150, 195, 255, 0.4), transparent 60%),
-    radial-gradient(ellipse 70% 50% at 18% 78%, rgba(90, 140, 210, 0.32), transparent 65%),
-    radial-gradient(ellipse 50% 40% at 55% 48%, rgba(212, 176, 114, 0.2), transparent 70%);
+    radial-gradient(ellipse 75% 52% at 72% 22%, rgba(160, 205, 255, 0.52), transparent 58%),
+    radial-gradient(ellipse 65% 48% at 18% 78%, rgba(100, 150, 220, 0.4), transparent 62%),
+    radial-gradient(ellipse 46% 36% at 55% 48%, rgba(212, 176, 114, 0.28), transparent 66%);
   animation: guest-nebula-veil 18s ease-in-out infinite alternate;
 }
 .guest-nebula__filaments {
@@ -4013,9 +4092,9 @@ button,
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.75;
+  opacity: 0.92;
   mix-blend-mode: screen;
-  filter: blur(0.3px);
+  filter: blur(0.2px);
   animation: guest-nebula-veil 20s ease-in-out infinite alternate-reverse;
 }
 
@@ -4028,16 +4107,16 @@ button,
   to { transform: translate3d(4%, -3%, 0) scale(1.08); }
 }
 @keyframes guest-nebula-c {
-  from { transform: translate3d(0, 0, 0) scale(0.96); opacity: 0.55; }
-  to { transform: translate3d(-2%, 3%, 0) scale(1.05); opacity: 0.82; }
+  from { transform: translate3d(0, 0, 0) scale(0.96); opacity: 0.7; }
+  to { transform: translate3d(-2%, 3%, 0) scale(1.05); opacity: 0.95; }
 }
 @keyframes guest-nebula-d {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(5%, 2%, 0); }
 }
 @keyframes guest-nebula-veil {
-  from { opacity: 0.55; }
-  to { opacity: 0.85; }
+  from { opacity: 0.65; }
+  to { opacity: 0.95; }
 }
 
 @media (max-width: 720px) {
@@ -4047,12 +4126,12 @@ button,
   .guest-nebula__cloud--a {
     width: 80vw;
     height: 48vh;
-    opacity: 0.85;
+    opacity: 0.95;
   }
   .guest-nebula__cloud--b {
     width: 70vw;
     height: 40vh;
-    opacity: 0.7;
+    opacity: 0.85;
   }
 }
 
@@ -4321,10 +4400,13 @@ button,
 }
 
 .guest-glass__pane > .guest-nebula {
-  z-index: 4;
+  z-index: 3;
 }
 .guest-glass__fog {
-  z-index: 3;
+  z-index: 4;
+}
+.guest-glass__pane > .guest-pattern-field {
+  z-index: 5;
 }
 .guest-glass__ink {
   z-index: 6;
@@ -4580,14 +4662,12 @@ button,
   cursor: pointer;
   font-family: var(--font-cormorant), Georgia, serif;
   font-style: italic;
-  font-size: 0.78rem;
-  font-weight: 300;
-  letter-spacing: 0.22em;
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(214, 229, 250, 0.88);
-  text-shadow:
-    0 1px 10px rgba(0, 0, 0, 0.72),
-    0 0 18px rgba(140, 180, 240, 0.28);
+  color: rgba(200, 218, 242, 0.78);
+  text-shadow: 0 1px 10px rgba(4, 10, 26, 0.7);
   opacity: 0;
   transform: translateY(14px);
   transition: color 0.35s ease, text-shadow 0.35s ease;
@@ -4687,7 +4767,7 @@ button,
   margin: 0 0 0.85rem;
   font-family: var(--font-cormorant), Georgia, serif;
   font-style: italic;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 400;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -4695,13 +4775,16 @@ button,
   text-shadow: 0 1px 10px rgba(4, 10, 26, 0.7);
 }
 .guest-landing__hl {
+  display: inline-block;
+  margin-left: 0.35em;
   color: #f2f7ff;
-  font-family: var(--font-noto-serif), "Songti SC", serif;
+  font-family: var(--font-noto-serif), "Songti SC", "Noto Serif CJK SC", serif;
   font-style: normal;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: none;
-  font-size: 1.28em;
+  font-size: 1.35em;
+  vertical-align: baseline;
 }
 .guest-landing__desc {
   margin: 0 0 0.85rem;
@@ -5311,7 +5394,7 @@ button,
   );
 }
 .guest-glass__fog {
-  z-index: 3;
+  z-index: 4;
 }
 .guest-glass__ink {
   position: absolute;

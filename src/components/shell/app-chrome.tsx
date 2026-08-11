@@ -12,8 +12,8 @@ type AppChromeProps = {
 /** 登录后顶栏：品牌标识 · 首页+四大模块 · 头像菜单 */
 export function AppChrome({ user }: AppChromeProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--panel)]/90 backdrop-blur-md">
-      <div className="app-shell-width mx-auto flex items-center gap-3 py-2.5">
+    <header className="app-chrome sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--topbar)] backdrop-blur-md">
+      <div className="app-shell-width mx-auto flex items-center gap-3 py-3">
         <BrandMark />
         <ModuleNav />
         <div className="shrink-0">

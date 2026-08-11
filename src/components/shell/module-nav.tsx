@@ -97,10 +97,9 @@ export function BrandMark() {
       nestInControl
       className="inline-flex shrink-0"
     >
-      <div className="select-none" aria-label="自宇">
-        <p className="font-[family-name:var(--font-cormorant)] text-sm tracking-[0.2em] text-[var(--amber)]">
-          自宇
-        </p>
+      <div className="app-brand-mark select-none" aria-label="自宇">
+        <span className="app-brand-mark__zh">自宇</span>
+        <span className="app-brand-mark__en">My Own Cosmos</span>
       </div>
     </HoverTip>
   );

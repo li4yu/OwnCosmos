@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { PasswordField } from "@/components/auth/password-field";
 import { authErrorMessage } from "@/lib/auth-errors";
+import { markAppArrive } from "@/lib/app-arrive";
 
 type LoginFormProps = {
   nextPath?: string;
@@ -31,7 +32,11 @@ export function LoginForm({ nextPath = "/app", onSwitchRegister }: LoginFormProp
         setError(authErrorMessage(signInError, "登录失败，请检查邮箱或密码"));
         return;
       }
-      router.push(nextPath.startsWith("/") ? nextPath : "/app");
+      const dest = nextPath.startsWith("/") ? nextPath : "/app";
+      if (dest === "/app" || dest.startsWith("/app/")) {
+        markAppArrive();
+      }
+      router.push(dest);
       router.refresh();
     } catch (err) {
       setError(

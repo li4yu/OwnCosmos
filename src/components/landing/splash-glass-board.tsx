@@ -90,7 +90,8 @@ export function SplashGlassBoard({
 
   function syncFrostOpacity() {
     const t = (fogDRef.current - 0.3) / 2;
-    const o = (0.08 + t * 0.72).toFixed(3);
+    // 霜层只做轻底，主遮挡交给可擦的 fog canvas，避免擦雾后仍盖住星云
+    const o = (0.04 + t * 0.18).toFixed(3);
     if (frostRef.current) frostRef.current.style.opacity = o;
   }
 
@@ -101,18 +102,20 @@ export function SplashGlassBoard({
   function paintHaze(fog: CanvasRenderingContext2D, W: number, H: number) {
     fog.globalCompositeOperation = "source-over";
     fog.shadowBlur = 0;
-    fog.fillStyle = `rgba(208,224,244,${fa(0.025)})`;
+    // 足够浓，擦开后才能明显看到下层星云
+    fog.fillStyle = `rgba(18, 32, 58,${fa(0.42)})`;
     fog.fillRect(0, 0, W, H);
     const g = fog.createRadialGradient(
       W * 0.5,
       H * 0.46,
-      Math.min(W, H) * 0.22,
+      Math.min(W, H) * 0.18,
       W * 0.5,
       H * 0.5,
-      Math.max(W, H) * 0.72,
+      Math.max(W, H) * 0.78,
     );
-    g.addColorStop(0, "rgba(214,228,246,0)");
-    g.addColorStop(1, `rgba(214,228,246,${fa(0.035)})`);
+    g.addColorStop(0, `rgba(160, 190, 230,${fa(0.08)})`);
+    g.addColorStop(0.45, `rgba(120, 160, 210,${fa(0.22)})`);
+    g.addColorStop(1, `rgba(24, 40, 72,${fa(0.55)})`);
     fog.fillStyle = g;
     fog.fillRect(0, 0, W, H);
 
@@ -125,14 +128,15 @@ export function SplashGlassBoard({
         H * y,
         Math.max(W, H) * r,
       );
-      bg.addColorStop(0, `rgba(222,234,250,${a})`);
-      bg.addColorStop(1, "rgba(222,234,250,0)");
+      bg.addColorStop(0, `rgba(200, 220, 245,${a})`);
+      bg.addColorStop(1, "rgba(200, 220, 245,0)");
       fog.fillStyle = bg;
       fog.fillRect(0, 0, W, H);
     }
-    blotch(0.18, 0.2, 0.5, fa(0.018));
-    blotch(0.82, 0.74, 0.55, fa(0.015));
-    blotch(0.6, 0.12, 0.4, fa(0.012));
+    blotch(0.18, 0.2, 0.5, fa(0.14));
+    blotch(0.82, 0.74, 0.55, fa(0.12));
+    blotch(0.6, 0.12, 0.4, fa(0.1));
+    blotch(0.4, 0.55, 0.45, fa(0.09));
   }
 
   function renderWipeStroke(
@@ -393,8 +397,9 @@ export function SplashGlassBoard({
           <div ref={frostRef} className="guest-glass__frost" aria-hidden="true" />
           <div className="guest-glass__noise" aria-hidden="true" />
           <div className="guest-glass__depth" aria-hidden="true" />
-          <canvas ref={fogRef} className="guest-glass__fog" aria-hidden="true" />
+          {/* 星云在雾层下：擦雾 destination-out 后透出 */}
           <SplashNebula />
+          <canvas ref={fogRef} className="guest-glass__fog" aria-hidden="true" />
           <SplashStaticPatterns />
           <canvas
             ref={inkRef}

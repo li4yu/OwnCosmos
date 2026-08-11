@@ -19,14 +19,14 @@ export function SplashNebula() {
         <defs>
           <linearGradient id="guest-nebula-fil" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="rgba(170,210,255,0)" />
-            <stop offset="45%" stopColor="rgba(170,210,255,0.35)" />
+            <stop offset="45%" stopColor="rgba(190,220,255,0.55)" />
             <stop offset="100%" stopColor="rgba(212,176,114,0)" />
           </linearGradient>
         </defs>
         <g
           fill="none"
           stroke="url(#guest-nebula-fil)"
-          strokeWidth="0.35"
+          strokeWidth="0.55"
           strokeLinecap="round"
         >
           <path d="M62 8 C70 22, 78 30, 92 36" />
