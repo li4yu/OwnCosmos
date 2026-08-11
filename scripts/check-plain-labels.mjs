@@ -19,6 +19,9 @@ const old = [
   "临期配",
   "同年回望",
   "随笔沉淀",
+  "顺钟",
+  "逆漏",
+  "凝录",
 ];
 
 console.log("=== major modules still present ===");

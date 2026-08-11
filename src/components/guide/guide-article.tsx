@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export type GuideArticleProps = {
   /** guest = 访客页顶栏；app = 已在应用壳内，无独立顶栏 */
@@ -12,14 +11,19 @@ export function GuideArticle({ mode, loggedIn = false }: GuideArticleProps) {
   const showGuestChrome = mode === "guest";
 
   return (
-    <div className={showGuestChrome ? "guide-page" : "guide-page guide-page--embedded"}>
+    <div
+      className={
+        showGuestChrome
+          ? "guide-page guide-page--guest"
+          : "guide-page guide-page--embedded"
+      }
+    >
       {showGuestChrome ? (
         <header className="guide-page__topbar">
           <Link href={loggedIn ? "/app" : "/"} className="guide-page__brand">
             <span>自宇</span>My Own Cosmos
           </Link>
           <div className="guide-page__actions">
-            <ThemeToggle />
             {loggedIn ? (
               <Link href="/app" className="guest-landing__chip guest-landing__chip--accent">
                 返回应用
@@ -535,16 +539,17 @@ export function GuideArticle({ mode, loggedIn = false }: GuideArticleProps) {
         <section id="later" className="guide-page__section">
           <h2>V1.0 与后续</h2>
           <p>
-            当前产品已冻结为 <strong>V1.0</strong>：账号可信、四大时序与凝时、馆藏与复盘、富文本与本地插图、首页摘要与动态、设置导出等均已可用。
+            当前产品已冻结 <strong>V1.0</strong> 基本能力：账号可信、四大时序与凝时、馆藏与复盘、富文本与本地插图、首页摘要与动态、设置导出等。
+            AI 主链路（知识库检索、伴读、随笔润色、自省镜台）已可用；对象存储迁云、OAuth / 手机号等仍属后置。
           </p>
           <p>
-            明确后置、不必在界面空等的能力包括：AI 语义检索与年度摘要文案、对象存储 S3、OAuth / 手机号等。下阶段从 AI 底座起做，不改变单向沉淀等硬规则。
+            明确后置、不必在界面空等的能力包括：对象存储 S3/R2、OAuth / 手机号、独立 App 等。不改变单向沉淀等硬规则。
           </p>
           <div className="guide-page__callout">
             <p>
               <em>
                 写随笔 → 沉淀 · 建计划 / 周期计划 → 临期完成归档 · 正向计时或倒计时 → 专注记录 ·
-                时间线与情绪复盘回望
+                时间线与情绪复盘回望 · 需要时打开伴读或自省
               </em>
             </p>
           </div>
@@ -557,7 +562,7 @@ export function GuideArticle({ mode, loggedIn = false }: GuideArticleProps) {
             <>
               <p>回到首页继续使用，从一条随笔或今日摘要开始即可。</p>
               <div className="guide-page__cta">
-                <Link href="/app" className="guest-landing__chip guest-landing__chip--accent">
+                <Link href="/app" className="guest-landing__btn guest-landing__btn--accent">
                   返回首页
                 </Link>
               </div>
@@ -566,17 +571,14 @@ export function GuideArticle({ mode, loggedIn = false }: GuideArticleProps) {
             <>
               <p>回到首页开启你的宇宙，或直接登录，从一条随笔开始。</p>
               <div className="guide-page__cta">
-                <Link href="/" className="guest-landing__chip">
-                  返回首页
-                </Link>
-                <Link
-                  href="/?auth=register"
-                  className="guest-landing__chip guest-landing__chip--accent"
-                >
+                <Link href="/?auth=register" className="guest-landing__btn guest-landing__btn--accent">
                   开启自宇
                 </Link>
-                <Link href="/?auth=login" className="guest-landing__chip">
+                <Link href="/?auth=login" className="guest-landing__btn">
                   去登录
+                </Link>
+                <Link href="/" className="guest-landing__btn">
+                  返回首页
                 </Link>
               </div>
             </>
