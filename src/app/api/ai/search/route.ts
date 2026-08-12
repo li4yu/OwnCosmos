@@ -11,6 +11,7 @@ import {
   semanticSearchUser,
 } from "@/ai/search";
 import { auth } from "@/lib/auth";
+import { assertAiRateLimit } from "@/lib/ai-rate-limit";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,10 @@ export async function POST(req: Request) {
   if (!session) {
     return NextResponse.json({ ok: false, error: "未登录" }, { status: 401 });
   }
+  const limited = await assertAiRateLimit(session.user.id, "search", {
+    max: 60,
+  });
+  if (limited) return limited;
   let body: Body;
   try {
     body = (await req.json()) as Body;

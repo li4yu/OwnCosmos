@@ -40,6 +40,7 @@ import {
 import {
   COMPANION_BUBBLE_EVENT,
   COMPANION_PET_CHANGED,
+  COMPANION_PREF_CHANGED,
   type CompanionBubbleDetail,
 } from "@/lib/companion-client";
 import type { PetManifest } from "@/lib/companion-pet";
@@ -84,11 +85,42 @@ type Pref = {
   activePetSheetUrl: string;
   activePetManifest: PetManifest;
 };
+
+/** 服务端下发，避免进站先闪默认桌宠再切自定义 */
+export type CompanionShellInitialPref = Pref;
+
 type Pos = { left: number; top: number };
 
 const POS_KEY = "owncosmos-companion-pos";
 const PET_SIZE = 108;
 const DRAG_THRESHOLD = 6;
+
+const FALLBACK_PREF: Pref = {
+  dnd: false,
+  companionName: DEFAULT_COMPANION_NAME,
+  tone: DEFAULT_COMPANION_TONE,
+  userAddress: DEFAULT_USER_ADDRESS,
+  personaReady: false,
+  activePetSheetUrl: DEFAULT_PET_SHEET_URL,
+  activePetManifest: DEFAULT_PET_MANIFEST,
+};
+
+function normalizePref(
+  raw: Partial<Pref> & {
+    activePetSheetUrl?: string;
+    activePetManifest?: PetManifest;
+  },
+): Pref {
+  return {
+    dnd: Boolean(raw.dnd),
+    companionName: raw.companionName || DEFAULT_COMPANION_NAME,
+    tone: raw.tone || DEFAULT_COMPANION_TONE,
+    userAddress: raw.userAddress || DEFAULT_USER_ADDRESS,
+    personaReady: Boolean(raw.personaReady),
+    activePetSheetUrl: raw.activePetSheetUrl || DEFAULT_PET_SHEET_URL,
+    activePetManifest: raw.activePetManifest || DEFAULT_PET_MANIFEST,
+  };
+}
 
 function petHeight(manifest: PetManifest) {
   return Math.round((PET_SIZE * manifest.frame.height) / manifest.frame.width);
@@ -123,7 +155,13 @@ function loadPos(h: number): Pos {
   }
 }
 
-export function CompanionShell({ userName }: { userName: string }) {
+export function CompanionShell({
+  userName,
+  initialPref,
+}: {
+  userName: string;
+  initialPref?: CompanionShellInitialPref | null;
+}) {
   const [open, setOpen] = useState(false);
   const [infraReady, setInfraReady] = useState(true);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -143,15 +181,11 @@ export function CompanionShell({ userName }: { userName: string }) {
   const [error, setError] = useState<string | null>(null);
   const [bubble, setBubble] = useState<Bubble | null>(null);
   const [bubbleForced, setBubbleForced] = useState(false);
-  const [pref, setPref] = useState<Pref>({
-    dnd: false,
-    companionName: DEFAULT_COMPANION_NAME,
-    tone: DEFAULT_COMPANION_TONE,
-    userAddress: DEFAULT_USER_ADDRESS,
-    personaReady: false,
-    activePetSheetUrl: DEFAULT_PET_SHEET_URL,
-    activePetManifest: DEFAULT_PET_MANIFEST,
-  });
+  const [pref, setPref] = useState<Pref>(() =>
+    initialPref ? normalizePref(initialPref) : FALLBACK_PREF,
+  );
+  /** 无服务端初始偏好时，等客户端拉完再显示桌宠，避免闪默认皮肤 */
+  const [prefReady, setPrefReady] = useState(Boolean(initialPref));
   const petH = petHeight(pref.activePetManifest);
   const [waveOnce, setWaveOnce] = useState(false);
   const [justFinished, setJustFinished] = useState(false);
@@ -256,20 +290,12 @@ export function CompanionShell({ userName }: { userName: string }) {
         };
       };
       if (data.ok && data.pref) {
-        setPref({
-          dnd: data.pref.dnd,
-          companionName: data.pref.companionName || DEFAULT_COMPANION_NAME,
-          tone: data.pref.tone || DEFAULT_COMPANION_TONE,
-          userAddress: data.pref.userAddress || DEFAULT_USER_ADDRESS,
-          personaReady: Boolean(data.pref.personaReady),
-          activePetSheetUrl:
-            data.pref.activePetSheetUrl || DEFAULT_PET_SHEET_URL,
-          activePetManifest:
-            data.pref.activePetManifest || DEFAULT_PET_MANIFEST,
-        });
+        setPref(normalizePref(data.pref));
       }
     } catch {
       /* ignore */
+    } finally {
+      setPrefReady(true);
     }
   }, []);
 
@@ -290,12 +316,17 @@ export function CompanionShell({ userName }: { userName: string }) {
   }, [petH]);
 
   useEffect(() => {
-    function onPetChanged() {
+    function onPrefOrPetChanged() {
       void loadPref();
+      void loadBubble();
     }
-    window.addEventListener(COMPANION_PET_CHANGED, onPetChanged);
-    return () => window.removeEventListener(COMPANION_PET_CHANGED, onPetChanged);
-  }, [loadPref]);
+    window.addEventListener(COMPANION_PREF_CHANGED, onPrefOrPetChanged);
+    window.addEventListener(COMPANION_PET_CHANGED, onPrefOrPetChanged);
+    return () => {
+      window.removeEventListener(COMPANION_PREF_CHANGED, onPrefOrPetChanged);
+      window.removeEventListener(COMPANION_PET_CHANGED, onPrefOrPetChanged);
+    };
+  }, [loadBubble, loadPref]);
 
   useEffect(() => {
     function onCheer(e: Event) {
@@ -777,7 +808,7 @@ export function CompanionShell({ userName }: { userName: string }) {
     abortRef.current?.abort();
   }
 
-  if (!pos) return null;
+  if (!pos || !prefReady) return null;
 
   const panelAbove = pos.top > window.innerHeight * 0.45;
   const menuLeft = menu

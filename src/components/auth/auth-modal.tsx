@@ -4,7 +4,6 @@ import { useEffect, useId, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 import { RegisterForm } from "@/components/auth/register-form";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export type AuthMode = "login" | "register";
 
@@ -41,42 +40,48 @@ export function AuthModal({ open, mode, onModeChange, onClose }: AuthModalProps)
       <button
         type="button"
         aria-label="关闭"
-        className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-[2px] transition"
+        className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-[3px] transition"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 w-full max-w-[380px] rounded-xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-[var(--dialog-shadow)] sm:p-6"
+        className="auth-dialog relative z-10 w-full max-w-[400px] border border-[var(--line)] bg-[var(--panel)] p-5 shadow-[var(--dialog-shadow)] sm:p-6"
       >
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
-            <p className="font-mono text-xs tracking-[0.2em] text-[var(--teal)]">
-              {mode === "login" ? "SIGN IN" : "SIGN UP"}
+            <p className="font-mono text-[0.7rem] tracking-[0.22em] text-[var(--teal)]">
+              {mode === "login" ? "RETURN TO ORBIT" : "BEGIN YOUR COSMOS"}
             </p>
-            <h2 id={titleId} className="mt-1 text-xl tracking-[0.14em] text-[var(--paper)]">
-              {mode === "login" ? "登录" : "注册"}
-            </h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <button
-              type="button"
-              onClick={onClose}
-              className="ui-btn-ghost ui-btn-sm"
-              aria-label="关闭窗口"
+            <h2
+              id={titleId}
+              className="mt-1.5 text-xl tracking-[0.12em] text-[var(--paper)]"
+              style={{ fontFamily: "var(--font-noto-serif), Songti SC, serif" }}
             >
-              关闭
-            </button>
+              {mode === "login" ? "回到你的时序" : "开启属于你的自宇"}
+            </h2>
+            <p className="mt-1.5 text-xs leading-relaxed text-[var(--mist)]">
+              {mode === "login"
+                ? "登录后继续你的过往、当下与未来。"
+                : "注册后即可书写随笔、规划来日、开启专注。"}
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="auth-dialog__close"
+            aria-label="关闭窗口"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
         </div>
 
-        <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg border border-[var(--line)] p-1">
+        <div className="auth-dialog__tabs mb-4 grid grid-cols-2 gap-1 border border-[var(--line)] p-1">
           <button
             type="button"
             onClick={() => onModeChange("login")}
-            className={`rounded-md py-1.5 text-sm tracking-[0.08em] transition ${
+            className={`py-1.5 text-sm tracking-[0.08em] transition ${
               mode === "login"
                 ? "bg-[var(--amber)] text-[var(--on-amber)]"
                 : "text-[var(--mist)] hover:text-[var(--paper)]"
@@ -87,13 +92,13 @@ export function AuthModal({ open, mode, onModeChange, onClose }: AuthModalProps)
           <button
             type="button"
             onClick={() => onModeChange("register")}
-            className={`rounded-md py-1.5 text-sm tracking-[0.08em] transition ${
+            className={`py-1.5 text-sm tracking-[0.08em] transition ${
               mode === "register"
                 ? "bg-[var(--amber)] text-[var(--on-amber)]"
                 : "text-[var(--mist)] hover:text-[var(--paper)]"
             }`}
           >
-            注册
+            开启
           </button>
         </div>
 

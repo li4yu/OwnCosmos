@@ -33,6 +33,9 @@ import {
   type PetManifest,
 } from "@/lib/companion-pet";
 import { moodDisplay, parseMoodKey, type MoodKey } from "@/lib/moods";
+import { withCache } from "@/lib/cache";
+import { cacheKeys, cacheTtl } from "@/lib/cache-keys";
+import { invalidateCompanionCache } from "@/lib/user-cache";
 import { getFocusShortStats } from "@/services/focus";
 import { getHomeSummary } from "@/services/home-summary";
 import { listDueReminderPlans } from "@/services/plans";
@@ -228,24 +231,30 @@ function resolvePetFromRow(row?: {
 }
 
 export async function getCompanionPref(userId: string): Promise<CompanionPref> {
-  const rows = await getDb()
-    .select()
-    .from(aiCompanionPref)
-    .where(eq(aiCompanionPref.userId, userId))
-    .limit(1);
-  const row = rows[0];
-  const pet = resolvePetFromRow(row);
-  return {
-    dnd: row?.dnd ?? false,
-    dailyBubbleCap: row?.dailyBubbleCap ?? DEFAULT_DAILY_BUBBLE_CAP,
-    quietStartMin: row?.quietStartMin ?? null,
-    quietEndMin: row?.quietEndMin ?? null,
-    companionName: row?.companionName?.trim() || DEFAULT_COMPANION_NAME,
-    tone: normalizeTone(row?.tone),
-    userAddress: row?.userAddress?.trim() || DEFAULT_USER_ADDRESS,
-    personaReady: row?.personaReady ?? false,
-    ...pet,
-  };
+  return withCache(
+    cacheKeys.companion(userId),
+    cacheTtl.companionSec,
+    async () => {
+      const rows = await getDb()
+        .select()
+        .from(aiCompanionPref)
+        .where(eq(aiCompanionPref.userId, userId))
+        .limit(1);
+      const row = rows[0];
+      const pet = resolvePetFromRow(row);
+      return {
+        dnd: row?.dnd ?? false,
+        dailyBubbleCap: row?.dailyBubbleCap ?? DEFAULT_DAILY_BUBBLE_CAP,
+        quietStartMin: row?.quietStartMin ?? null,
+        quietEndMin: row?.quietEndMin ?? null,
+        companionName: row?.companionName?.trim() || DEFAULT_COMPANION_NAME,
+        tone: normalizeTone(row?.tone),
+        userAddress: row?.userAddress?.trim() || DEFAULT_USER_ADDRESS,
+        personaReady: row?.personaReady ?? false,
+        ...pet,
+      };
+    },
+  );
 }
 
 export async function upsertCompanionPref(
@@ -318,6 +327,7 @@ export async function upsertCompanionPref(
         updatedAt: now,
       },
     });
+  await invalidateCompanionCache(userId);
   return getCompanionPref(userId);
 }
 
@@ -350,6 +360,103 @@ export type ProactiveBubble = {
   createdAt: string;
 };
 
+function companionAddressYou(
+  pref: CompanionPref,
+  displayName?: string | null,
+) {
+  return pref.userAddress && pref.userAddress !== "你"
+    ? pref.userAddress
+    : displayName?.trim() || "你";
+}
+
+function welcomeProactiveText(you: string, companion: string) {
+  return `${you}，我是${companion}。点我可以聊用法、过往，或随便说两句。`;
+}
+
+function chatInviteProactiveText(
+  you: string,
+  companion: string,
+  hour = new Date().getHours(),
+) {
+  if (hour >= 21) {
+    return `${you}，夜深了。不想刷屏的话，我可以陪你聊两句再歇。`;
+  }
+  if (hour < 11) {
+    return `${you}，新的一天。有空的话找我随便聊聊也行。`;
+  }
+  return `${companion}在这儿。无聊或想说说话，随时点我。`;
+}
+
+/**
+ * 人格保存后：改写当日未关闭轻语里带称呼的文案（问候 / 闲聊邀请），
+ * 避免仍显示旧称呼。
+ */
+export async function resyncOpenProactivePersona(
+  userId: string,
+  displayName?: string | null,
+): Promise<ProactiveBubble | null> {
+  const pref = await getCompanionPref(userId);
+  const companion = pref.companionName || DEFAULT_COMPANION_NAME;
+  const you = companionAddressYou(pref, displayName);
+  const day = localDayString();
+  const db = getDb();
+
+  const rows = await db
+    .select()
+    .from(aiProactiveEvent)
+    .where(
+      and(
+        eq(aiProactiveEvent.userId, userId),
+        eq(aiProactiveEvent.day, day),
+        isNull(aiProactiveEvent.dismissedAt),
+      ),
+    )
+    .orderBy(desc(aiProactiveEvent.createdAt))
+    .limit(1);
+  const open = rows[0];
+  if (!open) return null;
+
+  const prev = (open.payload ?? {}) as {
+    text?: string;
+    askText?: string;
+    label?: string;
+  };
+  let text = prev.text || "";
+  let askText = prev.askText ?? null;
+
+  if (open.category === AI_PROACTIVE_WELCOME) {
+    text = welcomeProactiveText(you, companion);
+    askText = askText || "今天可以做什么？";
+  } else if (open.category === AI_PROACTIVE_CHAT_INVITE) {
+    text = chatInviteProactiveText(you, companion);
+    askText = askText || "嗨，陪我随便聊两句吧。";
+  } else if (open.category === AI_PROACTIVE_CHECKIN_CHEER && text) {
+    const comma = text.indexOf("，");
+    if (comma > 0 && comma <= 16) {
+      text = `${you}${text.slice(comma)}`;
+    }
+  }
+
+  const label =
+    prev.label ||
+    PROACTIVE_CATEGORY_LABEL[open.category] ||
+    open.category;
+  const payload = { text, askText, label };
+  await db
+    .update(aiProactiveEvent)
+    .set({ payload })
+    .where(eq(aiProactiveEvent.id, open.id));
+
+  return {
+    id: open.id,
+    category: open.category,
+    label,
+    text,
+    askText,
+    createdAt: open.createdAt.toISOString(),
+  };
+}
+
 /** 规则调度：问候 / 临期 / 心绪 / 打卡 / 凝时 / 贴士 / 闲聊；频控与勿扰 */
 export async function pickProactiveBubble(
   userId: string,
@@ -366,11 +473,7 @@ export async function pickProactiveBubble(
   const day = localDayString();
   const db = getDb();
   const companion = pref.companionName || DEFAULT_COMPANION_NAME;
-  const you =
-    pref.userAddress && pref.userAddress !== "你"
-      ? pref.userAddress
-      : displayName?.trim() || "你";
-
+  const you = companionAddressYou(pref, displayName);
   const todayCountRows = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(aiProactiveEvent)
@@ -420,7 +523,7 @@ export async function pickProactiveBubble(
   if (!used.has(AI_PROACTIVE_WELCOME)) {
     candidates.push({
       category: AI_PROACTIVE_WELCOME,
-      text: `${you}，我是${companion}。点我可以聊用法、过往，或随便说两句。`,
+      text: welcomeProactiveText(you, companion),
       askText: "今天可以做什么？",
     });
   }
@@ -508,16 +611,9 @@ export async function pickProactiveBubble(
   }
 
   if (candidates.length === 0 && !used.has(AI_PROACTIVE_CHAT_INVITE)) {
-    const hour = new Date().getHours();
-    const chatText =
-      hour >= 21
-        ? `${you}，夜深了。不想刷屏的话，我可以陪你聊两句再歇。`
-        : hour < 11
-          ? `${you}，新的一天。有空的话找我随便聊聊也行。`
-          : `${companion}在这儿。无聊或想说说话，随时点我。`;
     candidates.push({
       category: AI_PROACTIVE_CHAT_INVITE,
-      text: chatText,
+      text: chatInviteProactiveText(you, companion),
       askText: "嗨，陪我随便聊两句吧。",
     });
   }

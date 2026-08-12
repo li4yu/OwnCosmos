@@ -663,6 +663,7 @@ export function GuestAtmosphereLanding({
               onClick={closeGate}
             />
             <div className="guest-landing__gate" data-mode={gateMode}>
+              <div className="guest-landing__gate-orbit" aria-hidden="true" />
               <div className="guest-landing__gate-head">
                 <div>
                   <p className="guest-landing__gate-eyebrow">
@@ -681,13 +682,14 @@ export function GuestAtmosphereLanding({
                       : "登录后继续你的过往、当下与未来。"}
                   </p>
                 </div>
-                <SplashTip tip="关闭登录窗口">
+                <SplashTip tip="关闭">
                   <button
                     type="button"
-                    className="guest-landing__chip"
+                    className="guest-landing__gate-close"
                     onClick={closeGate}
+                    aria-label="关闭登录窗口"
                   >
-                    收起
+                    <span aria-hidden="true">×</span>
                   </button>
                 </SplashTip>
               </div>
@@ -711,17 +713,19 @@ export function GuestAtmosphereLanding({
                   开启
                 </button>
               </div>
-              {gateMode === "login" ? (
-                <LoginForm
-                  nextPath="/app"
-                  onSwitchRegister={() => openGate("register")}
-                />
-              ) : (
-                <RegisterForm
-                  nextPath="/app"
-                  onSwitchLogin={() => openGate("login")}
-                />
-              )}
+              <div className="guest-landing__gate-body">
+                {gateMode === "login" ? (
+                  <LoginForm
+                    nextPath="/app"
+                    onSwitchRegister={() => openGate("register")}
+                  />
+                ) : (
+                  <RegisterForm
+                    nextPath="/app"
+                    onSwitchLogin={() => openGate("login")}
+                  />
+                )}
+              </div>
             </div>
           </div>
         ) : null}

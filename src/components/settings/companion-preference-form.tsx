@@ -6,7 +6,10 @@ import { NoticeDialog } from "@/components/ui/notice-dialog";
 import { SelectField } from "@/components/ui/select-field";
 import { TimePickerField } from "@/components/ui/time-picker-field";
 import type { CompanionTone } from "@/db/schema";
-import { COMPANION_PET_CHANGED, notifyCompanionPrefChanged } from "@/lib/companion-client";
+import {
+  COMPANION_PET_CHANGED,
+  notifyCompanionPrefChanged,
+} from "@/lib/companion-client";
 import { TONE_OPTIONS } from "@/lib/companion-persona";
 
 type Pref = {
@@ -56,6 +59,8 @@ export function CompanionPreferenceForm() {
   const [companionName, setCompanionName] = useState("");
   const [tone, setTone] = useState<CompanionTone>("warm");
   const [userAddress, setUserAddress] = useState("");
+  const [dnd, setDnd] = useState(false);
+  const [dailyBubbleCap, setDailyBubbleCap] = useState(5);
   const [petBusy, setPetBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -70,23 +75,30 @@ export function CompanionPreferenceForm() {
           };
         };
         if (data.ok && data.pref) {
-          setPref({
-            ...data.pref,
-            petDisplayName:
-              data.pref.activePetManifest?.displayName ||
-              data.pref.petDisplayName,
-          });
-          setQuietStart(minToInput(data.pref.quietStartMin));
-          setQuietEnd(minToInput(data.pref.quietEndMin));
-          setCompanionName(data.pref.companionName);
-          setTone(data.pref.tone);
-          setUserAddress(data.pref.userAddress);
+          applyPref(data.pref);
         }
       } catch {
         setNotice({ title: "读取失败", message: "无法读取伴读偏好" });
       }
     })();
   }, []);
+
+  function applyPref(
+    next: Pref & { activePetManifest?: { displayName?: string } },
+  ) {
+    setPref({
+      ...next,
+      petDisplayName:
+        next.activePetManifest?.displayName || next.petDisplayName,
+    });
+    setQuietStart(minToInput(next.quietStartMin));
+    setQuietEnd(minToInput(next.quietEndMin));
+    setCompanionName(next.companionName);
+    setTone(next.tone);
+    setUserAddress(next.userAddress);
+    setDnd(next.dnd);
+    setDailyBubbleCap(next.dailyBubbleCap);
+  }
 
   function notifyPetChanged() {
     window.dispatchEvent(new Event(COMPANION_PET_CHANGED));
@@ -191,38 +203,29 @@ export function CompanionPreferenceForm() {
     }
   }
 
-  async function save(
-    patch: Partial<Pref> & { quietStart?: string; quietEnd?: string },
-  ) {
+  async function saveAll() {
     if (!pref) return;
+    const name = companionName.trim();
+    if (!name) {
+      setNotice({ title: "无法保存", message: "请填写伴读称呼" });
+      return;
+    }
     setPending(true);
     setMessage(null);
-    const body: Record<string, unknown> = {};
-    if (typeof patch.dnd === "boolean") body.dnd = patch.dnd;
-    if (typeof patch.dailyBubbleCap === "number") {
-      body.dailyBubbleCap = patch.dailyBubbleCap;
-    }
-    if (patch.quietStart !== undefined || patch.quietEnd !== undefined) {
-      body.quietStartMin = inputToMin(patch.quietStart ?? quietStart);
-      body.quietEndMin = inputToMin(patch.quietEnd ?? quietEnd);
-    }
-    if (typeof patch.companionName === "string") {
-      body.companionName = patch.companionName;
-      body.personaReady = true;
-    }
-    if (typeof patch.tone === "string") {
-      body.tone = patch.tone;
-      body.personaReady = true;
-    }
-    if (typeof patch.userAddress === "string") {
-      body.userAddress = patch.userAddress;
-      body.personaReady = true;
-    }
     try {
       const res = await fetch("/api/ai/companion-pref", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          dnd,
+          dailyBubbleCap: Math.min(20, Math.max(0, Math.floor(dailyBubbleCap))),
+          quietStartMin: inputToMin(quietStart),
+          quietEndMin: inputToMin(quietEnd),
+          companionName: name,
+          tone,
+          userAddress,
+          personaReady: true,
+        }),
       });
       const data = (await res.json()) as {
         ok: boolean;
@@ -236,17 +239,8 @@ export function CompanionPreferenceForm() {
         });
         return;
       }
-      setPref({
-        ...data.pref,
-        petDisplayName:
-          data.pref.activePetManifest?.displayName || data.pref.petDisplayName,
-      });
-      setQuietStart(minToInput(data.pref.quietStartMin));
-      setQuietEnd(minToInput(data.pref.quietEndMin));
-      setCompanionName(data.pref.companionName);
-      setTone(data.pref.tone);
-      setUserAddress(data.pref.userAddress);
-      setMessage("已保存");
+      applyPref(data.pref);
+      setMessage("已保存；轻语与对话框将同步人格");
       notifyCompanionPrefChanged();
     } catch {
       setNotice({
@@ -321,11 +315,6 @@ export function CompanionPreferenceForm() {
             value={companionName}
             disabled={pending}
             onChange={(e) => setCompanionName(e.target.value)}
-            onBlur={() => {
-              if (companionName.trim() !== pref.companionName) {
-                void save({ companionName });
-              }
-            }}
           />
         </label>
         <SelectField
@@ -337,10 +326,7 @@ export function CompanionPreferenceForm() {
             label: opt.label,
             hint: opt.hint,
           }))}
-          onChange={(next) => {
-            setTone(next);
-            void save({ tone: next });
-          }}
+          onChange={setTone}
         />
         <label className="flex flex-col gap-1">
           <span className="text-xs text-[var(--mist)]">它对你的称呼</span>
@@ -350,11 +336,6 @@ export function CompanionPreferenceForm() {
             value={userAddress}
             disabled={pending}
             onChange={(e) => setUserAddress(e.target.value)}
-            onBlur={() => {
-              if (userAddress.trim() !== pref.userAddress) {
-                void save({ userAddress });
-              }
-            }}
           />
         </label>
         {!pref.personaReady ? (
@@ -362,12 +343,16 @@ export function CompanionPreferenceForm() {
             userName={pref.userAddress}
             initial={pref}
             compact
-            onSaved={(p) =>
+            onSaved={(p) => {
               setPref({
                 ...pref,
                 ...p,
-              })
-            }
+              });
+              setCompanionName(p.companionName);
+              setTone(p.tone);
+              setUserAddress(p.userAddress);
+              notifyCompanionPrefChanged();
+            }}
           />
         ) : null}
       </div>
@@ -382,9 +367,9 @@ export function CompanionPreferenceForm() {
         <input
           type="checkbox"
           className="h-4 w-4 accent-[var(--teal)]"
-          checked={pref.dnd}
+          checked={dnd}
           disabled={pending}
-          onChange={(e) => void save({ dnd: e.target.checked })}
+          onChange={(e) => setDnd(e.target.checked)}
         />
       </label>
 
@@ -395,15 +380,9 @@ export function CompanionPreferenceForm() {
           min={0}
           max={20}
           className="w-24 rounded border border-[var(--line)] bg-[var(--bg)] px-2 py-1"
-          value={pref.dailyBubbleCap}
+          value={dailyBubbleCap}
           disabled={pending}
-          onChange={(e) =>
-            setPref({
-              ...pref,
-              dailyBubbleCap: Number(e.target.value) || 0,
-            })
-          }
-          onBlur={() => void save({ dailyBubbleCap: pref.dailyBubbleCap })}
+          onChange={(e) => setDailyBubbleCap(Number(e.target.value) || 0)}
         />
       </label>
 
@@ -414,7 +393,6 @@ export function CompanionPreferenceForm() {
           disabled={pending}
           clearable
           onChange={setQuietStart}
-          onCommit={(next) => void save({ quietStart: next, quietEnd })}
         />
         <TimePickerField
           label="静默结束"
@@ -422,14 +400,26 @@ export function CompanionPreferenceForm() {
           disabled={pending}
           clearable
           onChange={setQuietEnd}
-          onCommit={(next) => void save({ quietStart, quietEnd: next })}
         />
       </div>
       <p className="text-xs text-[var(--mist)]">
         静默时段内不弹主动气泡；两端都空表示不限。跨午夜可用如 23:00–07:00。
+        修改后请点下方保存，轻语与对话框标题会同步新人格。
       </p>
 
-      {message ? <p className="text-xs text-[var(--teal)]">{message}</p> : null}
+      <div className="flex flex-wrap items-center gap-3 pt-1">
+        <button
+          type="button"
+          className="ui-btn ui-btn-sm"
+          disabled={pending || petBusy}
+          onClick={() => void saveAll()}
+        >
+          {pending ? "保存中…" : "保存设置"}
+        </button>
+        {message ? (
+          <p className="text-xs text-[var(--teal)]">{message}</p>
+        ) : null}
+      </div>
 
       <NoticeDialog
         open={Boolean(notice)}

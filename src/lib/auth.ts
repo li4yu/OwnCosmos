@@ -1,10 +1,25 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { redisStorage } from "@better-auth/redis-storage";
 import { nextCookies } from "better-auth/next-js";
 import { emailOTP } from "better-auth/plugins";
 import { getDb } from "@/db";
 import * as schema from "@/db/schema";
+import { cacheKeys } from "@/lib/cache-keys";
 import { sendMail } from "@/lib/mail";
+import { consumeRateLimit } from "@/lib/rate-limit";
+import { getRedis } from "@/lib/redis";
+import { resilientSecondaryStorage } from "@/lib/redis-secondary";
+
+const redis = getRedis();
+const secondaryStorage = redis
+  ? resilientSecondaryStorage(
+      redisStorage({
+        client: redis,
+        keyPrefix: "better-auth:",
+      }),
+    )
+  : undefined;
 
 export const auth = betterAuth({
   database: drizzleAdapter(getDb(), {
@@ -16,6 +31,16 @@ export const auth = betterAuth({
       verification: schema.verification,
     },
   }),
+  ...(secondaryStorage ? { secondaryStorage } : {}),
+  /** PG 仍存会话；Redis 热读。缺 Redis / 故障时回落库。 */
+  session: {
+    storeSessionInDatabase: true,
+  },
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 120,
+  },
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL,
   emailAndPassword: {
@@ -116,6 +141,21 @@ export const auth = betterAuth({
         return otp;
       },
       async sendVerificationOTP({ email, otp, type }) {
+        const normalized = email.trim().toLowerCase();
+        const perMin = await consumeRateLimit(
+          cacheKeys.rateOtp(normalized, "min"),
+          { windowSec: 60, max: 1 },
+        );
+        if (!perMin.ok) {
+          throw new Error("发送过于频繁，请稍后再试");
+        }
+        const perHour = await consumeRateLimit(
+          cacheKeys.rateOtp(normalized, "hour"),
+          { windowSec: 3600, max: 5 },
+        );
+        if (!perHour.ok) {
+          throw new Error("该邮箱验证码发送次数已达上限，请稍后再试");
+        }
         const code = String(otp).replace(/\D/g, "").slice(0, 6);
         if (code.length !== 6) {
           throw new Error("验证码生成异常，请重试");

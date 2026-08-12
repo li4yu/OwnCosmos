@@ -14,6 +14,7 @@ import {
   removeDatedArchiveDay,
 } from "@/lib/dated-notes";
 import { formatDueDateInput } from "@/lib/plan-dates";
+import { invalidateHomeCache } from "@/lib/user-cache";
 
 function newId() {
   return randomBytes(16).toString("hex");
@@ -197,6 +198,8 @@ export async function cancelHabitCheckin(
     .delete(dailyCheckin)
     .where(eq(dailyCheckin.id, existing.id));
 
+  await invalidateHomeCache(userId);
+
   const archives = await getDb()
     .select()
     .from(archiveItem)
@@ -280,6 +283,7 @@ export async function checkinHabit(
   }
 
   await upsertDailyHabitArchive(habit, note, checkinDate, isNewDay, now);
+  await invalidateHomeCache(userId, now);
   return checkinId;
 }
 

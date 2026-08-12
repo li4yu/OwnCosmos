@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { runEssayArchiveCatchUpAllUsers } from "@/lib/archive-catchup";
+import { cacheKeys } from "@/lib/cache-keys";
+import { tryAcquireLock } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +23,14 @@ function authorize(req: Request) {
 export async function GET(req: Request) {
   if (!authorize(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+  const locked = await tryAcquireLock(cacheKeys.lockEssayArchive(), 55 * 60);
+  if (!locked) {
+    return NextResponse.json({
+      ok: true,
+      skipped: true,
+      reason: "lock_held",
+    });
   }
   const result = await runEssayArchiveCatchUpAllUsers();
   return NextResponse.json({ ok: true, ...result });

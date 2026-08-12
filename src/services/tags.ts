@@ -7,6 +7,9 @@ import {
   planTag,
   tag,
 } from "@/db/schema";
+import { withCache } from "@/lib/cache";
+import { cacheKeys, cacheTtl } from "@/lib/cache-keys";
+import { invalidateTagsCache } from "@/lib/user-cache";
 
 function newId() {
   return randomBytes(16).toString("hex");
@@ -15,11 +18,24 @@ function newId() {
 export type TagRecord = typeof tag.$inferSelect;
 
 export async function listActiveTags(userId: string) {
-  return getDb()
-    .select()
-    .from(tag)
-    .where(and(eq(tag.userId, userId), eq(tag.active, true)))
-    .orderBy(asc(tag.name));
+  return withCache(
+    cacheKeys.tagsActive(userId),
+    cacheTtl.tagsSec,
+    () =>
+      getDb()
+        .select()
+        .from(tag)
+        .where(and(eq(tag.userId, userId), eq(tag.active, true)))
+        .orderBy(asc(tag.name)),
+    (raw) => {
+      const rows = raw as TagRecord[];
+      return rows.map((r) => ({
+        ...r,
+        createdAt: new Date(r.createdAt),
+        updatedAt: new Date(r.updatedAt),
+      }));
+    },
+  );
 }
 
 /** 含停用签，供馆藏筛选展示历史名 */
@@ -51,6 +67,7 @@ export async function ensureTag(userId: string, rawName: string) {
         .update(tag)
         .set({ active: true, updatedAt: now })
         .where(and(eq(tag.id, row.id), eq(tag.userId, userId)));
+      await invalidateTagsCache(userId);
       return { tag: { ...row, active: true, updatedAt: now } };
     }
     return { tag: row };
@@ -67,6 +84,7 @@ export async function ensureTag(userId: string, rawName: string) {
     updatedAt: now,
   };
   await getDb().insert(tag).values(created);
+  await invalidateTagsCache(userId);
   return { tag: created };
 }
 
@@ -90,6 +108,7 @@ export async function deactivateTag(userId: string, tagId: string) {
   await getDb()
     .delete(planTag)
     .where(and(eq(planTag.userId, userId), eq(planTag.tagId, tagId)));
+  await invalidateTagsCache(userId);
   return true;
 }
 

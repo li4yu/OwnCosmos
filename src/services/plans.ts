@@ -52,9 +52,12 @@ import {
   type PlanKind,
 } from "@/lib/plan-kinds";
 import { parseMoodKey, type MoodKey } from "@/lib/moods";
+import { withCache } from "@/lib/cache";
+import { cacheKeys, cacheTtl, localDayKey } from "@/lib/cache-keys";
 import { clampListPageSize } from "@/lib/list-paging";
 import { PLAN_PAGE_SIZE } from "@/lib/plan-query";
 import { clampRemindDays, DEFAULT_REMIND_DAYS } from "@/lib/plan-remind";
+import { invalidateDueAndHomeCache } from "@/lib/user-cache";
 
 export {
   clampRemindDays,
@@ -500,27 +503,44 @@ export async function resolvePlanSourceLink(
 
 /** 临期提醒：进入提醒窗、且未完成的未归档计划（排除胶囊与无截止） */
 export async function listDueReminderPlans(userId: string, now = new Date()) {
-  const rows = await listOpenPlans(userId);
-  const dueRows: Array<PlanRecord & { dueAt: Date; daysLeft: number }> = [];
-  for (const row of rows) {
-    if (!row.dueAt || !participatesInDueReminders(row.kind, row.dueAt)) continue;
-    if (!isInRemindWindow(row.dueAt, row.remindDays, now)) continue;
-    dueRows.push({
-      ...row,
-      dueAt: row.dueAt,
-      daysLeft: calendarDaysUntilDue(row.dueAt, now),
-    });
-  }
-  // 当日置顶，其余按剩余天数升序
-  return dueRows.sort((a, b) => {
-    const aToday = a.daysLeft === 0 ? 0 : 1;
-    const bToday = b.daysLeft === 0 ? 0 : 1;
-    return (
-      aToday - bToday ||
-      a.daysLeft - b.daysLeft ||
-      a.dueAt.getTime() - b.dueAt.getTime()
-    );
-  });
+  type DueRow = PlanRecord & { dueAt: Date; daysLeft: number };
+  return withCache(
+    cacheKeys.due(userId, localDayKey(now)),
+    cacheTtl.dueSec,
+    async () => {
+      const rows = await listOpenPlans(userId);
+      const dueRows: DueRow[] = [];
+      for (const row of rows) {
+        if (!row.dueAt || !participatesInDueReminders(row.kind, row.dueAt))
+          continue;
+        if (!isInRemindWindow(row.dueAt, row.remindDays, now)) continue;
+        dueRows.push({
+          ...row,
+          dueAt: row.dueAt,
+          daysLeft: calendarDaysUntilDue(row.dueAt, now),
+        });
+      }
+      return dueRows.sort((a, b) => {
+        const aToday = a.daysLeft === 0 ? 0 : 1;
+        const bToday = b.daysLeft === 0 ? 0 : 1;
+        return (
+          aToday - bToday ||
+          a.daysLeft - b.daysLeft ||
+          a.dueAt.getTime() - b.dueAt.getTime()
+        );
+      });
+    },
+    (raw) => {
+      const rows = raw as DueRow[];
+      return rows.map((r) => ({
+        ...r,
+        dueAt: new Date(r.dueAt),
+        createdAt: new Date(r.createdAt),
+        updatedAt: new Date(r.updatedAt),
+        archivedAt: r.archivedAt ? new Date(r.archivedAt) : null,
+      }));
+    },
+  );
 }
 
 /** 临期提醒延期：回写 due_at */
@@ -545,6 +565,7 @@ export async function postponeDuePlan(
       updatedAt: now,
     })
     .where(and(eq(plan.id, planId), eq(plan.userId, userId)));
+  await invalidateDueAndHomeCache(userId);
   return planId;
 }
 
@@ -590,6 +611,7 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
     createdAt: now,
     updatedAt: now,
   });
+  await invalidateDueAndHomeCache(userId);
   return id;
 }
 
@@ -674,6 +696,7 @@ export async function updatePlan(
     .update(plan)
     .set(patch)
     .where(and(eq(plan.id, planId), eq(plan.userId, userId)));
+  await invalidateDueAndHomeCache(userId);
   return planId;
 }
 
@@ -688,6 +711,7 @@ export async function setPlanStatus(
     .update(plan)
     .set({ status, updatedAt: new Date() })
     .where(and(eq(plan.id, planId), eq(plan.userId, userId)));
+  await invalidateDueAndHomeCache(userId);
   return planId;
 }
 
@@ -995,6 +1019,7 @@ export async function completeAndArchivePlan(
       updatedAt: now,
     })
     .where(and(eq(plan.id, planId), eq(plan.userId, userId)));
+  await invalidateDueAndHomeCache(userId);
   return archiveId;
 }
 
@@ -1242,6 +1267,7 @@ export async function deleteActivePlan(userId: string, planId: string) {
         isNull(plan.archivedAt),
       ),
     );
+  await invalidateDueAndHomeCache(userId);
   return true;
 }
 

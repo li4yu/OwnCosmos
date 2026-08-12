@@ -23,6 +23,7 @@ import {
   focusSession,
 } from "@/db/schema";
 import { defaultFocusTitle } from "@/lib/focus-duration";
+import { invalidateHomeCache } from "@/lib/user-cache";
 import { PLANNING_KINDS } from "@/lib/plan-kinds";
 import {
   getCheckinForDate,
@@ -300,6 +301,7 @@ export async function startFocusSession(userId: string, input: StartFocusInput) 
     startedAt: now,
     updatedAt: now,
   });
+  await invalidateHomeCache(userId, now);
   return { session: (await getFocusSession(userId, id))! };
 }
 
@@ -399,6 +401,8 @@ export async function completeFocusSession(
       updatedAt: now,
     })
     .where(and(eq(focusSession.id, sessionId), eq(focusSession.userId, userId)));
+
+  await invalidateHomeCache(userId);
 
   return {
     sessionId,

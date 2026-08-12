@@ -8,6 +8,7 @@ import {
   type PolishStyle,
 } from "@/ai/polish";
 import { getLlmModel, isRagInfraReady } from "@/ai/config";
+import { assertAiRateLimit } from "@/lib/ai-rate-limit";
 import { auth } from "@/lib/auth";
 
 export const runtime = "nodejs";
@@ -23,6 +24,8 @@ export async function POST(req: Request) {
   if (!session) {
     return Response.json({ ok: false, error: "未登录" }, { status: 401 });
   }
+  const limited = await assertAiRateLimit(session.user.id, "polish");
+  if (limited) return limited;
   if (!isRagInfraReady()) {
     return Response.json(
       { ok: false, error: "AI 未启用或未配置密钥" },

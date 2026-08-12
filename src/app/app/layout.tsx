@@ -5,6 +5,7 @@ import { AppAtmosphere } from "@/components/shell/app-atmosphere";
 import { AppChrome } from "@/components/shell/app-chrome";
 import { formatDueDateInput } from "@/lib/plan-dates";
 import { requireSession } from "@/lib/session";
+import { getCompanionPref } from "@/services/companion";
 import {
   listDueReminderPlans,
   listUnlockReadyCapsules,
@@ -46,15 +47,17 @@ export default async function AppAreaLayout({
   const anniversaryRemind = Boolean(user.anniversaryRemind);
   const focusDnd = Boolean(user.focusDnd);
 
-  const [readyCapsules, dueRows, anniversaryHits] = await Promise.all([
-    listUnlockReadyCapsules(session.user.id),
-    notifyEnabled && notifyDueReminder
-      ? listDueReminderPlans(session.user.id)
-      : Promise.resolve([]),
-    notifyEnabled && anniversaryRemind
-      ? listAnniversaryHits(session.user.id)
-      : Promise.resolve([]),
-  ]);
+  const [readyCapsules, dueRows, anniversaryHits, companionPref] =
+    await Promise.all([
+      listUnlockReadyCapsules(session.user.id),
+      notifyEnabled && notifyDueReminder
+        ? listDueReminderPlans(session.user.id)
+        : Promise.resolve([]),
+      notifyEnabled && anniversaryRemind
+        ? listAnniversaryHits(session.user.id)
+        : Promise.resolve([]),
+      getCompanionPref(session.user.id),
+    ]);
 
   return (
     <AppAtmosphere>
@@ -93,7 +96,18 @@ export default async function AppAreaLayout({
           }))}
         />
       ) : null}
-      <CompanionShell userName={session.user.name} />
+      <CompanionShell
+        userName={session.user.name}
+        initialPref={{
+          dnd: companionPref.dnd,
+          companionName: companionPref.companionName,
+          tone: companionPref.tone,
+          userAddress: companionPref.userAddress,
+          personaReady: companionPref.personaReady,
+          activePetSheetUrl: companionPref.activePetSheetUrl,
+          activePetManifest: companionPref.activePetManifest,
+        }}
+      />
     </AppAtmosphere>
   );
 }

@@ -8,6 +8,7 @@ import {
 } from "@/lib/companion-persona";
 import {
   getCompanionPref,
+  resyncOpenProactivePersona,
   upsertCompanionPref,
 } from "@/services/companion";
 
@@ -62,6 +63,11 @@ export async function PATCH(req: Request) {
   if (body.quietEndMin === null || typeof body.quietEndMin === "number") {
     patch.quietEndMin = body.quietEndMin;
   }
+  const personaTouched =
+    typeof body.companionName === "string" ||
+    typeof body.tone === "string" ||
+    typeof body.userAddress === "string" ||
+    body.skipPersonaSetup === true;
   if (typeof body.companionName === "string") {
     patch.companionName = clampCompanionName(body.companionName);
   }
@@ -82,5 +88,12 @@ export async function PATCH(req: Request) {
   }
 
   const pref = await upsertCompanionPref(session.user.id, patch);
-  return NextResponse.json({ ok: true, pref });
+  let bubble = null;
+  if (personaTouched) {
+    bubble = await resyncOpenProactivePersona(
+      session.user.id,
+      session.user.name,
+    );
+  }
+  return NextResponse.json({ ok: true, pref, bubble });
 }

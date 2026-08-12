@@ -4,6 +4,8 @@ import {
   FOCUS_STATUS_COMPLETED,
   focusSession,
 } from "@/db/schema";
+import { withCache } from "@/lib/cache";
+import { cacheKeys, cacheTtl, localDayKey } from "@/lib/cache-keys";
 import { formatFocusDurationMs } from "@/lib/focus-duration";
 import { formatDueDateInput } from "@/lib/plan-dates";
 import { cycleUnitLabel, planKindLabel } from "@/lib/plan-kinds";
@@ -103,6 +105,27 @@ export type HomeSummary = {
 export async function getHomeSummary(
   userId: string,
   now = new Date(),
+): Promise<HomeSummary> {
+  return withCache(
+    cacheKeys.homeSummary(userId, localDayKey(now)),
+    cacheTtl.homeSummarySec,
+    () => loadHomeSummary(userId, now),
+    (raw) => {
+      const s = raw as HomeSummary;
+      return {
+        ...s,
+        dueItems: s.dueItems.map((d) => ({
+          ...d,
+          dueAt: new Date(d.dueAt),
+        })),
+      };
+    },
+  );
+}
+
+async function loadHomeSummary(
+  userId: string,
+  now: Date,
 ): Promise<HomeSummary> {
   const [due, essays, activeFocus, habits, checkins, cycles, cycleTasks] =
     await Promise.all([

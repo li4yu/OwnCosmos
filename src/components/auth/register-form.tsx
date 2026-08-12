@@ -192,8 +192,8 @@ export function RegisterForm({
 
   return (
     <>
-      <form onSubmit={onSubmit} className="flex w-full flex-col gap-3.5">
-        <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
+      <form onSubmit={onSubmit} className="auth-form flex w-full flex-col gap-3.5">
+        <label className="auth-label flex flex-col gap-1.5 text-sm text-[var(--mist)]">
           昵称（可选）
           <input
             type="text"
@@ -205,7 +205,7 @@ export function RegisterForm({
             disabled={accountReady || pending}
           />
         </label>
-        <label className="flex flex-col gap-1.5 text-sm text-[var(--mist)]">
+        <label className="auth-label flex flex-col gap-1.5 text-sm text-[var(--mist)]">
           邮箱
           <div className="flex gap-2">
             <input
@@ -215,13 +215,15 @@ export function RegisterForm({
               onChange={(e) => setEmail(e.target.value)}
               className="auth-field min-w-0 flex-1"
               autoComplete="email"
+              placeholder="name@example.com"
+              spellCheck={false}
               disabled={accountReady || pending}
             />
             <button
               type="button"
               disabled={pending || cooldown > 0}
               onClick={() => void sendCode()}
-              className="ui-btn-ghost ui-btn-sm shrink-0 whitespace-nowrap"
+              className="auth-side-btn ui-btn-ghost ui-btn-sm shrink-0 whitespace-nowrap"
             >
               {cooldown > 0 ? `${cooldown}s` : "发送验证码"}
             </button>
@@ -286,16 +288,18 @@ export function RegisterForm({
           {pending ? "处理中…" : "验证并注册"}
         </button>
         {onSwitchLogin ? (
-          <p className="text-center text-sm text-[var(--mist)]">
-            已有账号？{" "}
-            <button
-              type="button"
-              onClick={onSwitchLogin}
-              className="text-[var(--amber)] underline-offset-4 hover:underline"
-            >
-              去登录
-            </button>
-          </p>
+          <div className="auth-form__foot">
+            <p className="auth-form__switch">
+              已有账号？{" "}
+              <button
+                type="button"
+                onClick={onSwitchLogin}
+                className="auth-form__link"
+              >
+                去登录
+              </button>
+            </p>
+          </div>
         ) : null}
       </form>
 

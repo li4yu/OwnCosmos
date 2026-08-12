@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { DEFAULT_SEARCH_TOP_K, getLlmModel, isRagInfraReady } from "@/ai/config";
 import { streamRagAnswer } from "@/ai/rag-answer";
+import { assertAiRateLimit } from "@/lib/ai-rate-limit";
 import { auth } from "@/lib/auth";
 
 export const runtime = "nodejs";
@@ -17,6 +18,8 @@ export async function POST(req: Request) {
   if (!session) {
     return Response.json({ ok: false, error: "未登录" }, { status: 401 });
   }
+  const limited = await assertAiRateLimit(session.user.id, "answer");
+  if (limited) return limited;
   if (!isRagInfraReady()) {
     return Response.json(
       { ok: false, error: "AI/RAG 未启用或未配置密钥" },

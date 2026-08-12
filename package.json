@@ -17,6 +17,7 @@
     "rag:backfill-user": "tsx scripts/rag-backfill-user.ts"
   },
   "dependencies": {
+    "@better-auth/redis-storage": "^1.6.27",
     "@tiptap/extension-image": "^3.29.2",
     "@tiptap/extension-link": "^3.29.2",
     "@tiptap/extension-placeholder": "^3.29.2",
@@ -24,8 +25,9 @@
     "@tiptap/react": "^3.29.2",
     "@tiptap/starter-kit": "^3.29.2",
     "@zilliz/milvus2-sdk-node": "2.5.12",
-    "better-auth": "^1.6.25",
+    "better-auth": "^1.6.27",
     "drizzle-orm": "^0.45.2",
+    "ioredis": "^5.8.2",
     "jszip": "^3.10.1",
     "next": "15.5.7",
     "nodemailer": "^9.0.3",
